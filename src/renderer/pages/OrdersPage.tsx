@@ -27,7 +27,7 @@ interface Article {
     name: string;
     composition: any[];
     laborHoursRequired: number;
-    marginPercentage: number;
+    marginPercentage: number | 0;
 }
 
 interface Material {
@@ -52,7 +52,7 @@ export const OrdersPage: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [materials, setMaterials] = useState<Material[]>([]);
     const [colors, setColors] = useState<Color[]>([]);
-    const [laborConfig, setLaborConfig] = useState<LaborConfig>({ hourlyRate: 25 });
+    const [laborConfig, setLaborConfig] = useState<LaborConfig>({ hourlyRate: 4 });
     const [showForm, setShowForm] = useState(false);
     const [showDetails, setShowDetails] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);

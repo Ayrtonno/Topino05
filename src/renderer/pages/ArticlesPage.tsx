@@ -13,7 +13,7 @@ interface Article {
     name: string;
     composition: ArticleComposition[];
     laborHoursRequired: number;
-    marginPercentage: number;
+    marginPercentage: number | 0;
     createdAt: string;
 }
 
@@ -40,7 +40,7 @@ export const ArticlesPage: React.FC = () => {
         name: "",
         composition: [],
         laborHoursRequired: 0,
-        marginPercentage: 15,
+        marginPercentage: 0,
     });
     const [currentComposition, setCurrentComposition] = useState<ArticleComposition>({
         materialId: "",
@@ -144,7 +144,7 @@ export const ArticlesPage: React.FC = () => {
                 name: "",
                 composition: [],
                 laborHoursRequired: 0,
-                marginPercentage: 15,
+                marginPercentage: 0,
             });
             setCurrentComposition({
                 materialId: "",
@@ -203,7 +203,7 @@ export const ArticlesPage: React.FC = () => {
                             name: "",
                             composition: [],
                             laborHoursRequired: 0,
-                            marginPercentage: 15,
+                            marginPercentage: 0,
                         });
                         setCurrentComposition({
                             materialId: "",
@@ -270,7 +270,7 @@ export const ArticlesPage: React.FC = () => {
                             <label>Margine %</label>
                             <input
                                 type="number"
-                                value={formData.marginPercentage || 15}
+                                value={formData.marginPercentage ?? 0}
                                 onChange={(e) =>
                                     setFormData({
                                         ...formData,

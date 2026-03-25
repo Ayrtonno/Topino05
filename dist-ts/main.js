@@ -86,7 +86,7 @@ var saveOrders = (orders) => {
   return writeJsonFile(ORDERS_FILE, orders);
 };
 var DEFAULT_LABOR_CONFIG = {
-  hourlyRate: 25,
+  hourlyRate: 4,
   lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
 };
 var getLaborConfig = () => {

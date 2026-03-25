@@ -79,7 +79,7 @@ export const saveOrders = (orders: Order[]): boolean => {
 
 // ==================== LABOR CONFIG ====================
 const DEFAULT_LABOR_CONFIG: LaborConfig = {
-    hourlyRate: 25,
+    hourlyRate: 4,
     lastUpdated: new Date().toISOString(),
 };
 
