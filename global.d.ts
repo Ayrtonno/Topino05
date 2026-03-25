@@ -119,8 +119,14 @@ declare global {
         saveLaborConfig: (config: LaborConfig) => Promise<boolean>;
 
         // Dashboard config
-        getDashboardConfig: () => Promise<{ salesTarget: number; lastUpdated: string }>;
-        saveDashboardConfig: (config: { salesTarget: number; lastUpdated: string }) => Promise<boolean>;
+        getDashboardConfig: () => Promise<{
+            salesTarget: number;
+            lastUpdated: string;
+        }>;
+        saveDashboardConfig: (config: {
+            salesTarget: number;
+            lastUpdated: string;
+        }) => Promise<boolean>;
     }
 
     interface Window {
