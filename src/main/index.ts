@@ -2,12 +2,18 @@ import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import * as path from "path";
 import * as isDev from "electron-is-dev";
 import {
-    getProducts,
-    saveProducts,
-    getInventory,
-    saveInventory,
-    getQuotes,
-    saveQuotes,
+    getMaterials,
+    saveMaterials,
+    getColors,
+    saveColors,
+    getArticles,
+    saveArticles,
+    getOrders,
+    saveOrders,
+    getLaborConfig,
+    saveLaborConfig,
+    getDashboardConfig,
+    saveDashboardConfig,
 } from "./store";
 
 let mainWindow: BrowserWindow | null;
@@ -25,10 +31,10 @@ const createWindow = () => {
     });
 
     // Determina URL basato su modalità dev/prod
-    const isProduction = !isDev || process.argv.includes("--prod");
-    const startUrl = isProduction
-        ? `file://${path.join(__dirname, "../build/index.html")}`
-        : "http://localhost:3000";
+    const isDevelopment = process.argv.includes("--dev");
+    const startUrl = isDevelopment
+        ? "http://localhost:3000"
+        : `file://${path.join(__dirname, "../build/index.html")}`;
 
     mainWindow.loadURL(startUrl);
 
@@ -54,30 +60,56 @@ app.on("activate", () => {
     }
 });
 
-// IPC Handlers
-ipcMain.handle("get-products", async () => {
-    return getProducts();
+// IPC Handlers - Materials
+ipcMain.handle("get-materials", async () => {
+    return getMaterials();
 });
 
-ipcMain.handle("save-products", async (_, products) => {
-    saveProducts(products);
-    return true;
+ipcMain.handle("save-materials", async (_, materials) => {
+    return saveMaterials(materials);
 });
 
-ipcMain.handle("get-inventory", async () => {
-    return getInventory();
+// IPC Handlers - Colors
+ipcMain.handle("get-colors", async () => {
+    return getColors();
 });
 
-ipcMain.handle("save-inventory", async (_, inventory) => {
-    saveInventory(inventory);
-    return true;
+ipcMain.handle("save-colors", async (_, colors) => {
+    return saveColors(colors);
 });
 
-ipcMain.handle("get-quotes", async () => {
-    return getQuotes();
+// IPC Handlers - Articles
+ipcMain.handle("get-articles", async () => {
+    return getArticles();
 });
 
-ipcMain.handle("save-quotes", async (_, quotes) => {
-    saveQuotes(quotes);
-    return true;
+ipcMain.handle("save-articles", async (_, articles) => {
+    return saveArticles(articles);
+});
+
+// IPC Handlers - Orders
+ipcMain.handle("get-orders", async () => {
+    return getOrders();
+});
+
+ipcMain.handle("save-orders", async (_, orders) => {
+    return saveOrders(orders);
+});
+
+// IPC Handlers - Labor Config
+ipcMain.handle("get-labor-config", async () => {
+    return getLaborConfig();
+});
+
+ipcMain.handle("save-labor-config", async (_, config) => {
+    return saveLaborConfig(config);
+});
+
+// IPC Handlers - Dashboard Config
+ipcMain.handle("get-dashboard-config", async () => {
+    return getDashboardConfig();
+});
+
+ipcMain.handle("save-dashboard-config", async (_, config) => {
+    return saveDashboardConfig(config);
 });

@@ -1,25 +1,38 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
-    // Products API
-    getProducts: () => ipcRenderer.invoke("get-products"),
-    saveProducts: (products: any) =>
-        ipcRenderer.invoke("save-products", products),
+    // Materials API
+    getMaterials: () =>
+        ipcRenderer.invoke("get-materials") as Promise<Material[]>,
+    saveMaterials: (materials: Material[]) =>
+        ipcRenderer.invoke("save-materials", materials) as Promise<boolean>,
 
-    // Inventory API
-    getInventory: () => ipcRenderer.invoke("get-inventory"),
-    saveInventory: (inventory: any) =>
-        ipcRenderer.invoke("save-inventory", inventory),
+    // Colors API
+    getColors: () => ipcRenderer.invoke("get-colors") as Promise<Color[]>,
+    saveColors: (colors: Color[]) =>
+        ipcRenderer.invoke("save-colors", colors) as Promise<boolean>,
 
-    // Quotes API
-    getQuotes: () => ipcRenderer.invoke("get-quotes"),
-    saveQuotes: (quotes: any) => ipcRenderer.invoke("save-quotes", quotes),
+    // Articles API
+    getArticles: () => ipcRenderer.invoke("get-articles") as Promise<Article[]>,
+    saveArticles: (articles: Article[]) =>
+        ipcRenderer.invoke("save-articles", articles) as Promise<boolean>,
+
+    // Orders API
+    getOrders: () => ipcRenderer.invoke("get-orders") as Promise<Order[]>,
+    saveOrders: (orders: Order[]) =>
+        ipcRenderer.invoke("save-orders", orders) as Promise<boolean>,
+
+    // Labor Config API
+    getLaborConfig: () =>
+        ipcRenderer.invoke("get-labor-config") as Promise<LaborConfig>,
+    saveLaborConfig: (config: LaborConfig) =>
+        ipcRenderer.invoke("save-labor-config", config) as Promise<boolean>,
+
+    // Dashboard Config API
+    getDashboardConfig: () =>
+        ipcRenderer.invoke("get-dashboard-config") as Promise<any>,
+    saveDashboardConfig: (config: any) =>
+        ipcRenderer.invoke("save-dashboard-config", config) as Promise<boolean>,
 };
 
 contextBridge.exposeInMainWorld("api", api);
-
-declare global {
-    interface Window {
-        api: typeof api;
-    }
-}

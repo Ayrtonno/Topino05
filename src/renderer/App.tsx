@@ -1,44 +1,60 @@
 import React, { useState } from 'react';
 import './App.css';
-import ProductsPage from './pages/ProductsPage';
-import InventoryPage from './pages/InventoryPage';
-import QuotesPage from './pages/QuotesPage';
+import { MaterialsPage } from './pages/MaterialsPage';
+import { ColorsPage } from './pages/ColorsPage';
+import { ArticlesPage } from './pages/ArticlesPage';
+import { OrdersPage } from './pages/OrdersPage';
+import { DashboardPage } from './pages/DashboardPage';
 
-type Page = 'products' | 'inventory' | 'quotes';
+type Page = 'dashboard' | 'materials' | 'colors' | 'articles' | 'orders';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('products');
+  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   return (
     <div className="app">
       <header className="header">
-        <h1>📊 Preventivatore & Magazzino</h1>
+        <h1>🏭 Magazzino & Preventivatore</h1>
         <nav className="nav">
           <button
-            className={`nav-btn ${currentPage === 'products' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('products')}
+            className={`nav-btn ${currentPage === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('dashboard')}
           >
-            📦 Prodotti
+            📊 Dashboard
           </button>
           <button
-            className={`nav-btn ${currentPage === 'inventory' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('inventory')}
+            className={`nav-btn ${currentPage === 'materials' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('materials')}
           >
-            🏭 Magazzino
+            📋 Materia Prima
           </button>
           <button
-            className={`nav-btn ${currentPage === 'quotes' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('quotes')}
+            className={`nav-btn ${currentPage === 'colors' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('colors')}
           >
-            📄 Preventivi
+            🎨 Colori
+          </button>
+          <button
+            className={`nav-btn ${currentPage === 'articles' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('articles')}
+          >
+            📦 Articoli
+          </button>
+          <button
+            className={`nav-btn ${currentPage === 'orders' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('orders')}
+          >
+            📄 Ordini
           </button>
         </nav>
       </header>
 
       <main className="main-content">
-        {currentPage === 'products' && <ProductsPage />}
-        {currentPage === 'inventory' && <InventoryPage />}
-        {currentPage === 'quotes' && <QuotesPage />}
+        {currentPage === 'dashboard' && <DashboardPage />}
+        {currentPage === 'materials' && <MaterialsPage />}
+        {currentPage === 'colors' && <ColorsPage />}
+        {currentPage === 'articles' && <ArticlesPage />}
+        {currentPage === 'orders' && <OrdersPage />}
       </main>
     </div>
   );
