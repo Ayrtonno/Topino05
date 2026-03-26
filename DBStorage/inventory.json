@@ -10,15 +10,15 @@
     "id": "inv_lana_azzurro_acqua",
     "materialId": "mat_lana",
     "colorName": "Azzurro Acqua",
-    "quantity": 47,
-    "lastUpdated": "2026-03-26T10:43:48.172Z"
+    "quantity": 42,
+    "lastUpdated": "2026-03-26T12:28:57.316Z"
   },
   {
     "id": "inv_lana_bianco",
     "materialId": "mat_lana",
     "colorName": "Bianco",
-    "quantity": 2,
-    "lastUpdated": "2026-03-26T10:43:48.172Z"
+    "quantity": 44,
+    "lastUpdated": "2026-03-26T12:28:57.316Z"
   },
   {
     "id": "inv_lana_blu_notte",
@@ -124,5 +124,31 @@
     "colorName": "Viola",
     "quantity": 15,
     "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "1774530104023",
+    "materialId": "mat_fettuccia",
+    "colorName": "Giallo",
+    "quantity": 800,
+    "lastUpdated": "2026-03-26T13:01:44.023Z"
+  },
+  {
+    "id": "1774530115902",
+    "materialId": "mat_fettuccia",
+    "colorName": "Verde",
+    "quantity": 800,
+    "lastUpdated": "2026-03-26T13:01:55.902Z"
+  },
+  {
+    "id": "1774530125132",
+    "materialId": "mat_base_borsa",
+    "quantity": 1,
+    "lastUpdated": "2026-03-26T13:02:05.132Z"
+  },
+  {
+    "id": "1774530133389",
+    "materialId": "mat_ganci_coppia",
+    "quantity": 2,
+    "lastUpdated": "2026-03-26T13:02:13.389Z"
   }
 ]

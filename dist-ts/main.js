@@ -36,6 +36,7 @@ if (!fs.existsSync(dataDir)) {
 }
 var MATERIALS_FILE = path.join(dataDir, "materials.json");
 var INVENTORY_FILE = path.join(dataDir, "inventory.json");
+var ARTICLE_INVENTORY_FILE = path.join(dataDir, "article-inventory.json");
 var ARTICLES_FILE = path.join(dataDir, "articles.json");
 var CLIENTS_FILE = path.join(dataDir, "clients.json");
 var ORDERS_FILE = path.join(dataDir, "orders.json");
@@ -182,6 +183,12 @@ var getInventory = () => {
 var saveInventory = (items) => {
   return writeJsonFile(INVENTORY_FILE, items);
 };
+var getArticleInventory = () => {
+  return readJsonFile(ARTICLE_INVENTORY_FILE, []);
+};
+var saveArticleInventory = (items) => {
+  return writeJsonFile(ARTICLE_INVENTORY_FILE, items);
+};
 var getArticles = () => {
   return readAndMigrate(ARTICLES_FILE, [], migrateArticles);
 };
@@ -235,6 +242,7 @@ var createWindow = () => {
   mainWindow = new import_electron.BrowserWindow({
     width: 1400,
     height: 900,
+    show: false,
     webPreferences: {
       preload: path2.join(__dirname, "preload.js"),
       nodeIntegration: false,
@@ -242,10 +250,15 @@ var createWindow = () => {
       sandbox: true
     }
   });
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.maximize();
+    mainWindow?.show();
+  });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     const child = new import_electron.BrowserWindow({
       width: 1100,
       height: 800,
+      show: false,
       parent: mainWindow || void 0,
       webPreferences: {
         preload: path2.join(__dirname, "preload.js"),
@@ -253,6 +266,10 @@ var createWindow = () => {
         contextIsolation: true,
         sandbox: true
       }
+    });
+    child.once("ready-to-show", () => {
+      child.maximize();
+      child.show();
     });
     if (url.startsWith("file://")) {
       child.loadURL(url);
@@ -288,6 +305,12 @@ import_electron.ipcMain.handle("get-inventory", async () => {
 });
 import_electron.ipcMain.handle("save-inventory", async (_, items) => {
   return saveInventory(items);
+});
+import_electron.ipcMain.handle("get-article-inventory", async () => {
+  return getArticleInventory();
+});
+import_electron.ipcMain.handle("save-article-inventory", async (_, items) => {
+  return saveArticleInventory(items);
 });
 import_electron.ipcMain.handle("get-articles", async () => {
   return getArticles();

@@ -44,6 +44,7 @@
   var articles = [];
   var materials = [];
   var laborConfig = { hourlyRate: 4 };
+  var articleInventory = [];
   var filterText = "";
   var filterStatus = "";
   var refreshBtn = qs("#refresh-production");
@@ -95,6 +96,80 @@
   function getArticleName(id) {
     return articles.find((a) => a.id === id)?.name || "-";
   }
+  function normalizeColor(value) {
+    return (value || "").trim().toLowerCase();
+  }
+  function normalizeColors(colors, len) {
+    return Array.from({ length: len }).map((_, i) => normalizeColor(colors[i]));
+  }
+  function getVariantKey(articleId, colors) {
+    return `${articleId}::${colors.join("|")}`;
+  }
+  function buildVariantIndex() {
+    const byId = /* @__PURE__ */ new Map();
+    const byCode = /* @__PURE__ */ new Map();
+    const byKey = /* @__PURE__ */ new Map();
+    articleInventory.forEach((v) => {
+      byId.set(v.id, v);
+      if (v.variantCode) byCode.set(v.variantCode, v);
+      const colors = normalizeColors(v.colors || [], v.colors?.length || 0);
+      const key = getVariantKey(v.articleId, colors);
+      byKey.set(key, v);
+    });
+    return { byId, byCode, byKey };
+  }
+  function formatVariantLabel(article, variantCode) {
+    if (!variantCode) return "-";
+    if (!article) return variantCode.replace("-", "");
+    return variantCode.replace(`${article.code}-`, "").replace("-", "");
+  }
+  async function migrateLegacyVariants() {
+    let changed = false;
+    articleInventory = articleInventory.map((item) => {
+      if (!item.variantCode || !Array.isArray(item.colors)) {
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return item;
+        changed = true;
+        return {
+          ...item,
+          variantCode: `${article.code}-0000`,
+          colors: Array.from({ length: article.composition.length }).map(() => "")
+        };
+      }
+      return item;
+    });
+    if (changed) {
+      await window.api.saveArticleInventory(articleInventory);
+    }
+  }
+  function computeMissingByItem(itemsList) {
+    const availability = /* @__PURE__ */ new Map();
+    const index = buildVariantIndex();
+    articleInventory.forEach((row) => {
+      availability.set(row.id, row.quantity);
+    });
+    return itemsList.map((item) => {
+      let variant;
+      if (item.variantId) {
+        variant = index.byId.get(item.variantId);
+      } else if (item.variantCode) {
+        variant = index.byCode.get(item.variantCode);
+      } else if (item.colorSelections?.length) {
+        const article = articles.find((a) => a.id === item.articleId);
+        const normalized = normalizeColors(item.colorSelections, article?.composition.length || item.colorSelections.length);
+        const key = getVariantKey(item.articleId, normalized);
+        variant = index.byKey.get(key);
+      }
+      if (!variant) {
+        return item.quantity;
+      }
+      const available = availability.get(variant.id) ?? variant.quantity ?? 0;
+      const used = Math.min(available, item.quantity);
+      const missing = Math.max(0, item.quantity - used);
+      availability.set(variant.id, available - used);
+      return missing;
+    });
+  }
   function formatItemColors(item) {
     const article = articles.find((a) => a.id === item.articleId);
     if (!article || !item.colorSelections?.length) return "-";
@@ -130,9 +205,6 @@
     };
   }
   function getOrderSaleTotal(order) {
-    if (order.status === "processed" && typeof order.paymentReceived === "number") {
-      return order.paymentReceived;
-    }
     const costs = calculateOrderCosts(order.items, order.discountPercentage);
     return costs.finalAmount;
   }
@@ -152,7 +224,11 @@
       const saleTotal = getOrderSaleTotal(order);
       const soldAmount = order.status === "processed" && typeof order.paymentReceived === "number" ? order.paymentReceived : null;
       const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
-      const codes = order.items.map((item) => `${getArticleCode(item.articleId)} x${item.quantity}`).join(", ");
+      const codes = order.items.map((item) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        const variantLabel = formatVariantLabel(article, item.variantCode);
+        return `${getArticleCode(item.articleId)} ${variantLabel} x${item.quantity}`;
+      }).join(", ");
       const tr = document.createElement("tr");
       tr.dataset.id = order.id;
       tr.innerHTML = `
@@ -181,22 +257,31 @@
     detailPaymentAmount.textContent = typeof order.paymentReceived === "number" ? `EUR ${order.paymentReceived.toFixed(2)}` : "-";
     const costs = calculateOrderCosts(order.items, order.discountPercentage);
     const saleTotal = getOrderSaleTotal(order);
-    const profitNoLabor = saleTotal - costs.materialCost;
-    const profitWithLabor = saleTotal - costs.materialCost - costs.laborCost;
+    const actualSale = order.status === "processed" && typeof order.paymentReceived === "number" ? order.paymentReceived : saleTotal;
+    const profitNoLabor = actualSale - costs.materialCost;
+    const profitWithLabor = actualSale - costs.materialCost - costs.laborCost;
     detailProfitNoLabor.textContent = `EUR ${profitNoLabor.toFixed(2)}`;
     detailProfitWithLabor.textContent = `EUR ${profitWithLabor.toFixed(2)}`;
+    const missingList = computeMissingByItem(order.items);
     detailItemsBody.innerHTML = order.items.map(
-      (item) => `
+      (item, idx) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        const colorsLabel = formatItemColors(item);
+        const variantLabel = formatVariantLabel(article, item.variantCode);
+        return `
         <tr>
             <td>${getArticleCode(item.articleId)}</td>
             <td>${getArticleName(item.articleId)}</td>
+            <td><span class="hover-hint" data-tooltip="${colorsLabel}">${variantLabel}</span></td>
             <td>${item.quantity}</td>
             <td>${item.packaging ? "Si" : "No"}</td>
             <td>${formatItemColors(item)}</td>
+            <td>${missingList[idx] > 0 ? `Da produrre: ${missingList[idx]}` : "Disponibile"}</td>
             <td>EUR ${item.unitPrice.toFixed(2)}</td>
             <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
         </tr>
-    `
+    `;
+      }
     ).join("");
     detailProcessBtn.textContent = "Venduto";
     detailProcessBtn.dataset.status = order.status;
@@ -212,6 +297,8 @@
       articles = await window.api.getArticles();
       materials = await window.api.getMaterials();
       laborConfig = await window.api.getLaborConfig();
+      articleInventory = await window.api.getArticleInventory();
+      await migrateLegacyVariants();
       renderProduction();
       const { popup, view, id } = getPopupParams();
       if (popup && view === "detail" && id) {
@@ -275,12 +362,50 @@
       showMessage("Importo non valido", "error");
       return;
     }
+    const missingList = computeMissingByItem(order.items);
+    const missingTotal = missingList.reduce((sum, value) => sum + value, 0);
+    if (missingTotal > 0) {
+      showMessage(`Deposito insufficiente. Da produrre: ${missingTotal}`, "error");
+      return;
+    }
+    const updatedInventory = [...articleInventory];
+    const index = buildVariantIndex();
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    order.items.forEach((item) => {
+      let row;
+      if (item.variantId) {
+        row = index.byId.get(item.variantId);
+      } else if (item.variantCode) {
+        row = index.byCode.get(item.variantCode);
+      } else if (item.colorSelections?.length) {
+        const article = articles.find((a) => a.id === item.articleId);
+        const normalized = normalizeColors(item.colorSelections, article?.composition.length || item.colorSelections.length);
+        const key = getVariantKey(item.articleId, normalized);
+        row = index.byKey.get(key);
+      }
+      if (!row) return;
+      const invRow = updatedInventory.find((r) => r.id === row?.id);
+      if (!invRow) return;
+      invRow.quantity = Math.max(0, invRow.quantity - item.quantity);
+      invRow.lastUpdated = now;
+    });
+    const inventorySaved = await window.api.saveArticleInventory(updatedInventory);
+    if (!inventorySaved) {
+      showMessage("Errore salvataggio deposito articoli", "error");
+      return;
+    }
+    articleInventory = updatedInventory;
     const updatedOrders = orders.map(
       (o) => o.id === id ? {
         ...o,
         status: "processed",
         processedDate: date,
-        paymentReceived: amount
+        paymentReceived: amount,
+        items: o.items.map((it) => ({
+          ...it,
+          depositUsed: it.quantity,
+          depositMissing: 0
+        }))
       } : o
     );
     const orderSaved = await window.api.saveOrders(updatedOrders);

@@ -5,6 +5,8 @@ import {
     saveMaterials,
     getInventory,
     saveInventory,
+    getArticleInventory,
+    saveArticleInventory,
     getArticles,
     saveArticles,
     getClients,
@@ -29,6 +31,7 @@ const createWindow = () => {
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
+        show: false,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: false,
@@ -36,11 +39,16 @@ const createWindow = () => {
             sandbox: true,
         },
     });
+    mainWindow.once("ready-to-show", () => {
+        mainWindow?.maximize();
+        mainWindow?.show();
+    });
 
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         const child = new BrowserWindow({
             width: 1100,
             height: 800,
+            show: false,
             parent: mainWindow || undefined,
             webPreferences: {
                 preload: path.join(__dirname, "preload.js"),
@@ -48,6 +56,10 @@ const createWindow = () => {
                 contextIsolation: true,
                 sandbox: true,
             },
+        });
+        child.once("ready-to-show", () => {
+            child.maximize();
+            child.show();
         });
         if (url.startsWith("file://")) {
             child.loadURL(url);
@@ -96,6 +108,15 @@ ipcMain.handle("get-inventory", async () => {
 
 ipcMain.handle("save-inventory", async (_, items) => {
     return saveInventory(items);
+});
+
+// IPC Handlers - Article Inventory
+ipcMain.handle("get-article-inventory", async () => {
+    return getArticleInventory();
+});
+
+ipcMain.handle("save-article-inventory", async (_, items) => {
+    return saveArticleInventory(items);
 });
 
 // IPC Handlers - Articles

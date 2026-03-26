@@ -28,6 +28,16 @@ declare namespace Models {
         lastUpdated: string;
     }
 
+    // Finished articles stock - deposito
+    interface ArticleInventoryItem {
+        id: string;
+        articleId: string;
+        variantCode: string;
+        colors: string[];
+        quantity: number;
+        lastUpdated: string;
+    }
+
     // Articles - articoli composti da materiale+colore in quantità
     interface ArticleComposition {
         materialId: string;
@@ -59,6 +69,10 @@ declare namespace Models {
         unitPrice: number; // prezzo unitario articolo
         packaging?: boolean;
         colorSelections?: string[];
+        variantId?: string;
+        variantCode?: string;
+        depositUsed?: number;
+        depositMissing?: number;
     }
 
     interface Client {
@@ -115,6 +129,7 @@ declare global {
     // Type aliases for convenience
     type Material = Models.Material;
     type InventoryItem = Models.InventoryItem;
+    type ArticleInventoryItem = Models.ArticleInventoryItem;
     type Article = Models.Article;
     type ArticleComposition = Models.ArticleComposition;
     type Order = Models.Order;
@@ -135,6 +150,10 @@ declare global {
         // Articles
         getArticles: () => Promise<Article[]>;
         saveArticles: (articles: Article[]) => Promise<boolean>;
+
+        // Article Inventory (Deposito)
+        getArticleInventory: () => Promise<ArticleInventoryItem[]>;
+        saveArticleInventory: (items: ArticleInventoryItem[]) => Promise<boolean>;
 
         // Clients
         getClients: () => Promise<Client[]>;

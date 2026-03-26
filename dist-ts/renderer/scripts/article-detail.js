@@ -94,12 +94,12 @@
         compBody.appendChild(tr);
       });
       const colorSurcharge = article.composition.length * COLOR_SURCHARGE;
-      const materialFinalBase = materialSellBase + colorSurcharge;
-      const materialSell = materialFinalBase * (1 + article.materialMarkupPct / 100);
+      const materialSell = materialSellBase * (1 + article.materialMarkupPct / 100);
+      const materialFinalBase = materialSell + colorSurcharge;
       const laborCost = article.laborHoursRequired * hourlyRate;
       const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
       const materialMargin = materialSell - materialCost + colorSurcharge;
-      const totalSell = materialSell + laborSell;
+      const totalSell = materialFinalBase + laborSell;
       const totalRounded = Math.round(totalSell * 2) / 2;
       const totalGain = totalRounded - materialCost;
       previewMaterialCost.textContent = `EUR ${materialCost.toFixed(2)}`;

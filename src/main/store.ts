@@ -14,6 +14,7 @@ if (!fs.existsSync(dataDir)) {
 
 const MATERIALS_FILE = path.join(dataDir, "materials.json");
 const INVENTORY_FILE = path.join(dataDir, "inventory.json");
+const ARTICLE_INVENTORY_FILE = path.join(dataDir, "article-inventory.json");
 const ARTICLES_FILE = path.join(dataDir, "articles.json");
 const CLIENTS_FILE = path.join(dataDir, "clients.json");
 const ORDERS_FILE = path.join(dataDir, "orders.json");
@@ -177,6 +178,15 @@ export const getInventory = (): InventoryItem[] => {
 
 export const saveInventory = (items: InventoryItem[]): boolean => {
     return writeJsonFile(INVENTORY_FILE, items);
+};
+
+// ==================== ARTICLE INVENTORY ====================
+export const getArticleInventory = (): ArticleInventoryItem[] => {
+    return readJsonFile(ARTICLE_INVENTORY_FILE, []);
+};
+
+export const saveArticleInventory = (items: ArticleInventoryItem[]): boolean => {
+    return writeJsonFile(ARTICLE_INVENTORY_FILE, items);
 };
 
 // ==================== ARTICLES ====================

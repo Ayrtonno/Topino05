@@ -212,6 +212,23 @@
     align-items: end;
 }
 
+.order-compact .section-title {
+    margin-bottom: 6px;
+}
+
+.order-compact .order-add-row {
+    gap: 8px;
+}
+
+.order-compact .order-subcard {
+    padding: 8px 10px;
+    margin-top: 8px;
+}
+
+.order-compact .subcard-title {
+    margin-bottom: 4px;
+}
+
 .add-btn-wrap {
     display: flex;
     align-items: flex-end;
@@ -219,6 +236,21 @@
 
 .order-subcard .table-container {
     margin-top: 6px;
+}
+
+.inline-input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    background: #fff;
+}
+
+.inline-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.15);
 }
 
 .popup .app {

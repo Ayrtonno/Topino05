@@ -1,1 +1,33 @@
-[]
+[
+  {
+    "id": "1774527537411",
+    "clientId": "1774524912625",
+    "clientFirstName": "Elena",
+    "clientLastName": "Noris",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-02-12",
+    "deliveryDate": "2026-03-25",
+    "items": [
+      {
+        "articleId": "1774514248718",
+        "quantity": 1,
+        "unitPrice": 9.5,
+        "packaging": true,
+        "colorSelections": [
+          "Bianco",
+          "Azzurro Acqua"
+        ]
+      }
+    ],
+    "materialCost": 0.31,
+    "laborCost": 8,
+    "finalAmount": 9.5,
+    "discountPercentage": 0,
+    "status": "processed",
+    "notes": "",
+    "createdAt": "2026-03-26T12:18:57.411Z",
+    "processedDate": "2026-02-25",
+    "paymentReceived": 10
+  }
+]

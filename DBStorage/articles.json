@@ -19,5 +19,145 @@
     "materialMarkupPct": 0,
     "laborMarkupPct": 0,
     "createdAt": "2026-03-26T08:37:28.718Z"
+  },
+  {
+    "id": "1774531174393",
+    "code": "GU001A",
+    "name": "Gactus Verde con Fiore, Dettagli e Spine",
+    "composition": [
+      {
+        "materialId": "mat_ovatta",
+        "description": "Imbottitura",
+        "quantity": 10
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Corpo",
+        "quantity": 5
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Spine",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Dettagli",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Fiore",
+        "quantity": 3
+      }
+    ],
+    "laborHoursRequired": 6,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T13:19:34.393Z"
+  },
+  {
+    "id": "1774531268628",
+    "code": "VG001A",
+    "name": "Vaso per Gactus",
+    "composition": [
+      {
+        "materialId": "mat_lana",
+        "description": "Vaso",
+        "quantity": 3
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Base per Gactus",
+        "quantity": 2
+      },
+      {
+        "materialId": "mat_ovatta",
+        "description": "Imbottitura",
+        "quantity": 5
+      }
+    ],
+    "laborHoursRequired": 2,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T13:21:08.628Z"
+  },
+  {
+    "id": "1774532476391",
+    "code": "PL002A",
+    "name": "Margherita Portalabello",
+    "composition": [
+      {
+        "materialId": "mat_lana",
+        "description": "Gambo",
+        "quantity": 5
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Petali",
+        "quantity": 4
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Capolino",
+        "quantity": 3
+      }
+    ],
+    "laborHoursRequired": 2,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T13:41:16.391Z"
+  },
+  {
+    "id": "1774532612430",
+    "code": "YU001A",
+    "name": "Yuegui",
+    "composition": [
+      {
+        "materialId": "mat_ovatta",
+        "description": "Imbottitura",
+        "quantity": 15
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Corpo Schiena/Testa",
+        "quantity": 5
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Corpo Pancia",
+        "quantity": 4
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Dettagli",
+        "quantity": 2
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Dettagli Volto",
+        "quantity": 1
+      }
+    ],
+    "laborHoursRequired": 5,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T13:43:32.430Z"
+  },
+  {
+    "id": "1774532703248",
+    "code": "PS001A",
+    "name": "Portasigaretta Elettronica",
+    "composition": [
+      {
+        "materialId": "mat_lana",
+        "description": "Custodia",
+        "quantity": 12
+      }
+    ],
+    "laborHoursRequired": 2,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T13:45:03.248Z"
   }
 ]

@@ -15,7 +15,8 @@
                 <a data-page="dashboard" href="index.html">Dashboard</a>
                 <a data-page="clients" href="clients.html">Clienti</a>
                 <a data-page="materials" href="materials.html">Materiali</a>
-                <a data-page="inventory" href="inventory.html">Magazzino</a>
+                <a data-page="inventory" href="inventory.html">Magazzino Materiale</a>
+                <a data-page="deposit" href="deposito.html">Deposito</a>
                 <a data-page="articles" href="articles.html">Articoli</a>
                 <a data-page="orders" href="orders.html">Ordini</a>
                 <a data-page="orders-production" href="orders-production.html">Ordini in Produzione</a>
@@ -35,28 +36,7 @@
 
             <div id="message" class="message"></div>
 
-            <div id="orders-stats" class="stat-grid">
-                <div class="stat-card">
-                    <div class="label">Ordini Totali</div>
-                    <div class="value" id="stat-total-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Fatturato</div>
-                    <div class="value" id="stat-total-revenue">EUR 0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Costi Materiali</div>
-                    <div class="value" id="stat-total-costs">EUR 0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Profitto</div>
-                    <div class="value" id="stat-total-profit-no-labor">EUR 0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Profitto Netto</div>
-                    <div class="value" id="stat-total-profit-with-labor">EUR 0</div>
-                </div>
-            </div>
+            <div id="orders-stats" class="stat-grid hidden"></div>
 
             <div id="orders-toolbar" class="toolbar">
                 <div class="left">
@@ -94,6 +74,14 @@
                             <label>Cognome</label>
                             <input id="order-last-name" type="text" placeholder="Cognome" readonly />
                         </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input id="order-email" type="email" placeholder="email@example.com" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Telefono</label>
+                            <input id="order-phone" type="tel" placeholder="+39 ..." readonly />
+                        </div>
                     </div>
                     <div class="form-row order-grid-2">
                         <div class="form-group">
@@ -105,19 +93,9 @@
                             <input id="order-delivery-date" type="date" />
                         </div>
                     </div>
-                    <div class="form-row order-grid-2">
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input id="order-email" type="email" placeholder="email@example.com" readonly />
-                        </div>
-                        <div class="form-group">
-                            <label>Telefono</label>
-                            <input id="order-phone" type="tel" placeholder="+39 ..." readonly />
-                        </div>
-                    </div>
                 </div>
 
-                <div class="card">
+                <div class="card order-compact">
                     <div class="section-title">Articoli</div>
                     <div class="form-row order-grid-4 order-add-row align-center">
                         <div class="form-group">
@@ -182,13 +160,14 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Articolo</th>
-                                    <th>Qty</th>
-                                    <th>Packaging</th>
-                                    <th>Prezzo Unit.</th>
-                                    <th>Totale</th>
-                                    <th></th>
+                            <tr>
+                                <th>Articolo</th>
+                                <th>Variante</th>
+                                <th>Qty</th>
+                                <th>Packaging</th>
+                                <th>Prezzo Unit.</th>
+                                <th>Totale</th>
+                                <th></th>
                                 </tr>
                             </thead>
                             <tbody id="items-body"></tbody>
@@ -216,6 +195,7 @@
                             <th>Cliente</th>
                             <th>Data</th>
                             <th>Articoli</th>
+                            <th>Deposito</th>
                             <th>Costo Materiale</th>
                             <th>Costo Lavoro</th>
                             <th>Totale</th>
@@ -291,9 +271,11 @@
                             <tr>
                                 <th>Codice</th>
                                 <th>Articolo</th>
+                                <th>Variante</th>
                                 <th>Qty</th>
                                 <th>Packaging</th>
                                 <th>Colori</th>
+                                <th>Deposito</th>
                                 <th>Prezzo Unit.</th>
                                 <th>Totale</th>
                             </tr>
@@ -309,3 +291,5 @@
     <script src="../scripts/orders.js"></script>
 </body>
 </html>
+
+

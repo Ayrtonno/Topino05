@@ -6,6 +6,10 @@ type OrderItem = {
     unitPrice: number;
     packaging?: boolean;
     colorSelections?: string[];
+    variantId?: string;
+    variantCode?: string;
+    depositUsed?: number;
+    depositMissing?: number;
 };
 
 type Order = {
@@ -53,6 +57,15 @@ type InventoryItem = {
     lastUpdated: string;
 };
 
+type ArticleInventoryItem = {
+    id: string;
+    articleId: string;
+    variantCode: string;
+    colors: string[];
+    quantity: number;
+    lastUpdated: string;
+};
+
 type LaborConfig = {
     hourlyRate: number;
 };
@@ -70,6 +83,7 @@ let articles: Article[] = [];
 let materials: Material[] = [];
 let clients: Client[] = [];
 let inventory: InventoryItem[] = [];
+let articleInventory: ArticleInventoryItem[] = [];
 let laborConfig: LaborConfig = { hourlyRate: 4 };
 let editingId: string | null = null;
 let items: OrderItem[] = [];
@@ -77,6 +91,8 @@ let detailsOpenId: string | null = null;
 let filterText = "";
 let filterStatus = "";
 let currentColorSelections: string[] = [];
+let orderLoadRetry = false;
+let currentDetailOrderId: string | null = null;
 
 const form = qs<HTMLFormElement>("#order-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
@@ -172,12 +188,22 @@ function showOnly(section: "list" | "form" | "detail") {
 
 async function loadData() {
     try {
-        orders = await window.api.getOrders();
-        articles = await window.api.getArticles();
-        materials = await window.api.getMaterials();
-        inventory = await window.api.getInventory();
-        clients = await window.api.getClients();
-        laborConfig = await window.api.getLaborConfig();
+        const safeGet = async <T>(fn: (() => Promise<T>) | undefined, fallback: T) => {
+            if (!fn) return fallback;
+            try {
+                return await fn();
+            } catch {
+                return fallback;
+            }
+        };
+        orders = await safeGet(window.api?.getOrders, []);
+        articles = await safeGet(window.api?.getArticles, []);
+        materials = await safeGet(window.api?.getMaterials, []);
+        inventory = await safeGet(window.api?.getInventory, []);
+        articleInventory = await safeGet(window.api?.getArticleInventory, []);
+        await migrateLegacyVariants();
+        clients = await safeGet(window.api?.getClients, []);
+        laborConfig = await safeGet(window.api?.getLaborConfig, { hourlyRate: 0 });
         renderArticleOptions();
         renderClientOptions();
         renderOrders();
@@ -189,32 +215,24 @@ async function loadData() {
         if (popup && view === "form" && id) {
             const order = orders.find((o) => o.id === id);
             if (order) {
-                editingId = id;
-                if (order.clientId) {
-                    clientSelect.value = order.clientId;
-                    fillClientFields(order.clientId);
+                populateFormFromOrder(order);
+            } else {
+                if (!orderLoadRetry) {
+                    orderLoadRetry = true;
+                    const fetched = await loadOrderById(id);
+                    if (fetched) {
+                        populateFormFromOrder(fetched);
+                        return;
+                    }
+                    setTimeout(loadData, 500);
                 } else {
-                    clientSelect.value = "";
+                    const fetched = await loadOrderById(id);
+                    if (fetched) {
+                        populateFormFromOrder(fetched);
+                        return;
+                    }
+                    showMessage(`Ordine non trovato (id: ${id})`, "error");
                 }
-                const legacyName = (order as unknown as { clientName?: string }).clientName || "";
-                const nameParts = legacyName ? legacyName.split(" ") : [];
-                firstNameInput.value = order.clientFirstName || nameParts.shift() || firstNameInput.value;
-                lastNameInput.value = order.clientLastName || nameParts.join(" ") || lastNameInput.value;
-                emailInput.value = order.clientEmail || emailInput.value;
-                phoneInput.value = order.clientPhone || phoneInput.value;
-                requestDateInput.value = order.requestedDate || "";
-                deliveryDateInput.value = order.deliveryDate || "";
-                notesInput.value = order.notes || "";
-                items = [...order.items];
-                submitBtn.textContent = "Salva Modifiche";
-                setFormVisible(true);
-                itemArticle.value = "";
-                itemQty.value = "1";
-                itemPackaging.checked = false;
-                currentColorSelections = [];
-                itemColorsBody.innerHTML = "";
-                updateItemPreview();
-                renderItems();
             }
         }
     } catch {
@@ -238,6 +256,45 @@ function fillClientFields(clientId: string) {
     lastNameInput.value = client?.lastName || "";
     emailInput.value = client?.email || "";
     phoneInput.value = client?.phone || "";
+}
+
+function populateFormFromOrder(order: Order) {
+    editingId = order.id;
+    if (order.clientId) {
+        clientSelect.value = order.clientId;
+        fillClientFields(order.clientId);
+    } else {
+        clientSelect.value = "";
+    }
+    const legacyName = (order as unknown as { clientName?: string }).clientName || "";
+    const nameParts = legacyName ? legacyName.split(" ") : [];
+    firstNameInput.value = order.clientFirstName || nameParts.shift() || firstNameInput.value;
+    lastNameInput.value = order.clientLastName || nameParts.join(" ") || lastNameInput.value;
+    emailInput.value = order.clientEmail || emailInput.value;
+    phoneInput.value = order.clientPhone || phoneInput.value;
+    requestDateInput.value = order.requestedDate || "";
+    deliveryDateInput.value = order.deliveryDate || "";
+    notesInput.value = order.notes || "";
+    items = [...order.items];
+    submitBtn.textContent = "Salva Modifiche";
+    setFormVisible(true);
+    itemArticle.value = "";
+    itemQty.value = "1";
+    itemPackaging.checked = false;
+    currentColorSelections = [];
+    itemColorsBody.innerHTML = "";
+    updateItemPreview();
+    renderItems();
+}
+
+async function loadOrderById(orderId: string) {
+    try {
+        const fresh = await window.api.getOrders();
+        orders = fresh;
+        return fresh.find((o) => o.id === orderId);
+    } catch {
+        return null;
+    }
 }
 
 function renderArticleOptions() {
@@ -400,6 +457,47 @@ function getOrderSaleTotal(order: Order) {
     return order.finalAmount;
 }
 
+function computeMissingByItem(itemsList: OrderItem[]) {
+    const availability = new Map<string, number>();
+    const index = buildVariantIndex();
+    articleInventory.forEach((row) => {
+        availability.set(row.id, row.quantity);
+    });
+    return itemsList.map((item) => {
+        let variant: ArticleInventoryItem | undefined;
+        if (item.variantId) {
+            variant = index.byId.get(item.variantId);
+        } else if (item.variantCode) {
+            variant = index.byCode.get(item.variantCode);
+        } else if (item.colorSelections?.length) {
+            const article = articles.find((a) => a.id === item.articleId);
+            const normalized = normalizeColors(item.colorSelections, article?.composition.length || item.colorSelections.length);
+            const key = getVariantKey(item.articleId, normalized);
+            variant = index.byKey.get(key);
+        }
+        if (!variant) {
+            return item.quantity;
+        }
+        const available = availability.get(variant.id) ?? variant.quantity ?? 0;
+        const used = Math.min(available, item.quantity);
+        const missing = Math.max(0, item.quantity - used);
+        availability.set(variant.id, available - used);
+        return missing;
+    });
+}
+
+function getOrderMissingTotal(order: Order) {
+    const missing = computeMissingByItem(order.items);
+    return missing.reduce((sum, value) => sum + value, 0);
+}
+
+function getItemMissing(item: OrderItem, missingList: number[], index: number) {
+    if (missingList[index] !== undefined) return missingList[index];
+    if (typeof item.depositMissing === "number") return item.depositMissing;
+    if (typeof item.depositUsed === "number") return Math.max(0, item.quantity - item.depositUsed);
+    return 0;
+}
+
 function calculateOrderSummary(order: Order) {
     let materialSell = 0;
     let laborHours = 0;
@@ -425,6 +523,7 @@ function calculateOrderSummary(order: Order) {
 }
 
 function renderOrderDetail(order: Order) {
+    currentDetailOrderId = order.id;
     detailTitle.textContent = `Dettaglio Ordine`;
     detailClient.textContent = getOrderFullName(order);
     detailEmail.textContent = order.clientEmail || "-";
@@ -446,21 +545,124 @@ function renderOrderDetail(order: Order) {
     detailConfirmBtn.disabled = !canChange;
     detailRefuseBtn.disabled = !canChange;
 
-    detailItemsBody.innerHTML = order.items.map((item) => `
+    const missingList = computeMissingByItem(order.items);
+    detailItemsBody.innerHTML = order.items.map((item, idx) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        const colorsLabel = formatVariantColors(article, item.colorSelections || []);
+        const variantLabel = formatVariantLabel(article, item.variantCode);
+        return `
         <tr>
             <td>${getArticleCode(item.articleId)}</td>
             <td>${getArticleName(item.articleId)}</td>
+            <td><span class="hover-hint" data-tooltip="${colorsLabel}">${variantLabel}</span></td>
             <td>${item.quantity}</td>
             <td>${item.packaging ? "Si" : "No"}</td>
             <td>${formatItemColors(item)}</td>
+            <td>${getItemMissing(item, missingList, idx) > 0 ? `Da produrre: ${getItemMissing(item, missingList, idx)}` : "Disponibile"}</td>
             <td>EUR ${item.unitPrice.toFixed(2)}</td>
             <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
         </tr>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function normalizeColor(value?: string) {
     return (value || "").trim().toLowerCase();
+}
+
+function normalizeColors(colors: string[], len: number) {
+    return Array.from({ length: len }).map((_, i) => normalizeColor(colors[i]));
+}
+
+function getVariantKey(articleId: string, colors: string[]) {
+    return `${articleId}::${colors.join("|")}`;
+}
+
+function buildVariantIndex() {
+    const byId = new Map<string, ArticleInventoryItem>();
+    const byCode = new Map<string, ArticleInventoryItem>();
+    const byKey = new Map<string, ArticleInventoryItem>();
+    articleInventory.forEach((v) => {
+        byId.set(v.id, v);
+        if (v.variantCode) byCode.set(v.variantCode, v);
+        const colors = normalizeColors(v.colors || [], v.colors?.length || 0);
+        const key = getVariantKey(v.articleId, colors);
+        byKey.set(key, v);
+    });
+    return { byId, byCode, byKey };
+}
+
+async function migrateLegacyVariants() {
+    let changed = false;
+    articleInventory = articleInventory.map((item) => {
+        if (!item.variantCode || !Array.isArray(item.colors)) {
+            const article = articles.find((a) => a.id === item.articleId);
+            if (!article) return item;
+            changed = true;
+            return {
+                ...item,
+                variantCode: `${article.code}-0000`,
+                colors: Array.from({ length: article.composition.length }).map(() => ""),
+            };
+        }
+        return item;
+    });
+    if (changed) {
+        await window.api.saveArticleInventory(articleInventory);
+    }
+}
+
+function nextVariantCode(article: Article) {
+    const prefix = `${article.code}-`;
+    const existing = articleInventory
+        .filter((v) => v.articleId === article.id && v.variantCode?.startsWith(prefix))
+        .map((v) => parseInt(v.variantCode.replace(prefix, ""), 10))
+        .filter((n) => !Number.isNaN(n));
+    const next = existing.length ? Math.max(...existing) + 1 : 0;
+    return `${article.code}-${next.toString().padStart(4, "0")}`;
+}
+
+async function ensureVariant(article: Article, colors: string[]) {
+    const normalized = normalizeColors(colors, article.composition.length);
+    const index = buildVariantIndex();
+    const key = getVariantKey(article.id, normalized);
+    const existing = index.byKey.get(key);
+    if (existing) return existing;
+
+    const newVariant: ArticleInventoryItem = {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        articleId: article.id,
+        variantCode: nextVariantCode(article),
+        colors: normalized.map((_, idx) => colors[idx] || ""),
+        quantity: 0,
+        lastUpdated: new Date().toISOString(),
+    };
+    const updated = [...articleInventory, newVariant];
+    const saved = await window.api.saveArticleInventory(updated);
+    if (saved) {
+        articleInventory = updated;
+        return newVariant;
+    }
+    return newVariant;
+}
+
+function formatVariantColors(article: Article | undefined, colors: string[]) {
+    if (!article) return "-";
+    const parts = article.composition
+        .map((comp, idx) => {
+            const color = colors[idx];
+            if (!color) return "";
+            const material = materials.find((m) => m.id === comp.materialId);
+            return `${material?.name || "Materiale"}: ${color}`;
+        })
+        .filter(Boolean);
+    return parts.length ? parts.join(", ") : "Nessun colore";
+}
+
+function formatVariantLabel(article: Article | undefined, variantCode?: string) {
+    if (!variantCode) return "-";
+    if (!article) return variantCode.replace("-", "");
+    return variantCode.replace(`${article.code}-`, "").replace("-", "");
 }
 
 type InventoryDelta = { qty: number; colorName?: string };
@@ -518,11 +720,22 @@ function applyInventoryDelta(deltaMap: Map<string, InventoryDelta>) {
 function renderItems() {
     itemsBody.innerHTML = "";
     items.forEach((item, idx) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        const colorsLabel = formatVariantColors(article, item.colorSelections || []);
+        const variantLabel = formatVariantLabel(article, item.variantCode);
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${getArticleCode(item.articleId)} - ${getArticleName(item.articleId)}</td>
-            <td>${item.quantity}</td>
-            <td>${item.packaging ? "Si" : "No"}</td>
+            <td><span class="hover-hint" data-tooltip="${colorsLabel}">${variantLabel}</span></td>
+            <td>
+                <input class="inline-input" data-field="quantity" data-index="${idx}" type="number" min="1" value="${item.quantity}" />
+            </td>
+            <td>
+                <select class="inline-input" data-field="packaging" data-index="${idx}">
+                    <option value="no" ${item.packaging ? "" : "selected"}>No</option>
+                    <option value="yes" ${item.packaging ? "selected" : ""}>Si</option>
+                </select>
+            </td>
             <td>EUR ${item.unitPrice.toFixed(2)}</td>
             <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
             <td><button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button></td>
@@ -534,23 +747,6 @@ function renderItems() {
 function renderOrders() {
     ordersBody.innerHTML = "";
     const empty = document.getElementById("orders-empty");
-    const statTotalOrders = document.getElementById("stat-total-orders");
-    const statTotalRevenue = document.getElementById("stat-total-revenue");
-    const statTotalCosts = document.getElementById("stat-total-costs");
-    const statTotalProfitNoLabor = document.getElementById("stat-total-profit-no-labor");
-    const statTotalProfitWithLabor = document.getElementById("stat-total-profit-with-labor");
-
-    const totalRevenue = orders.reduce((sum, o) => sum + getOrderSaleTotal(o), 0);
-    const totalMaterialCosts = orders.reduce((sum, o) => sum + o.materialCost, 0);
-    const totalLaborCosts = orders.reduce((sum, o) => sum + o.laborCost, 0);
-    const totalProfitNoLabor = totalRevenue - totalMaterialCosts;
-    const totalProfitWithLabor = totalRevenue - totalMaterialCosts - totalLaborCosts;
-
-    if (statTotalOrders) statTotalOrders.textContent = orders.length.toString();
-    if (statTotalRevenue) statTotalRevenue.textContent = `EUR ${totalRevenue.toFixed(2)}`;
-    if (statTotalCosts) statTotalCosts.textContent = `EUR ${totalMaterialCosts.toFixed(2)}`;
-    if (statTotalProfitNoLabor) statTotalProfitNoLabor.textContent = `EUR ${totalProfitNoLabor.toFixed(2)}`;
-    if (statTotalProfitWithLabor) statTotalProfitWithLabor.textContent = `EUR ${totalProfitWithLabor.toFixed(2)}`;
 
     const filtered = orders.filter((order) => {
         if (order.status === "confirmed" || order.status === "processed") return false;
@@ -569,14 +765,21 @@ function renderOrders() {
         const saleTotal = getOrderSaleTotal(order);
         const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
         const codes = order.items
-            .map((item) => `${getArticleCode(item.articleId)} x${item.quantity}`)
+            .map((item) => {
+                const article = articles.find((a) => a.id === item.articleId);
+                const variantLabel = formatVariantLabel(article, item.variantCode);
+                return `${getArticleCode(item.articleId)} ${variantLabel} x${item.quantity}`;
+            })
             .join(", ");
+        const missingTotal = getOrderMissingTotal(order);
+        const depositLabel = missingTotal > 0 ? `Da produrre: ${missingTotal}` : "Disponibile";
         const tr = document.createElement("tr");
         tr.dataset.id = order.id;
         tr.innerHTML = `
             <td>${getOrderFullName(order)}</td>
             <td>${formatDate(order.requestedDate || order.createdAt)}</td>
             <td><span class="hover-hint" data-tooltip="${codes}">${totalQty}</span></td>
+            <td>${depositLabel}</td>
             <td>EUR ${costs.materialCost.toFixed(2)}</td>
             <td>EUR ${costs.laborCost.toFixed(2)}</td>
             <td><strong>EUR ${saleTotal.toFixed(2)}</strong></td>
@@ -625,7 +828,7 @@ itemColorsBody.addEventListener("change", (e) => {
     currentColorSelections[index] = target.value;
 });
 
-addItemBtn.addEventListener("click", () => {
+addItemBtn.addEventListener("click", async () => {
     if (!itemArticle.value || !itemQty.value) {
         showMessage("Seleziona articolo e quantita", "error");
         return;
@@ -640,12 +843,15 @@ addItemBtn.addEventListener("click", () => {
     }
 
     const pricing = calculateArticlePricing(article, itemPackaging.checked);
+    const variant = await ensureVariant(article, currentColorSelections);
     items.push({
         articleId: article.id,
         quantity: qty,
         unitPrice: parseFloat(pricing.finalPrice.toFixed(2)),
         packaging: itemPackaging.checked,
         colorSelections: [...currentColorSelections],
+        variantId: variant?.id,
+        variantCode: variant?.variantCode,
     });
     itemArticle.value = "";
     itemQty.value = "1";
@@ -678,6 +884,31 @@ itemsBody.addEventListener("click", (e) => {
     renderItems();
 });
 
+itemsBody.addEventListener("change", (e) => {
+    const target = e.target as HTMLInputElement | HTMLSelectElement;
+    const indexStr = target.getAttribute("data-index");
+    const field = target.getAttribute("data-field");
+    if (indexStr === null || !field) return;
+    const index = parseInt(indexStr, 10);
+    const item = items[index];
+    if (!item) return;
+
+    if (field === "quantity") {
+        const qty = parseInt(target.value, 10) || 1;
+        item.quantity = Math.max(1, qty);
+    }
+    if (field === "packaging") {
+        const packaging = (target as HTMLSelectElement).value === "yes";
+        item.packaging = packaging;
+        const article = articles.find((a) => a.id === item.articleId);
+        if (article) {
+            const pricing = calculateArticlePricing(article, packaging);
+            item.unitPrice = parseFloat(pricing.finalPrice.toFixed(2));
+        }
+    }
+    renderItems();
+});
+
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!clientSelect.value || items.length === 0) {
@@ -691,6 +922,14 @@ form.addEventListener("submit", async (e) => {
 
     const newReq = computeRequiredMaterials(items);
     let deltaMap = new Map<string, InventoryDelta>();
+
+    const missingList = computeMissingByItem(items);
+    const missingTotal = missingList.reduce((sum, value) => sum + value, 0);
+    const itemsWithDeposit = items.map((item, idx) => ({
+        ...item,
+        depositMissing: missingList[idx],
+        depositUsed: Math.max(0, item.quantity - missingList[idx]),
+    }));
 
     if (editingId) {
         const oldOrder = orders.find((o) => o.id === editingId);
@@ -722,7 +961,7 @@ form.addEventListener("submit", async (e) => {
                       clientPhone: phoneInput.value.trim(),
                       requestedDate: requestDateInput.value,
                       deliveryDate: deliveryDateInput.value,
-                      items,
+                      items: itemsWithDeposit,
                       discountPercentage: 0,
                       status: o.status,
                       notes: notesInput.value.trim(),
@@ -747,7 +986,7 @@ form.addEventListener("submit", async (e) => {
             clientPhone: phoneInput.value.trim(),
             requestedDate: requestDateInput.value,
             deliveryDate: deliveryDateInput.value,
-            items,
+            items: itemsWithDeposit,
             materialCost: costs.materialCost,
             laborCost: costs.laborCost,
             finalAmount: costs.finalAmount,
@@ -784,7 +1023,11 @@ form.addEventListener("submit", async (e) => {
         }
         setFormVisible(false);
         resetForm();
-        showMessage("Ordine salvato!", "success");
+        if (missingTotal > 0) {
+            showMessage(`Ordine salvato. Da produrre: ${missingTotal}`, "success");
+        } else {
+            showMessage("Ordine salvato!", "success");
+        }
         clearMessage();
     } else {
         // rollback inventory if order save fails
@@ -861,6 +1104,10 @@ if (params.popup) {
     } else {
         document.body.classList.add("popup-form");
         showOnly("form");
+        setFormVisible(true);
+        if (!params.id) {
+            resetForm();
+        }
     }
 } else {
     showOnly("list");
@@ -871,10 +1118,28 @@ detailCloseBtn.addEventListener("click", () => {
 });
 
 detailEditBtn.addEventListener("click", () => {
-    const { id } = getPopupParams();
+    const id = currentDetailOrderId || getPopupParams().id;
     if (!id) return;
-    const url = `orders.html?popup=1&id=${id}`;
-    window.open(url, "_blank", "width=1200,height=800");
+    const order = orders.find((o) => o.id === id);
+    if (order) {
+        document.body.classList.remove("popup-detail");
+        document.body.classList.add("popup-form");
+        showOnly("form");
+        setFormVisible(true);
+        populateFormFromOrder(order);
+        return;
+    }
+    loadOrderById(id).then((found) => {
+        if (found) {
+            document.body.classList.remove("popup-detail");
+            document.body.classList.add("popup-form");
+            showOnly("form");
+            setFormVisible(true);
+            populateFormFromOrder(found);
+        } else {
+            showMessage(`Ordine non trovato (id: ${id})`, "error");
+        }
+    });
 });
 
 async function updateOrderStatus(orderId: string, status: Order["status"]) {
@@ -890,6 +1155,13 @@ async function updateOrderStatus(orderId: string, status: Order["status"]) {
 detailConfirmBtn.addEventListener("click", async () => {
     const { id } = getPopupParams();
     if (!id) return;
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    const missingTotal = getOrderMissingTotal(order);
+    if (missingTotal > 0) {
+        showMessage(`Attenzione: deposito insufficiente. Da produrre: ${missingTotal}`, "error");
+        clearMessage(3000);
+    }
     const ok = await updateOrderStatus(id, "confirmed");
     if (ok) {
         showMessage("Ordine confermato e spostato in produzione", "success");
@@ -914,3 +1186,13 @@ detailRefuseBtn.addEventListener("click", async () => {
 });
 
 loadData();
+
+const retryParams = getPopupParams();
+if (retryParams.popup && retryParams.id) {
+    setTimeout(() => {
+        const order = orders.find((o) => o.id === retryParams.id);
+        if (order && document.body.classList.contains("popup-form")) {
+            populateFormFromOrder(order);
+        }
+    }, 200);
+}

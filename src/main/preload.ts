@@ -12,6 +12,11 @@ const api = {
     saveInventory: (items: InventoryItem[]) =>
         ipcRenderer.invoke("save-inventory", items) as Promise<boolean>,
 
+    // Article Inventory API
+    getArticleInventory: () => ipcRenderer.invoke("get-article-inventory") as Promise<ArticleInventoryItem[]>,
+    saveArticleInventory: (items: ArticleInventoryItem[]) =>
+        ipcRenderer.invoke("save-article-inventory", items) as Promise<boolean>,
+
     // Articles API
     getArticles: () => ipcRenderer.invoke("get-articles") as Promise<Article[]>,
     saveArticles: (articles: Article[]) =>

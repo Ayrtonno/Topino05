@@ -9,6 +9,9 @@ var api = {
   // Inventory API
   getInventory: () => import_electron.ipcRenderer.invoke("get-inventory"),
   saveInventory: (items) => import_electron.ipcRenderer.invoke("save-inventory", items),
+  // Article Inventory API
+  getArticleInventory: () => import_electron.ipcRenderer.invoke("get-article-inventory"),
+  saveArticleInventory: (items) => import_electron.ipcRenderer.invoke("save-article-inventory", items),
   // Articles API
   getArticles: () => import_electron.ipcRenderer.invoke("get-articles"),
   saveArticles: (articles) => import_electron.ipcRenderer.invoke("save-articles", articles),

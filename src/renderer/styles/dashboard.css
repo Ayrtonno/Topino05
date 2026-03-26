@@ -1,83 +1,146 @@
-.kpi-grid {
+.report {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.report-filters {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.kpi-card {
-    padding: 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
     background: var(--panel);
-    text-align: left;
-    box-shadow: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
 }
 
-.kpi-label {
+.report-filters .filter label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.report-filters select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.report-filters input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.report-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.report-kpi {
+    background: linear-gradient(135deg, #f8fafc, #eef2ff);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+}
+
+.report-kpi .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.05em;
+}
+
+.report-kpi .value {
+    font-size: 20px;
+    font-weight: 800;
+    margin-top: 6px;
+    color: #0f172a;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.report-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+}
+
+.report-card.wide {
+    grid-column: span 2;
+}
+
+.card-title {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: #1f2937;
+}
+
+.chart {
+    width: 100%;
+    height: 320px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.chart-tooltip {
+    position: fixed;
+    z-index: 7000;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+    pointer-events: none;
+}
+
+.chart-tooltip.hidden {
+    display: none;
+}
+
+.report-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.metric-label {
     font-size: 11px;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
 }
 
-.kpi-value {
-    font-size: 22px;
+.metric-value {
+    font-size: 16px;
     font-weight: 700;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
-.kpi-blue .kpi-value { color: #2563eb; }
-.kpi-green .kpi-value { color: #16a34a; }
-.kpi-purple .kpi-value { color: #7c3aed; }
-.kpi-orange .kpi-value { color: #ea580c; }
+@media (max-width: 1100px) {
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
 
-.target-box {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px;
-    margin-bottom: 16px;
-    box-shadow: none;
-}
-
-.target-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-}
-
-.target-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--primary);
-}
-
-.progress {
-    background: #e5e7eb;
-    border-radius: 999px;
-    height: 22px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: var(--primary);
-    color: #fff;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: width 0.3s ease;
-}
-
-.info-box {
-    background: #f3f4f6;
-    border: 1px solid var(--border);
-    color: #374151;
-    border-radius: 8px;
-    padding: 12px;
+    .report-card.wide {
+        grid-column: span 1;
+    }
 }
