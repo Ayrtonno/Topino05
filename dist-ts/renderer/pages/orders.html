@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordini</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/page.css">
+</head>
+<body data-page="orders">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">Preventivatore <span>v1</span></div>
+            <nav class="nav">
+                <a data-page="dashboard" href="index.html">Dashboard</a>
+                <a data-page="materials" href="materials.html">Materiali</a>
+                <a data-page="colors" href="colors.html">Colori</a>
+                <a data-page="articles" href="articles.html">Articoli</a>
+                <a data-page="orders" href="orders.html">Ordini</a>
+            </nav>
+        </aside>
+        <main class="content">
+            <div class="topbar">
+                <div class="page-title">
+                    <h1>Ordini / Preventivi</h1>
+                    <p>Gestione ordini, costi e stato avanzamento.</p>
+                </div>
+                <div class="actions">
+                    <span class="chip">Light Mode</span>
+                    <button id="toggle-form" class="btn-primary">+ Nuovo Ordine</button>
+                </div>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="label">Ordini Totali</div>
+                    <div class="value" id="stat-total-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Fatturato</div>
+                    <div class="value" id="stat-total-revenue">EUR 0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Costi</div>
+                    <div class="value" id="stat-total-costs">EUR 0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Profitto</div>
+                    <div class="value" id="stat-total-profit">EUR 0</div>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="left">
+                    <div class="field">
+                        <input id="search-orders" type="text" placeholder="Cerca cliente, articolo..." />
+                    </div>
+                    <div class="field">
+                        <select id="filter-status">
+                            <option value="">Tutti gli stati</option>
+                            <option value="draft">Bozza</option>
+                            <option value="sent">Inviato</option>
+                            <option value="accepted">Accettato</option>
+                            <option value="rejected">Rifiutato</option>
+                            <option value="completed">Completato</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="right">
+                    <span class="badge primary">Aggiornato</span>
+                </div>
+            </div>
+
+            <form id="order-form" class="form hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome Cliente *</label>
+                        <input id="order-client" type="text" placeholder="Nome cliente" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input id="order-email" type="email" placeholder="email@example.com" />
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Articoli</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Articolo *</label>
+                            <select id="item-article">
+                                <option value="">Seleziona articolo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantita *</label>
+                            <input id="item-qty" type="number" min="1" value="1" />
+                        </div>
+                        <button id="add-item" type="button" class="btn-small" style="align-self:flex-end;">Aggiungi Articolo</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Articolo</th>
+                                    <th>Qty</th>
+                                    <th>Prezzo Unit.</th>
+                                    <th>Totale</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sconto %</label>
+                        <input id="order-discount" type="number" value="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Stato</label>
+                        <select id="order-status">
+                            <option value="draft">Bozza</option>
+                            <option value="sent">Inviato</option>
+                            <option value="accepted">Accettato</option>
+                            <option value="rejected">Rifiutato</option>
+                            <option value="completed">Completato</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Note</label>
+                    <textarea id="order-notes" rows="3" placeholder="Note aggiuntive"></textarea>
+                </div>
+
+                <button id="submit-order" type="submit" class="btn-primary">Crea Ordine</button>
+            </form>
+
+            <div class="table-header">
+                <div class="title">Elenco Ordini</div>
+                <div class="meta">Mostra tutti gli ordini salvati</div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Data</th>
+                            <th>Articoli</th>
+                            <th>Costo Materiale</th>
+                            <th>Costo Lavoro</th>
+                            <th>Totale</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-body"></tbody>
+                </table>
+                <div id="orders-empty" class="empty-state hidden">Nessun ordine presente.</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../scripts/shared.js"></script>
+    <script src="../scripts/orders.js"></script>
+</body>
+</html>

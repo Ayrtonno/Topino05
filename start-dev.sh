@@ -1,4 +1,4 @@
 #!/bin/bash
-# Start dev server
+# Start app
 cd "C:\Users\Krabbomibbo\Documents\Topino05"
-npm run dev
+npm start

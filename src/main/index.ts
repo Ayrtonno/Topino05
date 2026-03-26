@@ -1,6 +1,5 @@
 import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import * as path from "path";
-import * as isDev from "electron-is-dev";
 import {
     getMaterials,
     saveMaterials,
@@ -30,13 +29,8 @@ const createWindow = () => {
         },
     });
 
-    // Determina URL basato su modalità dev/prod
-    const isDevelopment = process.argv.includes("--dev");
-    const startUrl = isDevelopment
-        ? "http://localhost:3000"
-        : `file://${path.join(__dirname, "../build/index.html")}`;
-
-    mainWindow.loadURL(startUrl);
+    const rendererPath = path.join(__dirname, "renderer", "pages", "index.html");
+    mainWindow.loadFile(rendererPath);
 
     // Nascondi la barra dei menu
     Menu.setApplicationMenu(null);

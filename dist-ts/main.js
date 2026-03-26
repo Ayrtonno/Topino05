@@ -119,9 +119,8 @@ var createWindow = () => {
       sandbox: true
     }
   });
-  const isDevelopment = process.argv.includes("--dev");
-  const startUrl = isDevelopment ? "http://localhost:3000" : `file://${path2.join(__dirname, "../build/index.html")}`;
-  mainWindow.loadURL(startUrl);
+  const rendererPath = path2.join(__dirname, "renderer", "pages", "index.html");
+  mainWindow.loadFile(rendererPath);
   import_electron2.Menu.setApplicationMenu(null);
   mainWindow.on("closed", () => {
     mainWindow = null;

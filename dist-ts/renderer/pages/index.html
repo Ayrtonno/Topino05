@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/page.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+</head>
+<body data-page="dashboard">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">Preventivatore <span>v1</span></div>
+            <nav class="nav">
+                <a data-page="dashboard" href="index.html">Dashboard</a>
+                <a data-page="materials" href="materials.html">Materiali</a>
+                <a data-page="colors" href="colors.html">Colori</a>
+                <a data-page="articles" href="articles.html">Articoli</a>
+                <a data-page="orders" href="orders.html">Ordini</a>
+            </nav>
+        </aside>
+        <main class="content">
+            <div class="topbar">
+                <div class="page-title">
+                    <h1>Dashboard KPI</h1>
+                    <p>Visione rapida performance mensili.</p>
+                </div>
+                <div class="actions">
+                    <span class="chip">Overview</span>
+                </div>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="toolbar">
+                <div class="left">
+                    <div class="field">
+                        <input type="text" placeholder="Cerca report..." />
+                    </div>
+                </div>
+                <div class="right">
+                    <span class="badge success">Live</span>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-label">Numero Ordini (Mese)</div>
+                    <div id="kpi-orders" class="kpi-value">0</div>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-label">Guadagno (Mese)</div>
+                    <div id="kpi-profit" class="kpi-value">0</div>
+                </div>
+                <div class="kpi-card kpi-purple">
+                    <div class="kpi-label">Fatturato (Mese)</div>
+                    <div id="kpi-revenue" class="kpi-value">0</div>
+                </div>
+                <div class="kpi-card kpi-orange">
+                    <div class="kpi-label">Costi Totali (Mese)</div>
+                    <div id="kpi-cost" class="kpi-value">0</div>
+                </div>
+            </div>
+
+            <div class="target-box">
+                <h2>Target Mensile</h2>
+                <div class="target-row">
+                    <div id="target-display" class="target-value">0</div>
+                    <button id="target-edit-btn" class="btn-small">Modifica</button>
+                    <div id="target-edit" class="hidden">
+                        <input id="target-input" type="number" />
+                        <button id="target-save" class="btn-small">Salva</button>
+                        <button id="target-cancel" class="btn-small">Annulla</button>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div id="target-progress" class="progress-bar">0%</div>
+                </div>
+                <div id="target-note" style="margin-top: 10px; font-weight: 600;"></div>
+            </div>
+
+            <div class="card">
+                <h2>Statistiche Dettagliate</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metrica</th>
+                                <th style="text-align:right">Valore</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Numero Ordini (Mese)</td>
+                                <td id="stat-orders" style="text-align:right; font-weight:700">0</td>
+                            </tr>
+                            <tr>
+                                <td>Fatturato Totale</td>
+                                <td id="stat-revenue" style="text-align:right; font-weight:700">0</td>
+                            </tr>
+                            <tr>
+                                <td>Costi Totali (Materiali + Lavoro)</td>
+                                <td id="stat-cost" style="text-align:right; font-weight:700">0</td>
+                            </tr>
+                            <tr>
+                                <td>Guadagno Netto</td>
+                                <td id="stat-profit" style="text-align:right; font-weight:700">0</td>
+                            </tr>
+                            <tr>
+                                <td>Margine Medio %</td>
+                                <td id="stat-margin" style="text-align:right; font-weight:700">0%</td>
+                            </tr>
+                            <tr>
+                                <td>Raggiungimento Target</td>
+                                <td id="stat-target" style="text-align:right; font-weight:700">0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="info-box">
+                Nota: i dati mostrati si riferiscono al mese corrente e includono solo ordini con stato "completed".
+            </div>
+        </main>
+    </div>
+
+    <script src="../scripts/shared.js"></script>
+    <script src="../scripts/dashboard.js"></script>
+</body>
+</html>

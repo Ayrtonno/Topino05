@@ -8,40 +8,27 @@
   "license": "MIT",
   "scripts": {
     "start": "npm run build:ts && electron .",
-    "dev": "concurrently \"npm run start-react\" \"wait-on http://localhost:3000 && npm run start-electron-dev\"",
-    "start-react": "react-scripts start",
-    "start-electron-dev": "electron . --dev",
     "build:ts": "node tools/build-ts.js",
-    "build:react": "react-scripts build",
-    "build:dir": "npm run build:ts && npm run build:react && electron-builder --dir",
-    "build": "npm run build:ts && npm run build:react && electron-builder --win",
-    "test": "react-scripts test"
+    "build:dir": "npm run build:ts && electron-builder --dir",
+    "build": "npm run build:ts && electron-builder --win",
+    "test": "echo \"No tests configured\""
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
     "ajv": "^8.18.0",
-    "concurrently": "^8.2.0",
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
-    "electron-is-dev": "^2.0.0",
     "esbuild": "^0.24.2",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "wait-on": "^7.0.1"
+    "typescript": "^4.9.5"
   },
   "build": {
     "appId": "com.topino.preventivatore",
     "productName": "Preventivatore Magazzino",
     "files": [
-      "dist/**/*",
-      "node_modules/**/*",
-      "build/**/*"
+      "dist-ts/**/*",
+      "node_modules/**/*"
     ],
     "directories": {
       "buildResources": "assets",

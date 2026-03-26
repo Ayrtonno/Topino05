@@ -1,0 +1,83 @@
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.kpi-card {
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    text-align: left;
+    box-shadow: none;
+}
+
+.kpi-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.kpi-blue .kpi-value { color: #2563eb; }
+.kpi-green .kpi-value { color: #16a34a; }
+.kpi-purple .kpi-value { color: #7c3aed; }
+.kpi-orange .kpi-value { color: #ea580c; }
+
+.target-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: none;
+}
+
+.target-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.target-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.progress {
+    background: #e5e7eb;
+    border-radius: 999px;
+    height: 22px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s ease;
+}
+
+.info-box {
+    background: #f3f4f6;
+    border: 1px solid var(--border);
+    color: #374151;
+    border-radius: 8px;
+    padding: 12px;
+}
