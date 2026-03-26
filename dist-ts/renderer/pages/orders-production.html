@@ -89,6 +89,7 @@
                 <div class="table-header" style="margin:0 0 10px 0;">
                     <div class="title" id="production-detail-title">Dettaglio Produzione</div>
                     <div class="actions">
+                        <button id="production-pdf" class="btn-small">Esporta PDF</button>
                         <button id="production-process" class="btn-small">Venduto</button>
                         <button id="production-close" class="btn-small">Chiudi</button>
                     </div>
@@ -171,6 +172,24 @@
                     <div class="actions" style="justify-content:flex-end;">
                         <button id="process-cancel" class="btn-small">Annulla</button>
                         <button id="process-confirm" class="btn-primary">Conferma</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pdf-modal" class="modal hidden">
+                <div class="modal-backdrop"></div>
+                <div class="modal-card">
+                    <h3>Esporta PDF</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome file</label>
+                            <input id="pdf-filename" type="text" />
+                            <div class="muted">Salvato in DBStorage/PDF</div>
+                        </div>
+                    </div>
+                    <div class="actions" style="justify-content:flex-end;">
+                        <button id="pdf-cancel" class="btn-small">Annulla</button>
+                        <button id="pdf-confirm" class="btn-primary">Esporta</button>
                     </div>
                 </div>
             </div>

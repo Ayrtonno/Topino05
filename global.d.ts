@@ -16,7 +16,7 @@ declare namespace Models {
         sellingPricePerUnit: number;
         stockQuantity: number;
         unit: "grammi" | "pezzi";
-        lastUpdated: string;
+        lastUpdated?: string;
     }
 
     // Colors - colori disponibili con stock
@@ -25,7 +25,7 @@ declare namespace Models {
         materialId: string;
         colorName?: string;
         quantity: number;
-        lastUpdated: string;
+        lastUpdated?: string;
     }
 
     // Finished articles stock - deposito
@@ -35,7 +35,7 @@ declare namespace Models {
         variantCode: string;
         colors: string[];
         quantity: number;
-        lastUpdated: string;
+        lastUpdated?: string;
     }
 
     // Articles - articoli composti da materiale+colore in quantità
@@ -59,7 +59,7 @@ declare namespace Models {
     // Labor cost configuration
     interface LaborConfig {
         hourlyRate: number; // €/ora
-        lastUpdated: string;
+        lastUpdated?: string;
     }
 
     // Orders/Quotes - preventivi e ordini
@@ -174,15 +174,15 @@ declare global {
         // Dashboard config
         getDashboardConfig: () => Promise<{
             salesTarget: number;
-            lastUpdated: string;
+            lastUpdated?: string;
         }>;
         saveDashboardConfig: (config: {
             salesTarget: number;
-            lastUpdated: string;
+            lastUpdated?: string;
         }) => Promise<boolean>;
 
         // Export PDF
-        exportOrderPdf: (payload: { html: string; filename: string }) => Promise<{ ok: boolean; filePath?: string; message?: string; canceled?: boolean }>;
+        exportOrderPdf: (payload: { html: string; filename: string; skipDialog?: boolean }) => Promise<{ ok: boolean; filePath?: string; message?: string; canceled?: boolean }>;
     }
 
     interface Window {
@@ -191,3 +191,4 @@ declare global {
 }
 
 export {};
+

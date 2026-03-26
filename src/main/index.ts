@@ -174,16 +174,29 @@ ipcMain.handle("save-dashboard-config", async (_, config) => {
 });
 
 // IPC Handlers - Export PDF
-ipcMain.handle("export-order-pdf", async (_, payload: { html: string; filename: string }) => {
-    const { html, filename } = payload || {};
+ipcMain.handle("export-order-pdf", async (event, payload: { html: string; filename: string; skipDialog?: boolean }) => {
+    const { html, filename, skipDialog } = payload || {};
     if (!html) return { ok: false, message: "HTML mancante" };
 
-    const { canceled, filePath } = await dialog.showSaveDialog({
-        title: "Esporta Preventivo PDF",
-        defaultPath: filename || "preventivo.pdf",
-        filters: [{ name: "PDF", extensions: ["pdf"] }],
-    });
-    if (canceled || !filePath) return { ok: false, canceled: true };
+    let targetPath: string | undefined;
+    if (!skipDialog) {
+        const parentWindow = BrowserWindow.fromWebContents(event.sender);
+        const { canceled, filePath } = await dialog.showSaveDialog({
+            title: "Esporta Preventivo PDF",
+            defaultPath: filename || "preventivo.pdf",
+            filters: [{ name: "PDF", extensions: ["pdf"] }],
+            parent: parentWindow || undefined,
+        });
+        targetPath = canceled ? undefined : filePath || undefined;
+    }
+    if (!targetPath) {
+        const pdfDir = path.join(process.cwd(), "DBStorage", "PDF");
+        const fs = await import("fs");
+        if (!fs.existsSync(pdfDir)) {
+            fs.mkdirSync(pdfDir, { recursive: true });
+        }
+        targetPath = path.join(pdfDir, filename || `preventivo-${Date.now()}.pdf`);
+    }
 
     const win = new BrowserWindow({
         show: false,
@@ -200,8 +213,8 @@ ipcMain.handle("export-order-pdf", async (_, payload: { html: string; filename: 
             margins: { marginType: "default" },
         });
         const fs = await import("fs");
-        fs.writeFileSync(filePath, pdfBuffer);
-        return { ok: true, filePath };
+        fs.writeFileSync(targetPath, pdfBuffer);
+        return { ok: true, filePath: targetPath };
     } catch (err) {
         console.error("PDF export failed:", err);
         return { ok: false, message: "Errore esportazione PDF" };

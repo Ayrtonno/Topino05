@@ -160,7 +160,7 @@
             <td>${mat?.unit || "-"}</td>
             <td>EUR ${cost.toFixed(3)}</td>
             <td>EUR ${total.toFixed(2)}</td>
-            <td>${formatDate(i.lastUpdated)}</td>
+            <td>${formatDate(i.lastUpdated || "")}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${i.id}">Modifica</button>
                 <button class="btn-small btn-danger" data-action="delete" data-id="${i.id}">Elimina</button>

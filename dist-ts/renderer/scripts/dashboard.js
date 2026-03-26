@@ -39,8 +39,8 @@
   var kpiLaborHours = qs("#kpi-labor-hours");
   var kpiProfit = qs("#kpi-profit");
   var kpiNetProfit = qs("#kpi-net-profit");
-  var chartRevenue = qs("#chart-revenue");
-  var chartOrders = qs("#chart-orders");
+  var chartRevenue = document.querySelector("#chart-revenue");
+  var chartOrders = document.querySelector("#chart-orders");
   var chartTooltip = qs("#chart-tooltip");
   var metricAvgOrder = qs("#metric-avg-order");
   var metricBestMonth = qs("#metric-best-month");

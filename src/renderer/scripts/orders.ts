@@ -1,4 +1,4 @@
-import { qs, showMessage, clearMessage, formatDate } from "./shared";
+﻿﻿import { qs, showMessage, clearMessage, formatDate } from "./shared";
 
 type OrderItem = {
     articleId: string;
@@ -15,8 +15,8 @@ type OrderItem = {
 type Order = {
     id: string;
     clientId?: string;
-    clientFirstName: string;
-    clientLastName: string;
+    clientFirstName?: string;
+    clientLastName?: string;
     clientEmail?: string;
     clientPhone?: string;
     requestedDate?: string;
@@ -29,13 +29,20 @@ type Order = {
     createdAt: string;
     status: "pending" | "refused" | "confirmed" | "processed";
     notes?: string;
+    processedDate?: string;
+    paymentReceived?: number;
 };
 
 type Article = {
     id: string;
     code: string;
     name: string;
-    composition: { materialId: string; description?: string; quantity: number }[];
+    composition: {
+        materialName: string;
+        materialId: string;
+        description?: string;
+        quantity: number;
+    }[];
     laborHoursRequired: number;
     materialMarkupPct: number;
     laborMarkupPct: number;
@@ -54,7 +61,7 @@ type InventoryItem = {
     materialId: string;
     colorName?: string;
     quantity: number;
-    lastUpdated: string;
+    lastUpdated?: string;
 };
 
 type ArticleInventoryItem = {
@@ -63,11 +70,12 @@ type ArticleInventoryItem = {
     variantCode: string;
     colors: string[];
     quantity: number;
-    lastUpdated: string;
+    lastUpdated?: string;
 };
 
 type LaborConfig = {
     hourlyRate: number;
+    lastUpdated?: string;
 };
 
 type Client = {
@@ -144,6 +152,11 @@ const detailCloseBtn = qs<HTMLButtonElement>("#order-detail-close");
 const detailConfirmBtn = qs<HTMLButtonElement>("#order-detail-confirm");
 const detailRefuseBtn = qs<HTMLButtonElement>("#order-detail-refuse");
 const detailPdfBtn = qs<HTMLButtonElement>("#order-detail-pdf");
+const pdfModal = qs<HTMLDivElement>("#pdf-modal");
+const pdfFilenameInput = qs<HTMLInputElement>("#pdf-filename");
+const pdfCancelBtn = qs<HTMLButtonElement>("#pdf-cancel");
+const pdfConfirmBtn = qs<HTMLButtonElement>("#pdf-confirm");
+const pdfBackdrop = qs<HTMLDivElement>("#pdf-modal .modal-backdrop");
 
 function setFormVisible(visible: boolean) {
     form.classList.toggle("hidden", !visible);
@@ -192,7 +205,10 @@ function showOnly(section: "list" | "form" | "detail") {
 
 async function loadData() {
     try {
-        const safeGet = async <T>(fn: (() => Promise<T>) | undefined, fallback: T) => {
+        const safeGet = async <T>(
+            fn: (() => Promise<T>) | undefined,
+            fallback: T,
+        ) => {
             if (!fn) return fallback;
             try {
                 return await fn();
@@ -206,13 +222,24 @@ async function loadData() {
             await window.api.saveOrders(normalized.updated);
             orders = normalized.updated;
         }
-        articles = await safeGet(window.api?.getArticles, []);
+        const rawArticles = await safeGet(window.api?.getArticles, []);
         materials = await safeGet(window.api?.getMaterials, []);
+        articles = rawArticles.map((a: any) => ({
+            ...a,
+            composition: a.composition.map((comp: any) => ({
+                ...comp,
+                materialName:
+                    materials.find((m) => m.id === comp.materialId)?.name ||
+                    comp.materialId,
+            })),
+        }));
         inventory = await safeGet(window.api?.getInventory, []);
         articleInventory = await safeGet(window.api?.getArticleInventory, []);
         await migrateLegacyVariants();
         clients = await safeGet(window.api?.getClients, []);
-        laborConfig = await safeGet(window.api?.getLaborConfig, { hourlyRate: 0 });
+        laborConfig = await safeGet(window.api?.getLaborConfig, {
+            hourlyRate: 0,
+        });
         renderArticleOptions();
         renderClientOptions();
         renderOrders();
@@ -275,10 +302,13 @@ function populateFormFromOrder(order: Order) {
     } else {
         clientSelect.value = "";
     }
-    const legacyName = (order as unknown as { clientName?: string }).clientName || "";
+    const legacyName =
+        (order as unknown as { clientName?: string }).clientName || "";
     const nameParts = legacyName ? legacyName.split(" ") : [];
-    firstNameInput.value = order.clientFirstName || nameParts.shift() || firstNameInput.value;
-    lastNameInput.value = order.clientLastName || nameParts.join(" ") || lastNameInput.value;
+    firstNameInput.value =
+        order.clientFirstName || nameParts.shift() || firstNameInput.value;
+    lastNameInput.value =
+        order.clientLastName || nameParts.join(" ") || lastNameInput.value;
     emailInput.value = order.clientEmail || emailInput.value;
     phoneInput.value = order.clientPhone || phoneInput.value;
     requestDateInput.value = order.requestedDate || "";
@@ -381,12 +411,14 @@ function getArticleCode(id: string) {
 function formatItemColors(item: OrderItem) {
     const article = articles.find((a) => a.id === item.articleId);
     if (!article || !item.colorSelections?.length) return "-";
-    const parts = article.composition.map((comp, idx) => {
-        const color = item.colorSelections?.[idx];
-        if (!color) return "";
-        const material = materials.find((m) => m.id === comp.materialId);
-        return `${material?.name || "Materiale"}: ${color}`;
-    }).filter(Boolean);
+    const parts = article.composition
+        .map((comp, idx) => {
+            const color = item.colorSelections?.[idx];
+            if (!color) return "";
+            const material = materials.find((m) => m.id === comp.materialId);
+            return `${material?.name || "Materiale"}: ${color}`;
+        })
+        .filter(Boolean);
     return parts.length ? parts.join(", ") : "-";
 }
 
@@ -403,7 +435,8 @@ function roundToHalf(value: number) {
 }
 
 function getOrderYearKey(order: Order) {
-    const dateStr = order.requestedDate || order.createdAt || order.deliveryDate;
+    const dateStr =
+        order.requestedDate || order.createdAt || order.deliveryDate;
     const d = dateStr ? new Date(dateStr) : new Date();
     const yy = (d.getFullYear() % 100).toString().padStart(2, "0");
     return yy;
@@ -430,7 +463,10 @@ function normalizeOrderIds(list: Order[]) {
     const byYear = buildOrderIdIndex(updated);
     const toFix = updated.filter((o) => !isNewOrderId(o.id));
     if (!toFix.length) return { updated, changed: false };
-    toFix.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    toFix.sort(
+        (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
     toFix.forEach((o) => {
         const yearKey = getOrderYearKey(o);
         const next = (byYear.get(yearKey) || 0) + 1;
@@ -455,12 +491,16 @@ function calculateArticlePricing(article: Article, packaging: boolean) {
         const material = materials.find((m) => m.id === comp.materialId);
         if (material) {
             materialCost += material.costPerUnit * comp.quantity;
-            materialSellBase += (material.sellingPricePerUnit || material.costPerUnit) * comp.quantity;
+            materialSellBase +=
+                (material.sellingPricePerUnit || material.costPerUnit) *
+                comp.quantity;
         }
     }
     const laborCost = article.laborHoursRequired * laborConfig.hourlyRate;
     const colorSurcharge = article.composition.length * 0.1;
-    const materialSell = (materialSellBase + colorSurcharge) * (1 + article.materialMarkupPct / 100);
+    const materialSell =
+        (materialSellBase + colorSurcharge) *
+        (1 + article.materialMarkupPct / 100);
     const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
     const total = materialSell + laborSell;
     const rounded = roundToHalf(total);
@@ -488,13 +528,18 @@ function calculateOrderCosts(itemsList: OrderItem[], discount: number) {
         for (const comp of article.composition) {
             const material = materials.find((m) => m.id === comp.materialId);
             if (material) {
-                materialCost += material.costPerUnit * comp.quantity * item.quantity;
+                materialCost +=
+                    material.costPerUnit * comp.quantity * item.quantity;
             }
         }
-        laborCost += article.laborHoursRequired * laborConfig.hourlyRate * item.quantity;
+        laborCost +=
+            article.laborHoursRequired * laborConfig.hourlyRate * item.quantity;
     }
 
-    const subtotal = itemsList.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+    const subtotal = itemsList.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0,
+    );
     const discountAmount = subtotal * (discount / 100);
     const finalAmount = subtotal - discountAmount;
 
@@ -506,7 +551,10 @@ function calculateOrderCosts(itemsList: OrderItem[], discount: number) {
 }
 
 function getOrderSaleTotal(order: Order) {
-    if (order.status === "processed" && typeof order.paymentReceived === "number") {
+    if (
+        order.status === "processed" &&
+        typeof order.paymentReceived === "number"
+    ) {
         return order.paymentReceived;
     }
     return order.finalAmount;
@@ -526,7 +574,10 @@ function computeMissingByItem(itemsList: OrderItem[]) {
             variant = index.byCode.get(item.variantCode);
         } else if (item.colorSelections?.length) {
             const article = articles.find((a) => a.id === item.articleId);
-            const normalized = normalizeColors(item.colorSelections, article?.composition.length || item.colorSelections.length);
+            const normalized = normalizeColors(
+                item.colorSelections,
+                article?.composition.length || item.colorSelections.length,
+            );
             const key = getVariantKey(item.articleId, normalized);
             variant = index.byKey.get(key);
         }
@@ -549,7 +600,8 @@ function getOrderMissingTotal(order: Order) {
 function getItemMissing(item: OrderItem, missingList: number[], index: number) {
     if (missingList[index] !== undefined) return missingList[index];
     if (typeof item.depositMissing === "number") return item.depositMissing;
-    if (typeof item.depositUsed === "number") return Math.max(0, item.quantity - item.depositUsed);
+    if (typeof item.depositUsed === "number")
+        return Math.max(0, item.quantity - item.depositUsed);
     return 0;
 }
 
@@ -584,9 +636,53 @@ function buildOrderPdfHtml(order: Order) {
         .map((item) => formatItemColors(item))
         .filter((txt) => txt && txt !== "-")
         .join(", ");
-    const packaging = order.items.some((i) => i.packaging) ? "Prodotto impacchettato." : "Prodotto non impacchettato.";
-    const totalRounded = roundToHalf(summary.finalTotal);
+    const packaging = order.items.some((i) => i.packaging)
+        ? "Prodotto impacchettato."
+        : "Prodotto non impacchettato.";
+    const totalRaw = order.items.reduce((sum, item) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return sum;
+        const pricing = calculateArticlePricing(article, !!item.packaging);
+        const rawUnit = pricing.total + (item.packaging ? 0.5 : 0);
+        return sum + rawUnit * item.quantity;
+    }, 0);
+    const totalRounded = roundToHalf(totalRaw);
     const title = `Preventivo Ordine ${order.id}`;
+    const itemDetailsHtml = order.items
+        .map((item) => {
+            const article = articles.find((a) => a.id === item.articleId);
+            if (!article) return "";
+            const lines = article.composition
+                .map((c, idx) => {
+                    const material = materials.find((m) => m.id === c.materialId);
+                    const materialLabel =
+                        material?.name || c.materialId || "Materiale";
+                    const descLabel = c.description || materialLabel;
+                    const color =
+                        item.colorSelections && item.colorSelections[idx]
+                            ? item.colorSelections[idx]
+                            : "";
+                    const value = color
+                        ? `${materialLabel} ${color}`
+                        : materialLabel;
+                    return `<div class="info-line"><span class="info-label">${descLabel}</span><span class="info-value">${value}</span></div>`;
+                })
+                .join("");
+            return `
+            <div class="info-item">
+                <div class="info-item-title">Articolo: ${article.name}</div>
+                <div class="info-lines">${lines || ""}</div>
+            </div>
+        `;
+        })
+        .join("");
+    const packagingItems = order.items.filter((i) => i.packaging);
+    const packagingInfo =
+        packagingItems.length === 0
+            ? "Packaging non richiesto."
+            : packagingItems.length === order.items.length
+              ? "Packaging incluso su tutti i prodotti."
+              : `Packaging incluso su: ${packagingItems.map((i) => getArticleName(i.articleId)).join(", ")}.`;
 
     return `
 <!DOCTYPE html>
@@ -595,157 +691,257 @@ function buildOrderPdfHtml(order: Order) {
     <meta charset="UTF-8" />
     <style>
         :root {
-            --blue: #2563eb;
-            --soft: #e6f0ff;
-            --soft-2: #d9ebff;
-            --mint: #dff3e3;
-            --text: #0f172a;
+            --blue: #4aa3ff;
+            --blue-dark: #1d6ec6;
+            --blue-soft: #e7f3ff;
+            --blue-veil: #f3f9ff;
+            --mint: #e8f8ef;
+            --ink: #0f172a;
+            --muted: #526074;
+            --card: #ffffff;
         }
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            color: var(--text);
-            background: #ffffff;
+            font-family: "Segoe UI", "Trebuchet MS", Arial, sans-serif;
+            color: var(--ink);
+            background: #dfeeff;
         }
         .page {
-            padding: 28px 30px;
+            padding: 26px 28px 34px;
         }
-        .header {
-            border: 2px solid #0f172a;
-            padding: 16px 18px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 20px;
-            color: #0f172a;
+        .sheet {
+            background: #ffffff;
+            border-radius: 22px;
+            padding: 22px 22px 26px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+            border: 1px solid #cfe2ff;
             position: relative;
+            overflow: hidden;
         }
-        .header::before, .header::after {
+        .sheet::before {
             content: "";
             position: absolute;
-            width: 26px;
-            height: 36px;
-            border: 2px solid #0f172a;
-            border-radius: 14px 14px 6px 6px;
-            top: -24px;
-            background: #fff;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(74, 163, 255, 0.16), transparent 45%),
+                radial-gradient(circle at 100% 0%, rgba(74, 163, 255, 0.12), transparent 40%),
+                radial-gradient(circle at 10% 100%, rgba(209, 238, 255, 0.5), transparent 50%);
+            pointer-events: none;
         }
-        .header::before { left: 24px; transform: rotate(-6deg); }
-        .header::after { right: 24px; transform: rotate(6deg); }
-        .box {
-            border: 2px solid #0f172a;
-            margin: 14px 0;
+        .header {
+            position: relative;
+            border-radius: 18px;
+            padding: 16px 18px 18px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--ink);
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 75%);
+            border: 2px solid #c7ddff;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+            z-index: 1;
         }
-        .box .row {
+        .header::before,
+        .header::after {
+            content: "";
+            position: absolute;
+            width: 28px;
+            height: 38px;
+            border: 2px solid #c7ddff;
+            border-radius: 16px 16px 9px 9px;
+            top: -22px;
+            background: #f8fbff;
+        }
+        .header::before { left: 30px; transform: rotate(-6deg); }
+        .header::after { right: 30px; transform: rotate(6deg); }
+        .badge {
+            position: absolute;
+            right: 14px;
+            top: 12px;
+            background: var(--blue);
+            color: #fff;
+            font-weight: 800;
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            padding: 4px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            box-shadow: 0 8px 16px rgba(74, 163, 255, 0.35);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin: 16px 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08);
+        }
+        .card .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .card .value {
+            margin-top: 6px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .split {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            border-bottom: 1px solid #0f172a;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
         }
-        .cell {
-            padding: 6px 8px;
+        .pill {
+            background: var(--blue-veil);
+            border: 1px dashed #b9d7ff;
+            border-radius: 12px;
+            padding: 10px 12px;
             text-align: center;
-            font-weight: 600;
-            background: var(--soft);
-            border-right: 1px solid #0f172a;
-        }
-        .cell:last-child { border-right: none; }
-        .value {
-            padding: 6px 8px;
-            text-align: center;
-            font-weight: 700;
-            background: var(--soft-2);
-        }
-        .row:last-child { border-bottom: none; }
-        .totals {
-            display: grid;
-            grid-template-columns: 1fr;
-            border-top: 2px solid #0f172a;
-        }
-        .totals .label {
-            background: #cfe7c9;
-            font-weight: 700;
-            padding: 6px 8px;
-            text-align: center;
-            border-bottom: 1px solid #0f172a;
-        }
-        .totals .amount {
-            background: #e6f6df;
             font-weight: 800;
-            padding: 6px 8px;
+        }
+        .total {
+            background: var(--mint);
+            border: 1px solid #bfe3d0;
+            border-radius: 14px;
+            padding: 10px 14px;
             text-align: center;
+        }
+        .total .value {
+            font-size: 19px;
+            font-weight: 900;
         }
         .info {
-            border: 2px solid #0f172a;
-            margin-top: 10px;
+            border: 1px solid #cfe2ff;
+            border-radius: 16px;
+            margin-top: 12px;
+            background: #ffffff;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
+            position: relative;
+            z-index: 1;
         }
         .info-title {
-            background: var(--soft-2);
+            background: var(--blue-soft);
             text-align: center;
-            font-weight: 700;
-            padding: 6px 8px;
-            border-bottom: 1px solid #0f172a;
+            font-weight: 800;
+            padding: 8px 10px;
+            border-bottom: 1px dashed #b9d7ff;
         }
         .info-body {
-            padding: 8px 10px;
-            text-align: center;
+            padding: 10px 12px;
+            text-align: left;
             font-size: 12px;
+            line-height: 1.4;
+        }
+        .info-item {
+            padding: 8px 10px;
+            margin: 6px 0;
+            border: 1px solid #d8e9ff;
+            border-radius: 12px;
+            background: #f6fbff;
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06);
+        }
+        .info-item-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 800;
+            color: #0f5aa6;
+            margin-bottom: 6px;
+        }
+        .info-item-title::before {
+            content: "Articolo";
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .info-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 2px 0;
+        }
+        .info-label {
+            font-weight: 700;
+            color: #334155;
+        }
+        .info-value {
+            color: #0f172a;
+        }
+        .info-footer {
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 700;
+            color: #0f5aa6;
         }
         .footnote {
-            margin-top: 8px;
+            margin-top: 10px;
             text-align: center;
-            color: #b91c1c;
+            color: #0f5aa6;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
         }
-        .pair {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-        }
-        .pair .cell, .pair .value {
-            border-right: 1px solid #0f172a;
-        }
-        .pair .cell:last-child, .pair .value:last-child { border-right: none; }
     </style>
 </head>
 <body>
     <div class="page">
-        <div class="header">${title}</div>
-        <div class="box">
-            <div class="row pair">
-                <div class="cell">Costo Materiale</div>
-                <div class="cell">Manodopera</div>
+        <div class="sheet">
+            <div class="header">
+                ${title}
+                <span class="badge">Preventivo</span>
             </div>
-            <div class="row pair">
-                <div class="value">EUR ${costs.materialCost.toFixed(2)}</div>
-                <div class="value">EUR ${costs.laborCost.toFixed(2)}</div>
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Costo Materiale</div>
+                    <div class="value">EUR ${costs.materialCost.toFixed(2)}</div>
+                </div>
+                <div class="card">
+                    <div class="label">Ore Lavoro</div>
+                    <div class="value">${summary.laborHours}</div>
+                </div>
+                <div class="card">
+                    <div class="label">Manodopera</div>
+                    <div class="value">EUR ${costs.laborCost.toFixed(2)}</div>
+                </div>
+                <div class="card">
+                    <div class="label">Totale</div>
+                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                </div>
             </div>
-            <div class="row pair">
-                <div class="cell">Ore</div>
-                <div class="cell">Totale</div>
+            <div class="split">
+                <div class="pill">Totale: EUR ${totalRaw.toFixed(2)}</div>
+                <div class="total">
+                    <div class="label">Totale Arrotondato</div>
+                    <div class="value">EUR ${totalRounded.toFixed(2)}</div>
+                </div>
             </div>
-            <div class="row pair">
-                <div class="value">${summary.laborHours}</div>
-                <div class="value">EUR ${summary.finalTotal.toFixed(2)}</div>
-            </div>
-            <div class="totals">
-                <div class="label">Totale</div>
-                <div class="amount">EUR ${summary.finalTotal.toFixed(2)}</div>
-            </div>
-            <div class="totals">
-                <div class="label">Totale Arrotondato</div>
-                <div class="amount">EUR ${totalRounded.toFixed(2)}</div>
-            </div>
-        </div>
 
-        <div class="info">
-            <div class="info-title">Informazioni aggiuntive</div>
-            <div class="info-body">
-                Colori utilizzati: ${colorsList || "Nessuno"}.
-                ${packaging}
+            <div class="info">
+                <div class="info-title">Informazioni aggiuntive</div>
+                <div class="info-body">
+                    ${itemDetailsHtml || ""}
+                    <div class="info-footer">${packagingInfo}</div>
+                </div>
             </div>
+            <div class="footnote">Il totale � arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
         </div>
-        <div class="footnote">Il totale è arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
     </div>
 </body>
 </html>
@@ -776,11 +972,15 @@ function renderOrderDetail(order: Order) {
     detailRefuseBtn.disabled = !canChange;
 
     const missingList = computeMissingByItem(order.items);
-    detailItemsBody.innerHTML = order.items.map((item, idx) => {
-        const article = articles.find((a) => a.id === item.articleId);
-        const colorsLabel = formatVariantColors(article, item.colorSelections || []);
-        const variantLabel = formatVariantLabel(article, item.variantCode);
-        return `
+    detailItemsBody.innerHTML = order.items
+        .map((item, idx) => {
+            const article = articles.find((a) => a.id === item.articleId);
+            const colorsLabel = formatVariantColors(
+                article,
+                item.colorSelections || [],
+            );
+            const variantLabel = formatVariantLabel(article, item.variantCode);
+            return `
         <tr>
             <td>${getArticleCode(item.articleId)}</td>
             <td>${getArticleName(item.articleId)}</td>
@@ -793,7 +993,8 @@ function renderOrderDetail(order: Order) {
             <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
         </tr>
     `;
-    }).join("");
+        })
+        .join("");
 }
 
 function normalizeColor(value?: string) {
@@ -832,7 +1033,9 @@ async function migrateLegacyVariants() {
             return {
                 ...item,
                 variantCode: `${article.code}-0000`,
-                colors: Array.from({ length: article.composition.length }).map(() => ""),
+                colors: Array.from({ length: article.composition.length }).map(
+                    () => "",
+                ),
             };
         }
         return item;
@@ -845,7 +1048,10 @@ async function migrateLegacyVariants() {
 function nextVariantCode(article: Article) {
     const prefix = `${article.code}-`;
     const existing = articleInventory
-        .filter((v) => v.articleId === article.id && v.variantCode?.startsWith(prefix))
+        .filter(
+            (v) =>
+                v.articleId === article.id && v.variantCode?.startsWith(prefix),
+        )
         .map((v) => parseInt(v.variantCode.replace(prefix, ""), 10))
         .filter((n) => !Number.isNaN(n));
     const next = existing.length ? Math.max(...existing) + 1 : 0;
@@ -889,7 +1095,10 @@ function formatVariantColors(article: Article | undefined, colors: string[]) {
     return parts.length ? parts.join(", ") : "Nessun colore";
 }
 
-function formatVariantLabel(article: Article | undefined, variantCode?: string) {
+function formatVariantLabel(
+    article: Article | undefined,
+    variantCode?: string,
+) {
     if (!variantCode) return "-";
     if (!article) return variantCode.replace("-", "");
     return variantCode.replace(`${article.code}-`, "").replace("-", "");
@@ -925,7 +1134,7 @@ function applyInventoryDelta(deltaMap: Map<string, InventoryDelta>) {
         let row = updated.find(
             (i) =>
                 i.materialId === materialId &&
-                normalizeColor(i.colorName) === colorKey
+                normalizeColor(i.colorName) === colorKey,
         );
         if (!row) {
             // auto-create row with 0 then validate
@@ -939,7 +1148,10 @@ function applyInventoryDelta(deltaMap: Map<string, InventoryDelta>) {
             updated.push(row);
         }
         if (row.quantity + delta.qty < 0) {
-            return { ok: false, message: "Giacenza insufficiente per materiale/colore" };
+            return {
+                ok: false,
+                message: "Giacenza insufficiente per materiale/colore",
+            };
         }
         row.quantity += delta.qty;
         row.lastUpdated = new Date().toISOString();
@@ -951,7 +1163,10 @@ function renderItems() {
     itemsBody.innerHTML = "";
     items.forEach((item, idx) => {
         const article = articles.find((a) => a.id === item.articleId);
-        const colorsLabel = formatVariantColors(article, item.colorSelections || []);
+        const colorsLabel = formatVariantColors(
+            article,
+            item.colorSelections || [],
+        );
         const variantLabel = formatVariantLabel(article, item.variantCode);
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -979,12 +1194,17 @@ function renderOrders() {
     const empty = document.getElementById("orders-empty");
 
     const filtered = orders.filter((order) => {
-        if (order.status === "confirmed" || order.status === "processed") return false;
+        if (order.status === "confirmed" || order.status === "processed")
+            return false;
         const articleNames = order.items
-            .map((i) => `${getArticleCode(i.articleId)} ${getArticleName(i.articleId)}`)
+            .map(
+                (i) =>
+                    `${getArticleCode(i.articleId)} ${getArticleName(i.articleId)}`,
+            )
             .join(" ");
         const fullName = getOrderFullName(order);
-        const text = `${fullName} ${order.clientEmail || ""} ${articleNames}`.toLowerCase();
+        const text =
+            `${fullName} ${order.clientEmail || ""} ${articleNames}`.toLowerCase();
         const matchesText = text.includes(filterText);
         const matchesStatus = !filterStatus || order.status === filterStatus;
         return matchesText && matchesStatus;
@@ -1020,18 +1240,28 @@ function renderOrders() {
     });
 
     filtered.forEach((order) => {
-        const costs = calculateOrderCosts(order.items, order.discountPercentage);
+        const costs = calculateOrderCosts(
+            order.items,
+            order.discountPercentage,
+        );
         const saleTotal = getOrderSaleTotal(order);
-        const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalQty = order.items.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+        );
         const codes = order.items
             .map((item) => {
                 const article = articles.find((a) => a.id === item.articleId);
-                const variantLabel = formatVariantLabel(article, item.variantCode);
+                const variantLabel = formatVariantLabel(
+                    article,
+                    item.variantCode,
+                );
                 return `${getArticleCode(item.articleId)} ${variantLabel} x${item.quantity}`;
             })
             .join(", ");
         const missingTotal = getOrderMissingTotal(order);
-        const depositLabel = missingTotal > 0 ? `Da produrre: ${missingTotal}` : "Disponibile";
+        const depositLabel =
+            missingTotal > 0 ? `Da produrre: ${missingTotal}` : "Disponibile";
         const tr = document.createElement("tr");
         tr.dataset.id = order.id;
         tr.innerHTML = `
@@ -1231,7 +1461,7 @@ form.addEventListener("submit", async (e) => {
                       notes: notesInput.value.trim(),
                       ...costs,
                   }
-                : o
+                : o,
         );
     } else {
         for (const [key, data] of newReq.entries()) {
@@ -1268,7 +1498,9 @@ form.addEventListener("submit", async (e) => {
             showMessage(invResult.message || "Errore giacenza", "error");
             return;
         }
-        const invSaved = await window.api.saveInventory(invResult.updated as InventoryItem[]);
+        const invSaved = await window.api.saveInventory(
+            invResult.updated as InventoryItem[],
+        );
         if (!invSaved) {
             showMessage("Errore salvataggio magazzino", "error");
             return;
@@ -1288,7 +1520,10 @@ form.addEventListener("submit", async (e) => {
         setFormVisible(false);
         resetForm();
         if (missingTotal > 0) {
-            showMessage(`Ordine salvato. Da produrre: ${missingTotal}`, "success");
+            showMessage(
+                `Ordine salvato. Da produrre: ${missingTotal}`,
+                "success",
+            );
         } else {
             showMessage("Ordine salvato!", "success");
         }
@@ -1324,10 +1559,15 @@ ordersBody.addEventListener("click", async (e) => {
             if (deltaMap.size > 0) {
                 const invResult = applyInventoryDelta(deltaMap);
                 if (!invResult.ok) {
-                    showMessage(invResult.message || "Errore giacenza", "error");
+                    showMessage(
+                        invResult.message || "Errore giacenza",
+                        "error",
+                    );
                     return;
                 }
-                const invSaved = await window.api.saveInventory(invResult.updated as InventoryItem[]);
+                const invSaved = await window.api.saveInventory(
+                    invResult.updated as InventoryItem[],
+                );
                 if (!invSaved) {
                     showMessage("Errore salvataggio magazzino", "error");
                     return;
@@ -1350,7 +1590,7 @@ ordersBody.addEventListener("click", async (e) => {
         return;
     }
 
-    const row = (target.closest("tr") as HTMLTableRowElement | null);
+    const row = target.closest("tr") as HTMLTableRowElement | null;
     const rowId = row?.dataset.id;
     if (!rowId) return;
     const order = orders.find((o) => o.id === rowId);
@@ -1361,7 +1601,11 @@ ordersBody.addEventListener("click", async (e) => {
         return;
     }
     const url = `orders.html?popup=1&view=detail&id=${order.id}`;
-    const win = window.open(url, `order-detail-${order.id}`, "width=1200,height=800");
+    const win = window.open(
+        url,
+        `order-detail-${order.id}`,
+        "width=1200,height=800",
+    );
     if (win) {
         openOrderWindows.set(order.id, win);
         win.addEventListener("beforeunload", () => {
@@ -1418,7 +1662,9 @@ detailEditBtn.addEventListener("click", () => {
 });
 
 async function updateOrderStatus(orderId: string, status: Order["status"]) {
-    const updated = orders.map((o) => (o.id === orderId ? { ...o, status } : o));
+    const updated = orders.map((o) =>
+        o.id === orderId ? { ...o, status } : o,
+    );
     const success = await window.api.saveOrders(updated);
     if (success) {
         orders = updated;
@@ -1434,7 +1680,10 @@ detailConfirmBtn.addEventListener("click", async () => {
     if (!order) return;
     const missingTotal = getOrderMissingTotal(order);
     if (missingTotal > 0) {
-        showMessage(`Attenzione: deposito insufficiente. Da produrre: ${missingTotal}`, "error");
+        showMessage(
+            `Attenzione: deposito insufficiente. Da produrre: ${missingTotal}`,
+            "error",
+        );
         clearMessage(3000);
     }
     const ok = await updateOrderStatus(id, "confirmed");
@@ -1465,14 +1714,44 @@ detailPdfBtn.addEventListener("click", async () => {
     if (!id) return;
     const order = orders.find((o) => o.id === id);
     if (!order) return;
+    pdfFilenameInput.value = `preventivo-${order.id}.pdf`;
+    pdfModal.classList.remove("hidden");
+});
+
+function closePdfModal() {
+    pdfModal.classList.add("hidden");
+}
+
+pdfCancelBtn.addEventListener("click", () => closePdfModal());
+pdfBackdrop.addEventListener("click", () => closePdfModal());
+
+pdfConfirmBtn.addEventListener("click", async () => {
+    const { id } = getPopupParams();
+    if (!id) return;
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    if (!window.api?.exportOrderPdf) {
+        showMessage("Export PDF non disponibile", "error");
+        return;
+    }
     const html = buildOrderPdfHtml(order);
-    const filename = `preventivo-${order.id}.pdf`;
+    const filename =
+        pdfFilenameInput.value.trim() || `preventivo-${order.id}.pdf`;
     try {
-        const result = await window.api.exportOrderPdf({ html, filename });
+        showMessage("Esportazione PDF in corso...", "success");
+        const result = await window.api.exportOrderPdf({
+            html,
+            filename,
+            skipDialog: true,
+        });
         if (result?.ok) {
-            showMessage("PDF esportato!", "success");
+            showMessage(
+                `PDF esportato: ${result.filePath || filename}`,
+                "success",
+            );
             clearMessage();
-        } else if (!result?.canceled) {
+            closePdfModal();
+        } else {
             showMessage(result?.message || "Errore esportazione PDF", "error");
         }
     } catch {

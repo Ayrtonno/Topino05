@@ -1,4 +1,4 @@
-import { qs, showMessage, clearMessage, formatDate } from "./shared";
+﻿﻿import { qs, showMessage, clearMessage, formatDate } from "./shared";
 
 type OrderItem = {
     articleId: string;
@@ -51,6 +51,7 @@ type Material = {
 
 type LaborConfig = {
     hourlyRate: number;
+    lastUpdated?: string;
 };
 
 type IncomeMovement = {
@@ -67,7 +68,7 @@ type ArticleInventoryItem = {
     variantCode: string;
     colors: string[];
     quantity: number;
-    lastUpdated: string;
+    lastUpdated?: string;
 };
 
 let orders: Order[] = [];
@@ -100,6 +101,12 @@ const detailProfitNoLabor = qs<HTMLDivElement>("#production-profit-no-labor");
 const detailProfitWithLabor = qs<HTMLDivElement>("#production-profit-with-labor");
 const detailProcessBtn = qs<HTMLButtonElement>("#production-process");
 const detailCloseBtn = qs<HTMLButtonElement>("#production-close");
+const detailPdfBtn = qs<HTMLButtonElement>("#production-pdf");
+const pdfModal = qs<HTMLDivElement>("#pdf-modal");
+const pdfFilenameInput = qs<HTMLInputElement>("#pdf-filename");
+const pdfCancelBtn = qs<HTMLButtonElement>("#pdf-cancel");
+const pdfConfirmBtn = qs<HTMLButtonElement>("#pdf-confirm");
+const pdfBackdrop = qs<HTMLDivElement>("#pdf-modal .modal-backdrop");
 const processModal = qs<HTMLDivElement>("#process-modal");
 const processDateInput = qs<HTMLInputElement>("#process-date");
 const processAmountInput = qs<HTMLInputElement>("#process-amount");
@@ -300,6 +307,369 @@ function calculateOrderCosts(itemsList: OrderItem[], discount: number) {
 function getOrderSaleTotal(order: Order) {
     const costs = calculateOrderCosts(order.items, order.discountPercentage);
     return costs.finalAmount;
+}
+
+function roundToHalf(value: number) {
+    return Math.round(value * 2) / 2;
+}
+
+function calculateArticlePricing(article: Article, packaging: boolean) {
+    let materialCost = 0;
+    let materialSellBase = 0;
+    for (const comp of article.composition) {
+        const material = materials.find((m) => m.id === comp.materialId);
+        if (material) {
+            materialCost += material.costPerUnit * comp.quantity;
+            materialSellBase += (material.sellingPricePerUnit || material.costPerUnit) * comp.quantity;
+        }
+    }
+    const laborCost = article.laborHoursRequired * laborConfig.hourlyRate;
+    const colorSurcharge = article.composition.length * 0.1;
+    const materialSell = (materialSellBase + colorSurcharge) * (1 + article.materialMarkupPct / 100);
+    const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
+    const total = materialSell + laborSell;
+    const rounded = roundToHalf(total);
+    const finalPrice = rounded + (packaging ? 0.5 : 0);
+    return {
+        materialCost,
+        materialSell,
+        laborHours: article.laborHoursRequired,
+        laborCost,
+        laborSell,
+        colorSurcharge,
+        total,
+        rounded,
+        finalPrice,
+    };
+}
+
+function calculateOrderSummary(order: Order) {
+    let materialSell = 0;
+    let laborHours = 0;
+    let finalTotal = 0;
+    order.items.forEach((item) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return;
+        const pricing = calculateArticlePricing(article, !!item.packaging);
+        materialSell += pricing.materialSell * item.quantity;
+        laborHours += pricing.laborHours * item.quantity;
+        finalTotal += item.unitPrice * item.quantity;
+    });
+    const discountAmount = finalTotal * ((order.discountPercentage || 0) / 100);
+    const finalAfterDiscount = finalTotal - discountAmount;
+    return {
+        materialSell,
+        laborHours,
+        finalTotal,
+        finalAfterDiscount,
+    };
+}
+
+function buildOrderPdfHtml(order: Order) {
+    const summary = calculateOrderSummary(order);
+    const costs = calculateOrderCosts(order.items, order.discountPercentage);
+    const colorsList = order.items
+        .map((item) => formatItemColors(item))
+        .filter((txt) => txt && txt !== "-")
+        .join(", ");
+    const packaging = order.items.some((i) => i.packaging) ? "Prodotto impacchettato." : "Prodotto non impacchettato.";
+    const totalRaw = order.items.reduce((sum, item) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return sum;
+        const pricing = calculateArticlePricing(article, !!item.packaging);
+        const rawUnit = pricing.total + (item.packaging ? 0.5 : 0);
+        return sum + rawUnit * item.quantity;
+    }, 0);
+    const totalRounded = roundToHalf(totalRaw);
+    const title = `Preventivo Ordine ${order.id}`;
+    const itemDetailsHtml = order.items.map((item) => {
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return "";
+        const lines = article.composition.map((c, idx) => {
+            const material = materials.find((m) => m.id === c.materialId);
+            const materialLabel = material?.name || c.materialId || "Materiale";
+            const descLabel = c.description || materialLabel;
+            const color = item.colorSelections && item.colorSelections[idx] ? item.colorSelections[idx] : "";
+            const value = color ? `${materialLabel} ${color}` : materialLabel;
+            return `<div class="info-line"><span class="info-label">${descLabel}</span><span class="info-value">${value}</span></div>`;
+        }).join("");
+        return `
+            <div class="info-item">
+                <div class="info-item-title">Articolo: ${article.name}</div>
+                <div class="info-lines">${lines || ""}</div>
+            </div>
+        `;
+    }).join("");
+    const packagingItems = order.items.filter((i) => i.packaging);
+    const packagingInfo = packagingItems.length === 0
+        ? "Packaging non richiesto."
+        : packagingItems.length === order.items.length
+            ? "Packaging incluso su tutti i prodotti."
+            : `Packaging incluso su: ${packagingItems.map((i) => getArticleName(i.articleId)).join(", ")}.`;
+    
+
+    return `
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        :root {
+            --blue: #4aa3ff;
+            --blue-dark: #1d6ec6;
+            --blue-soft: #e7f3ff;
+            --blue-veil: #f3f9ff;
+            --mint: #e8f8ef;
+            --ink: #0f172a;
+            --muted: #526074;
+            --card: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", "Trebuchet MS", Arial, sans-serif;
+            color: var(--ink);
+            background: #dfeeff;
+        }
+        .page {
+            padding: 26px 28px 34px;
+        }
+        .sheet {
+            background: #ffffff;
+            border-radius: 22px;
+            padding: 22px 22px 26px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+            border: 1px solid #cfe2ff;
+            position: relative;
+            overflow: hidden;
+        }
+        .sheet::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(74, 163, 255, 0.16), transparent 45%),
+                radial-gradient(circle at 100% 0%, rgba(74, 163, 255, 0.12), transparent 40%),
+                radial-gradient(circle at 10% 100%, rgba(209, 238, 255, 0.5), transparent 50%);
+            pointer-events: none;
+        }
+        .header {
+            position: relative;
+            border-radius: 18px;
+            padding: 16px 18px 18px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--ink);
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 75%);
+            border: 2px solid #c7ddff;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+            z-index: 1;
+        }
+        .header::before,
+        .header::after {
+            content: "";
+            position: absolute;
+            width: 28px;
+            height: 38px;
+            border: 2px solid #c7ddff;
+            border-radius: 16px 16px 9px 9px;
+            top: -22px;
+            background: #f8fbff;
+        }
+        .header::before { left: 30px; transform: rotate(-6deg); }
+        .header::after { right: 30px; transform: rotate(6deg); }
+        .badge {
+            position: absolute;
+            right: 14px;
+            top: 12px;
+            background: var(--blue);
+            color: #fff;
+            font-weight: 800;
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            padding: 4px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            box-shadow: 0 8px 16px rgba(74, 163, 255, 0.35);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin: 16px 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08);
+        }
+        .card .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .card .value {
+            margin-top: 6px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .pill {
+            background: var(--blue-veil);
+            border: 1px dashed #b9d7ff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: 800;
+        }
+        .total {
+            background: var(--mint);
+            border: 1px solid #bfe3d0;
+            border-radius: 14px;
+            padding: 10px 14px;
+            text-align: center;
+        }
+        .total .value {
+            font-size: 19px;
+            font-weight: 900;
+        }
+        .info {
+            border: 1px solid #cfe2ff;
+            border-radius: 16px;
+            margin-top: 12px;
+            background: #ffffff;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
+            position: relative;
+            z-index: 1;
+        }
+        .info-title {
+            background: var(--blue-soft);
+            text-align: center;
+            font-weight: 800;
+            padding: 8px 10px;
+            border-bottom: 1px dashed #b9d7ff;
+        }
+        .info-body {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .info-item {
+            padding: 8px 10px;
+            margin: 6px 0;
+            border: 1px solid #d8e9ff;
+            border-radius: 12px;
+            background: #f6fbff;
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06);
+        }
+        .info-item-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 800;
+            color: #0f5aa6;
+            margin-bottom: 6px;
+        }
+        .info-item-title::before {
+            content: "Articolo";
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .info-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 2px 0;
+        }
+        .info-label {
+            font-weight: 700;
+            color: #334155;
+        }
+        .info-value {
+            color: #0f172a;
+        }
+        .info-footer {
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 700;
+            color: #0f5aa6;
+        }
+        .footnote {
+            margin-top: 10px;
+            text-align: center;
+            color: #0f5aa6;
+            font-size: 11px;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="sheet">
+            <div class="header">
+                ${title}
+                <span class="badge">Preventivo</span>
+            </div>
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Costo Materiale</div>
+                    <div class="value">EUR ${costs.materialCost.toFixed(2)}</div>
+                </div>
+                <div class="card">
+                    <div class="label">Ore Lavoro</div>
+                    <div class="value">${summary.laborHours}</div>
+                </div>
+                <div class="card">
+                    <div class="label">Manodopera</div>
+                    <div class="value">EUR ${costs.laborCost.toFixed(2)}</div>
+                </div>
+                <div class="card">
+                    <div class="label">Totale</div>
+                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                </div>
+            </div>
+            <div class="split">
+                <div class="pill">Totale: EUR ${totalRaw.toFixed(2)}</div>
+                <div class="total">
+                    <div class="label">Totale Arrotondato</div>
+                    <div class="value">EUR ${totalRounded.toFixed(2)}</div>
+                </div>
+            </div>
+
+            <div class="info">
+                <div class="info-title">Informazioni aggiuntive</div>
+                <div class="info-body">
+                    ${itemDetailsHtml || ""}
+                    <div class="info-footer">${packagingInfo}</div>
+                </div>
+            </div>
+            <div class="footnote">Il totale � arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
+        </div>
+    </div>
+</body>
+</html>
+    `.trim();
 }
 
 function renderProduction() {
@@ -512,6 +882,61 @@ detailProcessBtn.addEventListener("click", async () => {
     processModal.classList.remove("hidden");
 });
 
+detailPdfBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { id } = getPopupParams();
+    if (!id) return;
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    pdfFilenameInput.value = `preventivo-${order.id}.pdf`;
+    pdfModal.classList.remove("hidden");
+});
+
+document.addEventListener(
+    "click",
+    (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("#production-pdf")) {
+            showMessage("Esportazione PDF in corso...", "success");
+        }
+    },
+    true
+);
+
+function closePdfModal() {
+    pdfModal.classList.add("hidden");
+}
+
+pdfCancelBtn.addEventListener("click", () => closePdfModal());
+pdfBackdrop.addEventListener("click", () => closePdfModal());
+
+pdfConfirmBtn.addEventListener("click", async () => {
+    const { id } = getPopupParams();
+    if (!id) return;
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    if (!window.api?.exportOrderPdf) {
+        showMessage("Export PDF non disponibile", "error");
+        return;
+    }
+    const html = buildOrderPdfHtml(order);
+    const filename = pdfFilenameInput.value.trim() || `preventivo-${order.id}.pdf`;
+    try {
+        showMessage("Esportazione PDF in corso...", "success");
+        const result = await window.api.exportOrderPdf({ html, filename, skipDialog: true });
+        if (result?.ok) {
+            showMessage(`PDF esportato: ${result.filePath || filename}`, "success");
+            clearMessage();
+            closePdfModal();
+        } else {
+            showMessage(result?.message || "Errore esportazione PDF", "error");
+        }
+    } catch {
+        showMessage("Errore esportazione PDF", "error");
+    }
+});
+
 function closeProcessModal() {
     processModal.classList.add("hidden");
 }
@@ -575,7 +1000,7 @@ processConfirmBtn.addEventListener("click", async () => {
         o.id === id
             ? {
                   ...o,
-                  status: "processed",
+                  status: "processed" as Order["status"],
                   processedDate: date,
                   paymentReceived: amount,
                   items: o.items.map((it) => ({
@@ -622,3 +1047,7 @@ if (params.popup) {
 }
 
 loadData();
+
+
+
+

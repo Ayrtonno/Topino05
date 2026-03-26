@@ -51,7 +51,7 @@ const api = {
         ipcRenderer.invoke("save-dashboard-config", config) as Promise<boolean>,
 
     // Export PDF
-    exportOrderPdf: (payload: { html: string; filename: string }) =>
+    exportOrderPdf: (payload: { html: string; filename: string; skipDialog?: boolean }) =>
         ipcRenderer.invoke("export-order-pdf", payload) as Promise<{ ok: boolean; filePath?: string; message?: string; canceled?: boolean }>,
 };
 

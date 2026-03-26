@@ -227,7 +227,7 @@
             <td><span class="hover-hint" data-tooltip="${colorsLabel || "Nessun colore"}">${variantLabel}</span></td>
             <td>${article?.name || "-"}</td>
             <td>${i.quantity.toFixed(0)}</td>
-            <td>${formatDate(i.lastUpdated)}</td>
+            <td>${formatDate(i.lastUpdated || "")}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${i.id}">Modifica</button>
             </td>

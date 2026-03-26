@@ -37,6 +37,7 @@ type Article = {
 
 type LaborConfig = {
     hourlyRate: number;
+    lastUpdated?: string;
 };
 
 let orders: Order[] = [];
@@ -57,8 +58,8 @@ const kpiLaborHours = qs<HTMLDivElement>("#kpi-labor-hours");
 const kpiProfit = qs<HTMLDivElement>("#kpi-profit");
 const kpiNetProfit = qs<HTMLDivElement>("#kpi-net-profit");
 
-const chartRevenue = qs<SVGSVGElement>("#chart-revenue");
-const chartOrders = qs<SVGSVGElement>("#chart-orders");
+const chartRevenue = document.querySelector<SVGSVGElement>("#chart-revenue") as SVGSVGElement;
+const chartOrders = document.querySelector<SVGSVGElement>("#chart-orders") as SVGSVGElement;
 const chartTooltip = qs<HTMLDivElement>("#chart-tooltip");
 
 const metricAvgOrder = qs<HTMLDivElement>("#metric-avg-order");

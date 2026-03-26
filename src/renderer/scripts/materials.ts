@@ -7,7 +7,7 @@ type Material = {
     sellingPricePerUnit: number;
     stockQuantity: number;
     unit: "grammi" | "pezzi";
-    lastUpdated: string;
+    lastUpdated?: string;
 };
 
 let materials: Material[] = [];
