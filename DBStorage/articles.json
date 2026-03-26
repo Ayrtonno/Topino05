@@ -289,5 +289,36 @@
     "materialMarkupPct": 0,
     "laborMarkupPct": 0,
     "createdAt": "2026-03-26T15:25:16.583Z"
+  },
+  {
+    "id": "1774554132982",
+    "code": "BF001E",
+    "name": "Borsa in Fettuccia con Base, Doppi Ganci e Moschettoni",
+    "composition": [
+      {
+        "materialId": "mat_base_borsa",
+        "description": "Base Borsa",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_ganci_coppia",
+        "description": "Ganci per Manico",
+        "quantity": 2
+      },
+      {
+        "materialId": "mat_fettuccia",
+        "description": "Corpo",
+        "quantity": 1200
+      },
+      {
+        "materialId": "1774554091867",
+        "description": "Moschettoni per Manici",
+        "quantity": 2
+      }
+    ],
+    "laborHoursRequired": 9,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T19:42:12.982Z"
   }
 ]

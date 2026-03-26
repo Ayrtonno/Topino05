@@ -1,7 +1,9 @@
 node_modules
 dist
+dist-ts
 build
 .env
 .DS_Store
 *.log
 .vscode
+DBStorage/PDF

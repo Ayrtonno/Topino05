@@ -132,5 +132,40 @@
     "createdAt": "2026-03-26T14:51:33.181Z",
     "processedDate": "2026-03-18",
     "paymentReceived": 10
+  },
+  {
+    "id": "26005",
+    "clientId": "1774524912625",
+    "clientFirstName": "Elena",
+    "clientLastName": "Noris",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-03-14",
+    "deliveryDate": "2026-03-30",
+    "items": [
+      {
+        "articleId": "1774554132982",
+        "quantity": 1,
+        "unitPrice": 104.5,
+        "packaging": false,
+        "colorSelections": [
+          "",
+          "",
+          "Verde",
+          ""
+        ],
+        "variantId": "1774554189725-845080f89bec7",
+        "variantCode": "BF001E-0000",
+        "depositMissing": 1,
+        "depositUsed": 0
+      }
+    ],
+    "materialCost": 44.5,
+    "laborCost": 36,
+    "finalAmount": 104.5,
+    "discountPercentage": 0,
+    "status": "pending",
+    "notes": "",
+    "createdAt": "2026-03-26T19:43:15.264Z"
   }
 ]

@@ -43,5 +43,14 @@
     "stockQuantity": 0,
     "unit": "pezzi",
     "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "1774554091867",
+    "name": "Moschettoni per Borsa (Coppia)",
+    "costPerUnit": 3.25,
+    "sellingPricePerUnit": 4,
+    "stockQuantity": 0,
+    "unit": "pezzi",
+    "lastUpdated": "2026-03-26T19:41:31.867Z"
   }
 ]

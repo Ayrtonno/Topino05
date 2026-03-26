@@ -294,9 +294,9 @@ export function calculateArticlePrice(
 ): number {
     const materialCost = calculateArticleCost(article, materials);
     const laborCost = calculateLaborCost(article, laborConfig);
-    const totalCost = materialCost + laborCost;
-    const marginAmount = totalCost * (article.marginPercentage / 100);
-    const finalPrice = totalCost + marginAmount;
+    const materialSell = materialCost * (1 + article.materialMarkupPct / 100);
+    const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
+    const finalPrice = materialSell + laborSell;
 
     return parseFloat(finalPrice.toFixed(2));
 }

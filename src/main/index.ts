@@ -181,12 +181,14 @@ ipcMain.handle("export-order-pdf", async (event, payload: { html: string; filena
     let targetPath: string | undefined;
     if (!skipDialog) {
         const parentWindow = BrowserWindow.fromWebContents(event.sender);
-        const { canceled, filePath } = await dialog.showSaveDialog({
+        const saveDialogOptions = {
             title: "Esporta Preventivo PDF",
             defaultPath: filename || "preventivo.pdf",
             filters: [{ name: "PDF", extensions: ["pdf"] }],
-            parent: parentWindow || undefined,
-        });
+        };
+        const { canceled, filePath } = parentWindow
+            ? await dialog.showSaveDialog(parentWindow, saveDialogOptions)
+            : await dialog.showSaveDialog(saveDialogOptions);
         targetPath = canceled ? undefined : filePath || undefined;
     }
     if (!targetPath) {

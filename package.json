@@ -8,6 +8,8 @@
   "license": "MIT",
   "scripts": {
     "start": "npm run build:ts && electron .",
+    "start:dev": "electron .",
+    "rebuild": "npm run build:ts",
     "build:ts": "node tools/build-ts.js",
     "build:dir": "npm run build:ts && electron-builder --dir",
     "build": "npm run build:ts && electron-builder --win",

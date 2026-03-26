@@ -30,10 +30,24 @@ type InventoryItem = {
     lastUpdated?: string;
 };
 
+type OrderItem = {
+    articleId: string;
+    variantId?: string;
+    variantCode?: string;
+    colorSelections?: string[];
+};
+
+type Order = {
+    id: string;
+    status: "pending" | "refused" | "confirmed" | "processed";
+    items: OrderItem[];
+};
+
 let items: ArticleInventoryItem[] = [];
 let articles: Article[] = [];
 let materials: Material[] = [];
 let inventory: InventoryItem[] = [];
+let orders: Order[] = [];
 let editingId: string | null = null;
 let filterText = "";
 let currentColorSelections: string[] = [];
@@ -165,6 +179,7 @@ async function loadData() {
         articles = await window.api.getArticles();
         materials = await window.api.getMaterials();
         inventory = await window.api.getInventory();
+        orders = await window.api.getOrders();
         const migrated = migrateLegacyVariants();
         if (migrated) {
             await window.api.saveArticleInventory(items);
@@ -238,6 +253,10 @@ function renderTable() {
             .filter(Boolean)
             .join(", ");
         const tr = document.createElement("tr");
+        const canDelete = canDeleteVariant(i);
+        const deleteTitle = !canDelete
+            ? getDeleteBlockedReason(i)
+            : "Elimina variante";
         tr.innerHTML = `
             <td>${article?.code || "-"}</td>
             <td><span class="hover-hint" data-tooltip="${colorsLabel || "Nessun colore"}">${variantLabel}</span></td>
@@ -246,6 +265,7 @@ function renderTable() {
             <td>${formatDate(i.lastUpdated || "")}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${i.id}">Modifica</button>
+                <button class="btn-small btn-danger" data-action="delete" data-id="${i.id}" ${canDelete ? "" : "disabled"} title="${deleteTitle}">Elimina</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -253,6 +273,49 @@ function renderTable() {
     if (empty) {
         empty.classList.toggle("hidden", filtered.length > 0);
     }
+}
+
+function isVariantUsedInOpenOrders(variant: ArticleInventoryItem) {
+    const article = getArticleById(variant.articleId);
+    const targetColors = normalizeColors(
+        variant.colors || [],
+        article?.composition.length || (variant.colors || []).length,
+    );
+    return orders.some((order) => {
+        if (order.status !== "pending" && order.status !== "confirmed") {
+            return false;
+        }
+        return order.items.some((item) => {
+            if (item.articleId !== variant.articleId) return false;
+            if (item.variantId && item.variantId === variant.id) return true;
+            if (item.variantCode && item.variantCode === variant.variantCode) {
+                return true;
+            }
+            if (item.colorSelections?.length) {
+                const itemColors = normalizeColors(
+                    item.colorSelections,
+                    article?.composition.length || item.colorSelections.length,
+                );
+                return itemColors.join("|") === targetColors.join("|");
+            }
+            return false;
+        });
+    });
+}
+
+function canDeleteVariant(variant: ArticleInventoryItem) {
+    if (variant.quantity > 0) return false;
+    return !isVariantUsedInOpenOrders(variant);
+}
+
+function getDeleteBlockedReason(variant: ArticleInventoryItem) {
+    if (variant.quantity > 0) {
+        return "Imposta quantita a 0 prima di eliminare";
+    }
+    if (isVariantUsedInOpenOrders(variant)) {
+        return "Variante usata in ordini pending/confirmed";
+    }
+    return "";
 }
 
 form.addEventListener("submit", async (e) => {
@@ -357,6 +420,29 @@ tbody.addEventListener("click", (e) => {
         qtyInput.value = row.quantity.toString();
         submitBtn.textContent = "Salva Modifiche";
         setFormVisible(true);
+        return;
+    }
+    if (action === "delete") {
+        if (!canDeleteVariant(row)) {
+            showMessage(getDeleteBlockedReason(row), "error");
+            return;
+        }
+        if (!window.confirm("Eliminare questa variante di deposito?")) return;
+        const updated = items.filter((i) => i.id !== id);
+        window.api.saveArticleInventory(updated).then((success) => {
+            if (!success) {
+                showMessage("Errore eliminazione variante", "error");
+                return;
+            }
+            items = updated;
+            if (editingId === id) {
+                setFormVisible(false);
+                resetForm();
+            }
+            renderTable();
+            showMessage("Variante eliminata", "success");
+            clearMessage();
+        });
     }
 });
 

@@ -755,20 +755,6 @@ function buildOrderPdfHtml(order: Order) {
         }
         .header::before { left: 30px; transform: rotate(-6deg); }
         .header::after { right: 30px; transform: rotate(6deg); }
-        .badge {
-            position: absolute;
-            right: 14px;
-            top: 12px;
-            background: var(--blue);
-            color: #fff;
-            font-weight: 800;
-            font-size: 10px;
-            letter-spacing: 0.06em;
-            padding: 4px 8px;
-            border-radius: 999px;
-            text-transform: uppercase;
-            box-shadow: 0 8px 16px rgba(74, 163, 255, 0.35);
-        }
         .grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -803,14 +789,6 @@ function buildOrderPdfHtml(order: Order) {
             position: relative;
             z-index: 1;
         }
-        .pill {
-            background: var(--blue-veil);
-            border: 1px dashed #b9d7ff;
-            border-radius: 12px;
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 800;
-        }
         .total {
             background: var(--mint);
             border: 1px solid #bfe3d0;
@@ -818,7 +796,15 @@ function buildOrderPdfHtml(order: Order) {
             padding: 10px 14px;
             text-align: center;
         }
+        .total .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 700;
+        }
         .total .value {
+            margin-top: 6px;
             font-size: 19px;
             font-weight: 900;
         }
@@ -905,7 +891,6 @@ function buildOrderPdfHtml(order: Order) {
         <div class="sheet">
             <div class="header">
                 ${title}
-                <span class="badge">Preventivo</span>
             </div>
             <div class="grid">
                 <div class="card">
@@ -926,7 +911,10 @@ function buildOrderPdfHtml(order: Order) {
                 </div>
             </div>
             <div class="split">
-                <div class="pill">Totale: EUR ${totalRaw.toFixed(2)}</div>
+                <div class="total">
+                    <div class="label">Totale</div>
+                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                </div>
                 <div class="total">
                     <div class="label">Totale Arrotondato</div>
                     <div class="value">EUR ${totalRounded.toFixed(2)}</div>
@@ -940,7 +928,7 @@ function buildOrderPdfHtml(order: Order) {
                     <div class="info-footer">${packagingInfo}</div>
                 </div>
             </div>
-            <div class="footnote">Il totale � arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
+            <div class="footnote">Il totale e' arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
         </div>
     </div>
 </body>
@@ -1016,7 +1004,9 @@ function buildVariantIndex() {
     articleInventory.forEach((v) => {
         byId.set(v.id, v);
         if (v.variantCode) byCode.set(v.variantCode, v);
-        const colors = normalizeColors(v.colors || [], v.colors?.length || 0);
+        const article = articles.find((a) => a.id === v.articleId);
+        const colorsLen = article?.composition.length || v.colors?.length || 0;
+        const colors = normalizeColors(v.colors || [], colorsLen);
         const key = getVariantKey(v.articleId, colors);
         byKey.set(key, v);
     });
@@ -1026,19 +1016,28 @@ function buildVariantIndex() {
 async function migrateLegacyVariants() {
     let changed = false;
     articleInventory = articleInventory.map((item) => {
-        if (!item.variantCode || !Array.isArray(item.colors)) {
-            const article = articles.find((a) => a.id === item.articleId);
-            if (!article) return item;
-            changed = true;
-            return {
-                ...item,
-                variantCode: `${article.code}-0000`,
-                colors: Array.from({ length: article.composition.length }).map(
-                    () => "",
-                ),
-            };
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return item;
+
+        const targetLen = article.composition.length;
+        const hasValidColors = Array.isArray(item.colors);
+        const normalizedColors = Array.from({ length: targetLen }).map(
+            (_, i) => ((hasValidColors ? item.colors[i] : "") || "").trim(),
+        );
+        const hasLengthMismatch =
+            !hasValidColors || item.colors.length !== targetLen;
+        const hasMissingCode = !item.variantCode;
+
+        if (!hasLengthMismatch && !hasMissingCode) {
+            return item;
         }
-        return item;
+
+        changed = true;
+        return {
+            ...item,
+            variantCode: item.variantCode || `${article.code}-0000`,
+            colors: normalizedColors,
+        };
     });
     if (changed) {
         await window.api.saveArticleInventory(articleInventory);
@@ -1069,7 +1068,9 @@ async function ensureVariant(article: Article, colors: string[]) {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         articleId: article.id,
         variantCode: nextVariantCode(article),
-        colors: normalized.map((_, idx) => colors[idx] || ""),
+        colors: Array.from({ length: article.composition.length }).map(
+            (_, idx) => (colors[idx] || "").trim(),
+        ),
         quantity: 0,
         lastUpdated: new Date().toISOString(),
     };

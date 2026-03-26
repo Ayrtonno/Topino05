@@ -36,7 +36,11 @@ type Article = {
     id: string;
     code: string;
     name: string;
-    composition: { materialId: string; description?: string; quantity: number }[];
+    composition: {
+        materialId: string;
+        description?: string;
+        quantity: number;
+    }[];
     laborHoursRequired: number;
     materialMarkupPct: number;
     laborMarkupPct: number;
@@ -98,7 +102,9 @@ const detailPaymentDate = qs<HTMLDivElement>("#production-payment-date");
 const detailPaymentAmount = qs<HTMLDivElement>("#production-payment-amount");
 const detailItemsBody = qs<HTMLTableSectionElement>("#production-items-body");
 const detailProfitNoLabor = qs<HTMLDivElement>("#production-profit-no-labor");
-const detailProfitWithLabor = qs<HTMLDivElement>("#production-profit-with-labor");
+const detailProfitWithLabor = qs<HTMLDivElement>(
+    "#production-profit-with-labor",
+);
 const detailProcessBtn = qs<HTMLButtonElement>("#production-process");
 const detailCloseBtn = qs<HTMLButtonElement>("#production-close");
 const detailPdfBtn = qs<HTMLButtonElement>("#production-pdf");
@@ -137,7 +143,8 @@ function getOrderFullName(order: Order) {
 }
 
 function getOrderYearKey(order: Order) {
-    const dateStr = order.requestedDate || order.createdAt || order.deliveryDate;
+    const dateStr =
+        order.requestedDate || order.createdAt || order.deliveryDate;
     const d = dateStr ? new Date(dateStr) : new Date();
     const yy = (d.getFullYear() % 100).toString().padStart(2, "0");
     return yy;
@@ -164,7 +171,10 @@ function normalizeOrderIds(list: Order[]) {
     const byYear = buildOrderIdIndex(updated);
     const toFix = updated.filter((o) => !isNewOrderId(o.id));
     if (!toFix.length) return { updated, changed: false };
-    toFix.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    toFix.sort(
+        (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
     toFix.forEach((o) => {
         const yearKey = getOrderYearKey(o);
         const next = (byYear.get(yearKey) || 0) + 1;
@@ -201,14 +211,19 @@ function buildVariantIndex() {
     articleInventory.forEach((v) => {
         byId.set(v.id, v);
         if (v.variantCode) byCode.set(v.variantCode, v);
-        const colors = normalizeColors(v.colors || [], v.colors?.length || 0);
+        const article = articles.find((a) => a.id === v.articleId);
+        const colorsLen = article?.composition.length || v.colors?.length || 0;
+        const colors = normalizeColors(v.colors || [], colorsLen);
         const key = getVariantKey(v.articleId, colors);
         byKey.set(key, v);
     });
     return { byId, byCode, byKey };
 }
 
-function formatVariantLabel(article: Article | undefined, variantCode?: string) {
+function formatVariantLabel(
+    article: Article | undefined,
+    variantCode?: string,
+) {
     if (!variantCode) return "-";
     if (!article) return variantCode.replace("-", "");
     return variantCode.replace(`${article.code}-`, "").replace("-", "");
@@ -217,17 +232,28 @@ function formatVariantLabel(article: Article | undefined, variantCode?: string) 
 async function migrateLegacyVariants() {
     let changed = false;
     articleInventory = articleInventory.map((item) => {
-        if (!item.variantCode || !Array.isArray(item.colors)) {
-            const article = articles.find((a) => a.id === item.articleId);
-            if (!article) return item;
-            changed = true;
-            return {
-                ...item,
-                variantCode: `${article.code}-0000`,
-                colors: Array.from({ length: article.composition.length }).map(() => ""),
-            };
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) return item;
+
+        const targetLen = article.composition.length;
+        const hasValidColors = Array.isArray(item.colors);
+        const normalizedColors = Array.from({ length: targetLen }).map(
+            (_, i) => ((hasValidColors ? item.colors[i] : "") || "").trim(),
+        );
+        const hasLengthMismatch =
+            !hasValidColors || item.colors.length !== targetLen;
+        const hasMissingCode = !item.variantCode;
+
+        if (!hasLengthMismatch && !hasMissingCode) {
+            return item;
         }
-        return item;
+
+        changed = true;
+        return {
+            ...item,
+            variantCode: item.variantCode || `${article.code}-0000`,
+            colors: normalizedColors,
+        };
     });
     if (changed) {
         await window.api.saveArticleInventory(articleInventory);
@@ -248,7 +274,10 @@ function computeMissingByItem(itemsList: OrderItem[]) {
             variant = index.byCode.get(item.variantCode);
         } else if (item.colorSelections?.length) {
             const article = articles.find((a) => a.id === item.articleId);
-            const normalized = normalizeColors(item.colorSelections, article?.composition.length || item.colorSelections.length);
+            const normalized = normalizeColors(
+                item.colorSelections,
+                article?.composition.length || item.colorSelections.length,
+            );
             const key = getVariantKey(item.articleId, normalized);
             variant = index.byKey.get(key);
         }
@@ -287,13 +316,18 @@ function calculateOrderCosts(itemsList: OrderItem[], discount: number) {
         for (const comp of article.composition) {
             const material = materials.find((m) => m.id === comp.materialId);
             if (material) {
-                materialCost += material.costPerUnit * comp.quantity * item.quantity;
+                materialCost +=
+                    material.costPerUnit * comp.quantity * item.quantity;
             }
         }
-        laborCost += article.laborHoursRequired * laborConfig.hourlyRate * item.quantity;
+        laborCost +=
+            article.laborHoursRequired * laborConfig.hourlyRate * item.quantity;
     }
 
-    const subtotal = itemsList.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+    const subtotal = itemsList.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0,
+    );
     const discountAmount = subtotal * (discount / 100);
     const finalAmount = subtotal - discountAmount;
 
@@ -320,12 +354,16 @@ function calculateArticlePricing(article: Article, packaging: boolean) {
         const material = materials.find((m) => m.id === comp.materialId);
         if (material) {
             materialCost += material.costPerUnit * comp.quantity;
-            materialSellBase += (material.sellingPricePerUnit || material.costPerUnit) * comp.quantity;
+            materialSellBase +=
+                (material.sellingPricePerUnit || material.costPerUnit) *
+                comp.quantity;
         }
     }
     const laborCost = article.laborHoursRequired * laborConfig.hourlyRate;
     const colorSurcharge = article.composition.length * 0.1;
-    const materialSell = (materialSellBase + colorSurcharge) * (1 + article.materialMarkupPct / 100);
+    const materialSell =
+        (materialSellBase + colorSurcharge) *
+        (1 + article.materialMarkupPct / 100);
     const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
     const total = materialSell + laborSell;
     const rounded = roundToHalf(total);
@@ -372,7 +410,9 @@ function buildOrderPdfHtml(order: Order) {
         .map((item) => formatItemColors(item))
         .filter((txt) => txt && txt !== "-")
         .join(", ");
-    const packaging = order.items.some((i) => i.packaging) ? "Prodotto impacchettato." : "Prodotto non impacchettato.";
+    const packaging = order.items.some((i) => i.packaging)
+        ? "Prodotto impacchettato."
+        : "Prodotto non impacchettato.";
     const totalRaw = order.items.reduce((sum, item) => {
         const article = articles.find((a) => a.id === item.articleId);
         if (!article) return sum;
@@ -382,31 +422,43 @@ function buildOrderPdfHtml(order: Order) {
     }, 0);
     const totalRounded = roundToHalf(totalRaw);
     const title = `Preventivo Ordine ${order.id}`;
-    const itemDetailsHtml = order.items.map((item) => {
-        const article = articles.find((a) => a.id === item.articleId);
-        if (!article) return "";
-        const lines = article.composition.map((c, idx) => {
-            const material = materials.find((m) => m.id === c.materialId);
-            const materialLabel = material?.name || c.materialId || "Materiale";
-            const descLabel = c.description || materialLabel;
-            const color = item.colorSelections && item.colorSelections[idx] ? item.colorSelections[idx] : "";
-            const value = color ? `${materialLabel} ${color}` : materialLabel;
-            return `<div class="info-line"><span class="info-label">${descLabel}</span><span class="info-value">${value}</span></div>`;
-        }).join("");
-        return `
+    const itemDetailsHtml = order.items
+        .map((item) => {
+            const article = articles.find((a) => a.id === item.articleId);
+            if (!article) return "";
+            const lines = article.composition
+                .map((c, idx) => {
+                    const material = materials.find(
+                        (m) => m.id === c.materialId,
+                    );
+                    const materialLabel =
+                        material?.name || c.materialId || "Materiale";
+                    const descLabel = c.description || materialLabel;
+                    const color =
+                        item.colorSelections && item.colorSelections[idx]
+                            ? item.colorSelections[idx]
+                            : "";
+                    const value = color
+                        ? `${materialLabel} ${color}`
+                        : materialLabel;
+                    return `<div class="info-line"><span class="info-label">${descLabel}</span><span class="info-value">${value}</span></div>`;
+                })
+                .join("");
+            return `
             <div class="info-item">
                 <div class="info-item-title">Articolo: ${article.name}</div>
                 <div class="info-lines">${lines || ""}</div>
             </div>
         `;
-    }).join("");
+        })
+        .join("");
     const packagingItems = order.items.filter((i) => i.packaging);
-    const packagingInfo = packagingItems.length === 0
-        ? "Packaging non richiesto."
-        : packagingItems.length === order.items.length
-            ? "Packaging incluso su tutti i prodotti."
-            : `Packaging incluso su: ${packagingItems.map((i) => getArticleName(i.articleId)).join(", ")}.`;
-    
+    const packagingInfo =
+        packagingItems.length === 0
+            ? "Packaging non richiesto."
+            : packagingItems.length === order.items.length
+              ? "Packaging incluso su tutti i prodotti."
+              : `Packaging incluso su: ${packagingItems.map((i) => getArticleName(i.articleId)).join(", ")}.`;
 
     return `
 <!DOCTYPE html>
@@ -479,20 +531,6 @@ function buildOrderPdfHtml(order: Order) {
         }
         .header::before { left: 30px; transform: rotate(-6deg); }
         .header::after { right: 30px; transform: rotate(6deg); }
-        .badge {
-            position: absolute;
-            right: 14px;
-            top: 12px;
-            background: var(--blue);
-            color: #fff;
-            font-weight: 800;
-            font-size: 10px;
-            letter-spacing: 0.06em;
-            padding: 4px 8px;
-            border-radius: 999px;
-            text-transform: uppercase;
-            box-shadow: 0 8px 16px rgba(74, 163, 255, 0.35);
-        }
         .grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -527,14 +565,6 @@ function buildOrderPdfHtml(order: Order) {
             position: relative;
             z-index: 1;
         }
-        .pill {
-            background: var(--blue-veil);
-            border: 1px dashed #b9d7ff;
-            border-radius: 12px;
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 800;
-        }
         .total {
             background: var(--mint);
             border: 1px solid #bfe3d0;
@@ -542,7 +572,15 @@ function buildOrderPdfHtml(order: Order) {
             padding: 10px 14px;
             text-align: center;
         }
+        .total .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 700;
+        }
         .total .value {
+            margin-top: 6px;
             font-size: 19px;
             font-weight: 900;
         }
@@ -629,7 +667,6 @@ function buildOrderPdfHtml(order: Order) {
         <div class="sheet">
             <div class="header">
                 ${title}
-                <span class="badge">Preventivo</span>
             </div>
             <div class="grid">
                 <div class="card">
@@ -650,7 +687,10 @@ function buildOrderPdfHtml(order: Order) {
                 </div>
             </div>
             <div class="split">
-                <div class="pill">Totale: EUR ${totalRaw.toFixed(2)}</div>
+                <div class="total">
+                    <div class="label">Totale</div>
+                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                </div>
                 <div class="total">
                     <div class="label">Totale Arrotondato</div>
                     <div class="value">EUR ${totalRounded.toFixed(2)}</div>
@@ -664,7 +704,7 @@ function buildOrderPdfHtml(order: Order) {
                     <div class="info-footer">${packagingInfo}</div>
                 </div>
             </div>
-            <div class="footnote">Il totale � arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
+            <div class="footnote">Il totale e' arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
         </div>
     </div>
 </body>
@@ -676,11 +716,16 @@ function renderProduction() {
     productionBody.innerHTML = "";
     const empty = document.getElementById("production-empty");
     const filtered = orders.filter((order) => {
-        if (order.status !== "confirmed" && order.status !== "processed") return false;
+        if (order.status !== "confirmed" && order.status !== "processed")
+            return false;
         const articleNames = order.items
-            .map((i) => `${getArticleCode(i.articleId)} ${getArticleName(i.articleId)}`)
+            .map(
+                (i) =>
+                    `${getArticleCode(i.articleId)} ${getArticleName(i.articleId)}`,
+            )
             .join(" ");
-        const text = `${getOrderFullName(order)} ${order.clientEmail || ""} ${articleNames}`.toLowerCase();
+        const text =
+            `${getOrderFullName(order)} ${order.clientEmail || ""} ${articleNames}`.toLowerCase();
         const matchesText = text.includes(filterText);
         const matchesStatus = !filterStatus || order.status === filterStatus;
         return matchesText && matchesStatus;
@@ -710,17 +755,27 @@ function renderProduction() {
     });
 
     filtered.forEach((order) => {
-        const costs = calculateOrderCosts(order.items, order.discountPercentage);
+        const costs = calculateOrderCosts(
+            order.items,
+            order.discountPercentage,
+        );
         const saleTotal = getOrderSaleTotal(order);
         const soldAmount =
-            order.status === "processed" && typeof order.paymentReceived === "number"
+            order.status === "processed" &&
+            typeof order.paymentReceived === "number"
                 ? order.paymentReceived
                 : null;
-        const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalQty = order.items.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+        );
         const codes = order.items
             .map((item) => {
                 const article = articles.find((a) => a.id === item.articleId);
-                const variantLabel = formatVariantLabel(article, item.variantCode);
+                const variantLabel = formatVariantLabel(
+                    article,
+                    item.variantCode,
+                );
                 return `${getArticleCode(item.articleId)} ${variantLabel} x${item.quantity}`;
             })
             .join(", ");
@@ -750,14 +805,19 @@ function renderDetail(order: Order) {
     detailRequestDate.textContent = formatDate(order.requestedDate || "");
     detailDeliveryDate.textContent = formatDate(order.deliveryDate || "");
     detailStatus.textContent = order.status;
-    detailPaymentDate.textContent = order.processedDate ? formatDate(order.processedDate) : "-";
+    detailPaymentDate.textContent = order.processedDate
+        ? formatDate(order.processedDate)
+        : "-";
     detailPaymentAmount.textContent =
-        typeof order.paymentReceived === "number" ? `EUR ${order.paymentReceived.toFixed(2)}` : "-";
+        typeof order.paymentReceived === "number"
+            ? `EUR ${order.paymentReceived.toFixed(2)}`
+            : "-";
 
     const costs = calculateOrderCosts(order.items, order.discountPercentage);
     const saleTotal = getOrderSaleTotal(order);
     const actualSale =
-        order.status === "processed" && typeof order.paymentReceived === "number"
+        order.status === "processed" &&
+        typeof order.paymentReceived === "number"
             ? order.paymentReceived
             : saleTotal;
     const profitNoLabor = actualSale - costs.materialCost;
@@ -767,8 +827,7 @@ function renderDetail(order: Order) {
 
     const missingList = computeMissingByItem(order.items);
     detailItemsBody.innerHTML = order.items
-        .map(
-            (item, idx) => {
+        .map((item, idx) => {
             const article = articles.find((a) => a.id === item.articleId);
             const colorsLabel = formatItemColors(item);
             const variantLabel = formatVariantLabel(article, item.variantCode);
@@ -785,8 +844,7 @@ function renderDetail(order: Order) {
             <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
         </tr>
     `;
-        }
-        )
+        })
         .join("");
 
     detailProcessBtn.textContent = "Venduto";
@@ -853,7 +911,11 @@ productionBody.addEventListener("click", (e) => {
     }
     openingProductionLock = true;
     const url = `orders-production.html?popup=1&view=detail&id=${rowId}`;
-    const win = window.open(url, `production-detail-${rowId}`, "width=1200,height=800");
+    const win = window.open(
+        url,
+        `production-detail-${rowId}`,
+        "width=1200,height=800",
+    );
     if (win) {
         openProductionWindows.set(rowId, win);
         win.addEventListener("beforeunload", () => {
@@ -873,7 +935,10 @@ detailProcessBtn.addEventListener("click", async () => {
     const order = orders.find((o) => o.id === id);
     if (!order) return;
     if (order.status !== "confirmed") {
-        showMessage("L'ordine deve essere Confirmed per essere venduto", "error");
+        showMessage(
+            "L'ordine deve essere Confirmed per essere venduto",
+            "error",
+        );
         clearMessage();
         return;
     }
@@ -901,7 +966,7 @@ document.addEventListener(
             showMessage("Esportazione PDF in corso...", "success");
         }
     },
-    true
+    true,
 );
 
 function closePdfModal() {
@@ -921,12 +986,20 @@ pdfConfirmBtn.addEventListener("click", async () => {
         return;
     }
     const html = buildOrderPdfHtml(order);
-    const filename = pdfFilenameInput.value.trim() || `preventivo-${order.id}.pdf`;
+    const filename =
+        pdfFilenameInput.value.trim() || `preventivo-${order.id}.pdf`;
     try {
         showMessage("Esportazione PDF in corso...", "success");
-        const result = await window.api.exportOrderPdf({ html, filename, skipDialog: true });
+        const result = await window.api.exportOrderPdf({
+            html,
+            filename,
+            skipDialog: true,
+        });
         if (result?.ok) {
-            showMessage(`PDF esportato: ${result.filePath || filename}`, "success");
+            showMessage(
+                `PDF esportato: ${result.filePath || filename}`,
+                "success",
+            );
             clearMessage();
             closePdfModal();
         } else {
@@ -964,7 +1037,10 @@ processConfirmBtn.addEventListener("click", async () => {
     const missingList = computeMissingByItem(order.items);
     const missingTotal = missingList.reduce((sum, value) => sum + value, 0);
     if (missingTotal > 0) {
-        showMessage(`Deposito insufficiente. Da produrre: ${missingTotal}`, "error");
+        showMessage(
+            `Deposito insufficiente. Da produrre: ${missingTotal}`,
+            "error",
+        );
         return;
     }
 
@@ -979,7 +1055,10 @@ processConfirmBtn.addEventListener("click", async () => {
             row = index.byCode.get(item.variantCode);
         } else if (item.colorSelections?.length) {
             const article = articles.find((a) => a.id === item.articleId);
-            const normalized = normalizeColors(item.colorSelections, article?.composition.length || item.colorSelections.length);
+            const normalized = normalizeColors(
+                item.colorSelections,
+                article?.composition.length || item.colorSelections.length,
+            );
             const key = getVariantKey(item.articleId, normalized);
             row = index.byKey.get(key);
         }
@@ -989,7 +1068,8 @@ processConfirmBtn.addEventListener("click", async () => {
         invRow.quantity = Math.max(0, invRow.quantity - item.quantity);
         invRow.lastUpdated = now;
     });
-    const inventorySaved = await window.api.saveArticleInventory(updatedInventory);
+    const inventorySaved =
+        await window.api.saveArticleInventory(updatedInventory);
     if (!inventorySaved) {
         showMessage("Errore salvataggio deposito articoli", "error");
         return;
@@ -1009,7 +1089,7 @@ processConfirmBtn.addEventListener("click", async () => {
                       depositMissing: 0,
                   })),
               }
-            : o
+            : o,
     );
     const orderSaved = await window.api.saveOrders(updatedOrders);
     if (!orderSaved) {
@@ -1025,7 +1105,10 @@ processConfirmBtn.addEventListener("click", async () => {
         receivedDate: date,
         createdAt: new Date().toISOString(),
     };
-    const moveSaved = await window.api.saveIncomeMovements([...movements, newMovement]);
+    const moveSaved = await window.api.saveIncomeMovements([
+        ...movements,
+        newMovement,
+    ]);
     if (!moveSaved) {
         showMessage("Errore salvataggio movimento economico", "error");
         return;
@@ -1047,7 +1130,3 @@ if (params.popup) {
 }
 
 loadData();
-
-
-
-
