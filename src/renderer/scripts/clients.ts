@@ -11,12 +11,14 @@ type Client = {
 
 let clients: Client[] = [];
 let editingId: string | null = null;
+let sortMode = "name-asc";
 
 const form = qs<HTMLFormElement>("#client-form");
 const refreshBtn = qs<HTMLButtonElement>("#refresh-clients");
 const newBtn = qs<HTMLButtonElement>("#new-client");
 const listSection = qs<HTMLDivElement>("#clients-list-section");
 const body = qs<HTMLTableSectionElement>("#clients-body");
+const sortSelect = qs<HTMLSelectElement>("#sort-clients");
 const firstNameInput = qs<HTMLInputElement>("#client-first-name");
 const lastNameInput = qs<HTMLInputElement>("#client-last-name");
 const emailInput = qs<HTMLInputElement>("#client-email");
@@ -48,7 +50,31 @@ function showOnly(section: "list" | "form") {
 function renderClients() {
     body.innerHTML = "";
     const empty = document.getElementById("clients-empty");
-    clients.forEach((c) => {
+    const sorted = [...clients];
+    sorted.sort((a, b) => {
+        const nameA = `${a.firstName} ${a.lastName}`.trim();
+        const nameB = `${b.firstName} ${b.lastName}`.trim();
+        const emailA = (a.email || "").toLowerCase();
+        const emailB = (b.email || "").toLowerCase();
+        const phoneA = (a.phone || "").toLowerCase();
+        const phoneB = (b.phone || "").toLowerCase();
+        switch (sortMode) {
+            case "name-desc":
+                return nameB.localeCompare(nameA);
+            case "email-asc":
+                return emailA.localeCompare(emailB);
+            case "email-desc":
+                return emailB.localeCompare(emailA);
+            case "phone-asc":
+                return phoneA.localeCompare(phoneB);
+            case "phone-desc":
+                return phoneB.localeCompare(phoneA);
+            case "name-asc":
+            default:
+                return nameA.localeCompare(nameB);
+        }
+    });
+    sorted.forEach((c) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${c.firstName} ${c.lastName}</td>
@@ -74,6 +100,11 @@ async function loadClients() {
 }
 
 refreshBtn.addEventListener("click", loadClients);
+
+sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
+    renderClients();
+});
 
 newBtn.addEventListener("click", () => {
     const { popup } = getPopupParams();

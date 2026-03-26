@@ -50,6 +50,18 @@
                             <option value="refused">Refused</option>
                         </select>
                     </div>
+                    <div class="field">
+                        <select id="sort-orders">
+                            <option value="date-desc">Data (recente)</option>
+                            <option value="date-asc">Data (meno recente)</option>
+                            <option value="client-asc">Cliente (A-Z)</option>
+                            <option value="client-desc">Cliente (Z-A)</option>
+                            <option value="total-asc">Totale (crescente)</option>
+                            <option value="total-desc">Totale (decrescente)</option>
+                            <option value="deposit-asc">Da produrre (crescente)</option>
+                            <option value="deposit-desc">Da produrre (decrescente)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="right">
                     <span class="badge primary">Aggiornato</span>
@@ -215,6 +227,7 @@
                     <div class="actions">
                         <button id="order-detail-confirm" class="btn-small">Conferma</button>
                         <button id="order-detail-refuse" class="btn-small btn-danger">Rifiuta</button>
+                        <button id="order-detail-pdf" class="btn-small">Esporta PDF</button>
                         <button id="order-detail-edit" class="btn-small">Modifica</button>
                         <button id="order-detail-close" class="btn-small">Chiudi</button>
                     </div>

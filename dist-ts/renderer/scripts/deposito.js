@@ -47,11 +47,14 @@
   var editingId = null;
   var filterText = "";
   var currentColorSelections = [];
+  var sortMode = "code-asc";
+  var editingColors = [];
   var form = qs("#deposit-form");
   var toggleBtn = qs("#toggle-deposit-form");
   var tbody = qs("#deposit-body");
   var searchInput = qs("#search-deposit");
-  var refreshBtn = qs("#refresh-deposit");
+  var refreshBtn = document.querySelector("#refresh-deposit");
+  var sortSelect = qs("#sort-deposit");
   var articleSelect = qs("#deposit-article");
   var qtyInput = qs("#deposit-qty");
   var moveType = qs("#deposit-move-type");
@@ -68,6 +71,7 @@
     moveType.value = "carico";
     submitBtn.textContent = "Salva";
     editingId = null;
+    editingColors = [];
     currentColorSelections = [];
     colorsBody.innerHTML = "";
   }
@@ -179,6 +183,35 @@
       const text = `${article?.code || ""} ${article?.name || ""}`.toLowerCase();
       return text.includes(filterText);
     });
+    filtered.sort((a, b) => {
+      const articleA = getArticleById(a.articleId);
+      const articleB = getArticleById(b.articleId);
+      const codeA = articleA?.code || "";
+      const codeB = articleB?.code || "";
+      const nameA = articleA?.name || "";
+      const nameB = articleB?.name || "";
+      const varA = parseInt(a.variantCode?.replace(`${codeA}-`, "").replace("-", "") || "0", 10);
+      const varB = parseInt(b.variantCode?.replace(`${codeB}-`, "").replace("-", "") || "0", 10);
+      switch (sortMode) {
+        case "code-desc":
+          return codeB.localeCompare(codeA);
+        case "variant-asc":
+          return varA - varB;
+        case "variant-desc":
+          return varB - varA;
+        case "name-asc":
+          return nameA.localeCompare(nameB);
+        case "name-desc":
+          return nameB.localeCompare(nameA);
+        case "qty-asc":
+          return a.quantity - b.quantity;
+        case "qty-desc":
+          return b.quantity - a.quantity;
+        case "code-asc":
+        default:
+          return codeA.localeCompare(codeB);
+      }
+    });
     filtered.forEach((i) => {
       const article = getArticleById(i.articleId);
       const variantLabel = article && i.variantCode ? i.variantCode.replace(`${article.code}-`, "").replace("-", "") : "-";
@@ -221,9 +254,27 @@
     }
     const variantColors = normalizeColors(currentColorSelections, article.composition.length).map((_, idx) => currentColorSelections[idx] || "");
     if (editingId) {
-      updated = updated.map(
-        (i) => i.id === editingId ? { ...i, quantity: qtyValue, lastUpdated: now } : i
-      );
+      const current = updated.find((i) => i.id === editingId);
+      if (!current) return;
+      const normalizedNew = normalizeColors(variantColors, article.composition.length);
+      const normalizedOld = normalizeColors(editingColors, article.composition.length);
+      const colorsChanged = normalizedNew.join("|") !== normalizedOld.join("|");
+      const target = findVariant(article.id, variantColors, article.composition.length);
+      if (colorsChanged && target && target.id !== current.id) {
+        target.quantity = qtyValue;
+        target.lastUpdated = now;
+        updated = updated.filter((i) => i.id !== current.id);
+      } else {
+        updated = updated.map(
+          (i) => i.id === editingId ? {
+            ...i,
+            quantity: qtyValue,
+            colors: variantColors,
+            variantCode: colorsChanged ? nextVariantCode(article) : i.variantCode,
+            lastUpdated: now
+          } : i
+        );
+      }
     } else {
       let row = findVariant(article.id, variantColors, article.composition.length);
       if (!row) {
@@ -269,11 +320,14 @@
       articleSelect.disabled = true;
       renderColorRows(getArticleById(row.articleId));
       const selects = colorsBody.querySelectorAll("select");
-      selects.forEach((select, idx) => {
-        const value = row.colors?.[idx] || "";
-        select.value = value;
-        select.disabled = true;
+      const colorList = row.colors || [];
+      selects.forEach((select) => {
+        const indexStr = select.getAttribute("data-color-index");
+        const index = indexStr ? parseInt(indexStr, 10) : -1;
+        const value = index >= 0 ? colorList[index] : "";
+        select.value = value || "";
       });
+      editingColors = [...row.colors || []];
       qtyInput.value = row.quantity.toString();
       submitBtn.textContent = "Salva Modifiche";
       setFormVisible(true);
@@ -288,7 +342,11 @@
     filterText = searchInput.value.trim().toLowerCase();
     renderTable();
   });
-  refreshBtn.addEventListener("click", () => {
+  sortSelect.addEventListener("change", () => {
+    sortMode = sortSelect.value;
+    renderTable();
+  });
+  refreshBtn?.addEventListener("click", () => {
     loadData();
   });
   articleSelect.addEventListener("change", () => {

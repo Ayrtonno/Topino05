@@ -111,7 +111,7 @@
   {
     "id": "1774532612430",
     "code": "YU001A",
-    "name": "Yuegui",
+    "name": "Yuegui 4 Colori",
     "composition": [
       {
         "materialId": "mat_ovatta",
@@ -130,12 +130,12 @@
       },
       {
         "materialId": "mat_lana",
-        "description": "Dettagli",
+        "description": "Dettagli Laterali",
         "quantity": 2
       },
       {
         "materialId": "mat_lana",
-        "description": "Dettagli Volto",
+        "description": "Occhi e Bocca",
         "quantity": 1
       }
     ],
@@ -159,5 +159,135 @@
     "materialMarkupPct": 0,
     "laborMarkupPct": 0,
     "createdAt": "2026-03-26T13:45:03.248Z"
+  },
+  {
+    "id": "1774534081911",
+    "code": "YU001B",
+    "name": "Yuegui 5 Colori",
+    "composition": [
+      {
+        "materialId": "mat_ovatta",
+        "description": "Imbottitura",
+        "quantity": 15
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Corpo Schiena/Testa",
+        "quantity": 5
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Corpo Pancia",
+        "quantity": 4
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Dettagli Laterali",
+        "quantity": 2
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Occhi",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_lana",
+        "description": "Bocca",
+        "quantity": 1
+      }
+    ],
+    "laborHoursRequired": 5,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T14:08:01.911Z"
+  },
+  {
+    "id": "1774538595016",
+    "code": "BF001A",
+    "name": "Borsa in Fettuccia con Base e Ganci",
+    "composition": [
+      {
+        "materialId": "mat_base_borsa",
+        "description": "Base Borsa",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_ganci_coppia",
+        "description": "Ganci per Manico",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_fettuccia",
+        "description": "Corpo",
+        "quantity": 800
+      }
+    ],
+    "laborHoursRequired": 8,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T15:23:15.016Z"
+  },
+  {
+    "id": "1774538643617",
+    "code": "BF001B",
+    "name": "Borsa in Fettuccia con Base",
+    "composition": [
+      {
+        "materialId": "mat_base_borsa",
+        "description": "Base Borsa",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_fettuccia",
+        "description": "Corpo",
+        "quantity": 800
+      }
+    ],
+    "laborHoursRequired": 8,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T15:24:03.617Z"
+  },
+  {
+    "id": "1774538675917",
+    "code": "BF001C",
+    "name": "Borsa in Fettuccia con Ganci",
+    "composition": [
+      {
+        "materialId": "mat_ganci_coppia",
+        "description": "Ganci per Manico",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_fettuccia",
+        "description": "Corpo",
+        "quantity": 800
+      }
+    ],
+    "laborHoursRequired": 8,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T15:24:35.917Z"
+  },
+  {
+    "id": "1774538716583",
+    "code": "BF001D",
+    "name": "Borsa in Fettuccia con Doppi Ganci",
+    "composition": [
+      {
+        "materialId": "mat_ganci_coppia",
+        "description": "Ganci per Manico",
+        "quantity": 2
+      },
+      {
+        "materialId": "mat_fettuccia",
+        "description": "Corpo",
+        "quantity": 800
+      }
+    ],
+    "laborHoursRequired": 10,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T15:25:16.583Z"
   }
 ]

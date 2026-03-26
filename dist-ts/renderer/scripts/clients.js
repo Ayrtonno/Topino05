@@ -34,11 +34,13 @@
   // src/renderer/scripts/clients.ts
   var clients = [];
   var editingId = null;
+  var sortMode = "name-asc";
   var form = qs("#client-form");
   var refreshBtn = qs("#refresh-clients");
   var newBtn = qs("#new-client");
   var listSection = qs("#clients-list-section");
   var body = qs("#clients-body");
+  var sortSelect = qs("#sort-clients");
   var firstNameInput = qs("#client-first-name");
   var lastNameInput = qs("#client-last-name");
   var emailInput = qs("#client-email");
@@ -66,7 +68,31 @@
   function renderClients() {
     body.innerHTML = "";
     const empty = document.getElementById("clients-empty");
-    clients.forEach((c) => {
+    const sorted = [...clients];
+    sorted.sort((a, b) => {
+      const nameA = `${a.firstName} ${a.lastName}`.trim();
+      const nameB = `${b.firstName} ${b.lastName}`.trim();
+      const emailA = (a.email || "").toLowerCase();
+      const emailB = (b.email || "").toLowerCase();
+      const phoneA = (a.phone || "").toLowerCase();
+      const phoneB = (b.phone || "").toLowerCase();
+      switch (sortMode) {
+        case "name-desc":
+          return nameB.localeCompare(nameA);
+        case "email-asc":
+          return emailA.localeCompare(emailB);
+        case "email-desc":
+          return emailB.localeCompare(emailA);
+        case "phone-asc":
+          return phoneA.localeCompare(phoneB);
+        case "phone-desc":
+          return phoneB.localeCompare(phoneA);
+        case "name-asc":
+        default:
+          return nameA.localeCompare(nameB);
+      }
+    });
+    sorted.forEach((c) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
             <td>${c.firstName} ${c.lastName}</td>
@@ -90,6 +116,10 @@
     }
   }
   refreshBtn.addEventListener("click", loadClients);
+  sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
+    renderClients();
+  });
   newBtn.addEventListener("click", () => {
     const { popup } = getPopupParams();
     if (popup) {

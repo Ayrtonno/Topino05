@@ -180,6 +180,9 @@ declare global {
             salesTarget: number;
             lastUpdated: string;
         }) => Promise<boolean>;
+
+        // Export PDF
+        exportOrderPdf: (payload: { html: string; filename: string }) => Promise<{ ok: boolean; filePath?: string; message?: string; canceled?: boolean }>;
     }
 
     interface Window {

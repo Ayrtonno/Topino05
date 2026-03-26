@@ -1,39 +1,48 @@
 [
   {
-    "id": "1774531296945-167e334b9bfb7",
+    "id": "1774533285059-32717c22838ae",
     "articleId": "1774514248718",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T13:21:36.945Z",
     "variantCode": "PL001A-0000",
     "colors": [
-      "",
-      ""
-    ]
+      "Bianco",
+      "Azzurro Acqua"
+    ],
+    "quantity": 0,
+    "lastUpdated": "2026-03-26T13:54:54.858Z"
   },
   {
-    "id": "1774531296945-b531b0eef214a",
-    "articleId": "1774531174393",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T13:21:36.945Z",
-    "variantCode": "GU001A-0000",
+    "id": "1774535179793-bbbdeb826dc9d",
+    "articleId": "1774532612430",
+    "variantCode": "YU001A-0001",
     "colors": [
       "",
       "",
       "",
       "",
       ""
-    ]
+    ],
+    "quantity": 1,
+    "lastUpdated": "2026-03-26T14:44:09.921Z"
   },
   {
-    "id": "1774531296945-b7351828f594",
-    "articleId": "1774531268628",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T13:21:36.945Z",
-    "variantCode": "VG001A-0000",
+    "id": "1774536444286-757cd717bbec8",
+    "articleId": "1774514248718",
+    "variantCode": "PL001A-0001",
     "colors": [
-      "",
-      "",
-      ""
-    ]
+      "Bianco",
+      "Verde"
+    ],
+    "quantity": 1,
+    "lastUpdated": "2026-03-26T14:47:24.286Z"
+  },
+  {
+    "id": "1774536690408-a3fd35888d1b5",
+    "articleId": "1774532703248",
+    "variantCode": "PS001A-0000",
+    "colors": [
+      "Nero"
+    ],
+    "quantity": 0,
+    "lastUpdated": "2026-03-26T15:16:28.228Z"
   }
 ]

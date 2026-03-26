@@ -77,11 +77,15 @@ let laborConfig: LaborConfig = { hourlyRate: 4 };
 let articleInventory: ArticleInventoryItem[] = [];
 let filterText = "";
 let filterStatus = "";
+let sortMode = "date-desc";
+const openProductionWindows = new Map<string, Window>();
+let openingProductionLock = false;
 
 const refreshBtn = qs<HTMLButtonElement>("#refresh-production");
 const productionBody = qs<HTMLTableSectionElement>("#production-body");
 const searchInput = qs<HTMLInputElement>("#search-production");
 const statusFilter = qs<HTMLSelectElement>("#filter-production-status");
+const sortSelect = qs<HTMLSelectElement>("#sort-production");
 const listSection = qs<HTMLDivElement>("#production-list-section");
 const detailSection = qs<HTMLDivElement>("#production-detail-section");
 const detailTitle = qs<HTMLDivElement>("#production-detail-title");
@@ -123,6 +127,44 @@ function getOrderFullName(order: Order) {
     const last = order.clientLastName || "";
     const full = `${first} ${last}`.trim();
     return full || legacyName || "-";
+}
+
+function getOrderYearKey(order: Order) {
+    const dateStr = order.requestedDate || order.createdAt || order.deliveryDate;
+    const d = dateStr ? new Date(dateStr) : new Date();
+    const yy = (d.getFullYear() % 100).toString().padStart(2, "0");
+    return yy;
+}
+
+function isNewOrderId(id: string) {
+    return /^\d{5}$/.test(id);
+}
+
+function buildOrderIdIndex(list: Order[]) {
+    const byYear = new Map<string, number>();
+    list.forEach((o) => {
+        if (!isNewOrderId(o.id)) return;
+        const yearKey = o.id.slice(0, 2);
+        const seq = parseInt(o.id.slice(2), 10);
+        if (Number.isNaN(seq)) return;
+        byYear.set(yearKey, Math.max(byYear.get(yearKey) || 0, seq));
+    });
+    return byYear;
+}
+
+function normalizeOrderIds(list: Order[]) {
+    const updated = [...list];
+    const byYear = buildOrderIdIndex(updated);
+    const toFix = updated.filter((o) => !isNewOrderId(o.id));
+    if (!toFix.length) return { updated, changed: false };
+    toFix.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    toFix.forEach((o) => {
+        const yearKey = getOrderYearKey(o);
+        const next = (byYear.get(yearKey) || 0) + 1;
+        byYear.set(yearKey, next);
+        o.id = `${yearKey}${next.toString().padStart(3, "0")}`;
+    });
+    return { updated, changed: true };
 }
 
 function getArticleCode(id: string) {
@@ -273,6 +315,29 @@ function renderProduction() {
         const matchesStatus = !filterStatus || order.status === filterStatus;
         return matchesText && matchesStatus;
     });
+    filtered.sort((a, b) => {
+        const nameA = getOrderFullName(a).toLowerCase();
+        const nameB = getOrderFullName(b).toLowerCase();
+        const dateA = new Date(a.requestedDate || a.createdAt).getTime();
+        const dateB = new Date(b.requestedDate || b.createdAt).getTime();
+        const totalA = getOrderSaleTotal(a);
+        const totalB = getOrderSaleTotal(b);
+        switch (sortMode) {
+            case "date-asc":
+                return dateA - dateB;
+            case "client-asc":
+                return nameA.localeCompare(nameB);
+            case "client-desc":
+                return nameB.localeCompare(nameA);
+            case "total-asc":
+                return totalA - totalB;
+            case "total-desc":
+                return totalB - totalA;
+            case "date-desc":
+            default:
+                return dateB - dateA;
+        }
+    });
 
     filtered.forEach((order) => {
         const costs = calculateOrderCosts(order.items, order.discountPercentage);
@@ -366,6 +431,11 @@ function renderDetail(order: Order) {
 async function loadData() {
     try {
         orders = await window.api.getOrders();
+        const normalized = normalizeOrderIds(orders);
+        if (normalized.changed) {
+            await window.api.saveOrders(normalized.updated);
+            orders = normalized.updated;
+        }
         articles = await window.api.getArticles();
         materials = await window.api.getMaterials();
         laborConfig = await window.api.getLaborConfig();
@@ -395,13 +465,34 @@ statusFilter.addEventListener("change", () => {
     renderProduction();
 });
 
+sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
+    renderProduction();
+});
+
 productionBody.addEventListener("click", (e) => {
+    if (openingProductionLock) return;
     const target = e.target as HTMLElement;
     const row = target.closest("tr") as HTMLTableRowElement | null;
     const rowId = row?.dataset.id;
     if (!rowId) return;
+    const existing = openProductionWindows.get(rowId);
+    if (existing && !existing.closed) {
+        existing.focus();
+        return;
+    }
+    openingProductionLock = true;
     const url = `orders-production.html?popup=1&view=detail&id=${rowId}`;
-    window.open(url, "_blank", "width=1200,height=800");
+    const win = window.open(url, `production-detail-${rowId}`, "width=1200,height=800");
+    if (win) {
+        openProductionWindows.set(rowId, win);
+        win.addEventListener("beforeunload", () => {
+            openProductionWindows.delete(rowId);
+        });
+    }
+    setTimeout(() => {
+        openingProductionLock = false;
+    }, 400);
 });
 
 detailCloseBtn.addEventListener("click", () => window.close());

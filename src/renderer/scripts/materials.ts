@@ -13,12 +13,14 @@ type Material = {
 let materials: Material[] = [];
 let editingId: string | null = null;
 let filterText = "";
+let sortMode = "name-asc";
 
 const form = qs<HTMLFormElement>("#material-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
 const tbody = qs<HTMLTableSectionElement>("#materials-body");
 const searchInput = qs<HTMLInputElement>("#search-materials");
 const refreshBtn = qs<HTMLButtonElement>("#refresh-materials");
+const sortSelect = qs<HTMLSelectElement>("#sort-materials");
 
 const nameInput = qs<HTMLInputElement>("#mat-name");
 const costInput = qs<HTMLInputElement>("#mat-cost");
@@ -55,6 +57,27 @@ function renderTable() {
     const filtered = materials.filter((m) =>
         m.name.toLowerCase().includes(filterText)
     );
+    filtered.sort((a, b) => {
+        switch (sortMode) {
+            case "name-desc":
+                return b.name.localeCompare(a.name);
+            case "cost-asc":
+                return a.costPerUnit - b.costPerUnit;
+            case "cost-desc":
+                return b.costPerUnit - a.costPerUnit;
+            case "selling-asc":
+                return a.sellingPricePerUnit - b.sellingPricePerUnit;
+            case "selling-desc":
+                return b.sellingPricePerUnit - a.sellingPricePerUnit;
+            case "unit-asc":
+                return a.unit.localeCompare(b.unit);
+            case "unit-desc":
+                return b.unit.localeCompare(a.unit);
+            case "name-asc":
+            default:
+                return a.name.localeCompare(b.name);
+        }
+    });
     filtered.forEach((m) => {
         const unitLabel = m.unit === "pezzi" ? "€/pz" : "€/g";
         const tr = document.createElement("tr");
@@ -77,6 +100,11 @@ function renderTable() {
 
 searchInput?.addEventListener("input", () => {
     filterText = searchInput.value.trim().toLowerCase();
+    renderTable();
+});
+
+sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
     renderTable();
 });
 

@@ -17,8 +17,8 @@
     "id": "inv_lana_bianco",
     "materialId": "mat_lana",
     "colorName": "Bianco",
-    "quantity": 44,
-    "lastUpdated": "2026-03-26T12:28:57.316Z"
+    "quantity": 34,
+    "lastUpdated": "2026-03-26T14:48:56.751Z"
   },
   {
     "id": "inv_lana_blu_notte",
@@ -80,15 +80,15 @@
     "id": "inv_lana_nero",
     "materialId": "mat_lana",
     "colorName": "Nero",
-    "quantity": 82,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "quantity": 69,
+    "lastUpdated": "2026-03-26T14:51:33.181Z"
   },
   {
     "id": "inv_lana_rosa_chiaro",
     "materialId": "mat_lana",
     "colorName": "Rosa Chiaro",
-    "quantity": 41,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "quantity": 36,
+    "lastUpdated": "2026-03-26T14:26:28.233Z"
   },
   {
     "id": "inv_lana_rosa_scuro",
@@ -108,8 +108,8 @@
     "id": "inv_lana_verde",
     "materialId": "mat_lana",
     "colorName": "Verde",
-    "quantity": 82,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "quantity": 77,
+    "lastUpdated": "2026-03-26T14:48:56.751Z"
   },
   {
     "id": "inv_lana_verde_acqua",
@@ -122,8 +122,8 @@
     "id": "inv_lana_viola",
     "materialId": "mat_lana",
     "colorName": "Viola",
-    "quantity": 15,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "quantity": 13,
+    "lastUpdated": "2026-03-26T14:26:28.233Z"
   },
   {
     "id": "1774530104023",
@@ -150,5 +150,11 @@
     "materialId": "mat_ganci_coppia",
     "quantity": 2,
     "lastUpdated": "2026-03-26T13:02:13.389Z"
+  },
+  {
+    "id": "1774535124574",
+    "materialId": "mat_ovatta",
+    "quantity": 985,
+    "lastUpdated": "2026-03-26T14:26:28.232Z"
   }
 ]

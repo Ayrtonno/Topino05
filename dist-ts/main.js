@@ -348,4 +348,37 @@ import_electron.ipcMain.handle("get-dashboard-config", async () => {
 import_electron.ipcMain.handle("save-dashboard-config", async (_, config) => {
   return saveDashboardConfig(config);
 });
+import_electron.ipcMain.handle("export-order-pdf", async (_, payload) => {
+  const { html, filename } = payload || {};
+  if (!html) return { ok: false, message: "HTML mancante" };
+  const { canceled, filePath } = await import_electron.dialog.showSaveDialog({
+    title: "Esporta Preventivo PDF",
+    defaultPath: filename || "preventivo.pdf",
+    filters: [{ name: "PDF", extensions: ["pdf"] }]
+  });
+  if (canceled || !filePath) return { ok: false, canceled: true };
+  const win = new import_electron.BrowserWindow({
+    show: false,
+    webPreferences: {
+      sandbox: true
+    }
+  });
+  try {
+    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+    await win.loadURL(dataUrl);
+    const pdfBuffer = await win.webContents.printToPDF({
+      printBackground: true,
+      pageSize: "A4",
+      margins: { marginType: "default" }
+    });
+    const fs2 = await import("fs");
+    fs2.writeFileSync(filePath, pdfBuffer);
+    return { ok: true, filePath };
+  } catch (err) {
+    console.error("PDF export failed:", err);
+    return { ok: false, message: "Errore esportazione PDF" };
+  } finally {
+    win.close();
+  }
+});
 //# sourceMappingURL=main.js.map

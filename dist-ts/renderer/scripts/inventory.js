@@ -45,12 +45,14 @@
   var editingId = null;
   var filterText = "";
   var filterMaterial = "";
+  var sortMode = "material-asc";
   var form = qs("#inventory-form");
   var toggleBtn = qs("#toggle-form");
   var tbody = qs("#inventory-body");
   var searchInput = qs("#search-inventory");
   var filterSelect = qs("#filter-material");
   var refreshBtn = qs("#refresh-inventory");
+  var sortSelect = qs("#sort-inventory");
   var materialSelect = qs("#inv-material");
   var colorInput = qs("#inv-color");
   var qtyInput = qs("#inv-qty");
@@ -109,6 +111,41 @@
       const matchesText = text.includes(filterText);
       const matchesMaterial = !filterMaterial || i.materialId === filterMaterial;
       return matchesText && matchesMaterial;
+    });
+    filtered.sort((a, b) => {
+      const matA = getMaterialById(a.materialId);
+      const matB = getMaterialById(b.materialId);
+      const nameA = matA?.name || "";
+      const nameB = matB?.name || "";
+      const colorA = (a.colorName || "").toLowerCase();
+      const colorB = (b.colorName || "").toLowerCase();
+      const costA = matA?.costPerUnit || 0;
+      const costB = matB?.costPerUnit || 0;
+      const valueA = costA * a.quantity;
+      const valueB = costB * b.quantity;
+      switch (sortMode) {
+        case "material-desc":
+          return nameB.localeCompare(nameA);
+        case "color-asc":
+          return colorA.localeCompare(colorB);
+        case "color-desc":
+          return colorB.localeCompare(colorA);
+        case "qty-asc":
+          return a.quantity - b.quantity;
+        case "qty-desc":
+          return b.quantity - a.quantity;
+        case "cost-asc":
+          return costA - costB;
+        case "cost-desc":
+          return costB - costA;
+        case "value-asc":
+          return valueA - valueB;
+        case "value-desc":
+          return valueB - valueA;
+        case "material-asc":
+        default:
+          return nameA.localeCompare(nameB);
+      }
     });
     filtered.forEach((i) => {
       const mat = getMaterialById(i.materialId);
@@ -241,6 +278,10 @@
   });
   filterSelect?.addEventListener("change", () => {
     filterMaterial = filterSelect.value;
+    renderTable();
+  });
+  sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
     renderTable();
   });
   refreshBtn?.addEventListener("click", () => {

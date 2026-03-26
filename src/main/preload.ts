@@ -49,6 +49,10 @@ const api = {
         ipcRenderer.invoke("get-dashboard-config") as Promise<any>,
     saveDashboardConfig: (config: any) =>
         ipcRenderer.invoke("save-dashboard-config", config) as Promise<boolean>,
+
+    // Export PDF
+    exportOrderPdf: (payload: { html: string; filename: string }) =>
+        ipcRenderer.invoke("export-order-pdf", payload) as Promise<{ ok: boolean; filePath?: string; message?: string; canceled?: boolean }>,
 };
 
 contextBridge.exposeInMainWorld("api", api);

@@ -35,11 +35,13 @@
   var materials = [];
   var editingId = null;
   var filterText = "";
+  var sortMode = "name-asc";
   var form = qs("#material-form");
   var toggleBtn = qs("#toggle-form");
   var tbody = qs("#materials-body");
   var searchInput = qs("#search-materials");
   var refreshBtn = qs("#refresh-materials");
+  var sortSelect = qs("#sort-materials");
   var nameInput = qs("#mat-name");
   var costInput = qs("#mat-cost");
   var sellingInput = qs("#mat-selling");
@@ -71,6 +73,27 @@
     const filtered = materials.filter(
       (m) => m.name.toLowerCase().includes(filterText)
     );
+    filtered.sort((a, b) => {
+      switch (sortMode) {
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "cost-asc":
+          return a.costPerUnit - b.costPerUnit;
+        case "cost-desc":
+          return b.costPerUnit - a.costPerUnit;
+        case "selling-asc":
+          return a.sellingPricePerUnit - b.sellingPricePerUnit;
+        case "selling-desc":
+          return b.sellingPricePerUnit - a.sellingPricePerUnit;
+        case "unit-asc":
+          return a.unit.localeCompare(b.unit);
+        case "unit-desc":
+          return b.unit.localeCompare(a.unit);
+        case "name-asc":
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
     filtered.forEach((m) => {
       const unitLabel = m.unit === "pezzi" ? "\u20AC/pz" : "\u20AC/g";
       const tr = document.createElement("tr");
@@ -92,6 +115,10 @@
   }
   searchInput?.addEventListener("input", () => {
     filterText = searchInput.value.trim().toLowerCase();
+    renderTable();
+  });
+  sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
     renderTable();
   });
   refreshBtn?.addEventListener("click", () => {

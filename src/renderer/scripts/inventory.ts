@@ -20,6 +20,7 @@ let materials: Material[] = [];
 let editingId: string | null = null;
 let filterText = "";
 let filterMaterial = "";
+let sortMode = "material-asc";
 
 const form = qs<HTMLFormElement>("#inventory-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
@@ -27,6 +28,7 @@ const tbody = qs<HTMLTableSectionElement>("#inventory-body");
 const searchInput = qs<HTMLInputElement>("#search-inventory");
 const filterSelect = qs<HTMLSelectElement>("#filter-material");
 const refreshBtn = qs<HTMLButtonElement>("#refresh-inventory");
+const sortSelect = qs<HTMLSelectElement>("#sort-inventory");
 
 const materialSelect = qs<HTMLSelectElement>("#inv-material");
 const colorInput = qs<HTMLInputElement>("#inv-color");
@@ -93,6 +95,41 @@ function renderTable() {
         const matchesText = text.includes(filterText);
         const matchesMaterial = !filterMaterial || i.materialId === filterMaterial;
         return matchesText && matchesMaterial;
+    });
+    filtered.sort((a, b) => {
+        const matA = getMaterialById(a.materialId);
+        const matB = getMaterialById(b.materialId);
+        const nameA = matA?.name || "";
+        const nameB = matB?.name || "";
+        const colorA = (a.colorName || "").toLowerCase();
+        const colorB = (b.colorName || "").toLowerCase();
+        const costA = matA?.costPerUnit || 0;
+        const costB = matB?.costPerUnit || 0;
+        const valueA = costA * a.quantity;
+        const valueB = costB * b.quantity;
+        switch (sortMode) {
+            case "material-desc":
+                return nameB.localeCompare(nameA);
+            case "color-asc":
+                return colorA.localeCompare(colorB);
+            case "color-desc":
+                return colorB.localeCompare(colorA);
+            case "qty-asc":
+                return a.quantity - b.quantity;
+            case "qty-desc":
+                return b.quantity - a.quantity;
+            case "cost-asc":
+                return costA - costB;
+            case "cost-desc":
+                return costB - costA;
+            case "value-asc":
+                return valueA - valueB;
+            case "value-desc":
+                return valueB - valueA;
+            case "material-asc":
+            default:
+                return nameA.localeCompare(nameB);
+        }
     });
     filtered.forEach((i) => {
         const mat = getMaterialById(i.materialId);
@@ -243,6 +280,11 @@ searchInput?.addEventListener("input", () => {
 
 filterSelect?.addEventListener("change", () => {
     filterMaterial = filterSelect.value;
+    renderTable();
+});
+
+sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
     renderTable();
 });
 

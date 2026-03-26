@@ -29,7 +29,9 @@ var api = {
   saveLaborConfig: (config) => import_electron.ipcRenderer.invoke("save-labor-config", config),
   // Dashboard Config API
   getDashboardConfig: () => import_electron.ipcRenderer.invoke("get-dashboard-config"),
-  saveDashboardConfig: (config) => import_electron.ipcRenderer.invoke("save-dashboard-config", config)
+  saveDashboardConfig: (config) => import_electron.ipcRenderer.invoke("save-dashboard-config", config),
+  // Export PDF
+  exportOrderPdf: (payload) => import_electron.ipcRenderer.invoke("export-order-pdf", payload)
 };
 import_electron.contextBridge.exposeInMainWorld("api", api);
 //# sourceMappingURL=preload.js.map

@@ -20,16 +20,21 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
     background: var(--bg);
     color: var(--text);
+    overflow: hidden;
 }
 
 .app {
     display: grid;
     grid-template-columns: 260px 1fr;
-    min-height: 100vh;
+    height: 100vh;
 }
 
 .app.single {
@@ -44,6 +49,7 @@ body {
     flex-direction: column;
     gap: 18px;
     border-right: 1px solid #111827;
+    overflow: hidden;
 }
 
 .logo {

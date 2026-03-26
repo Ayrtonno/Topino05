@@ -29,7 +29,6 @@
                     <p>Giacenze di articoli finiti pronti alla vendita.</p>
                 </div>
                 <div class="actions">
-                    <button id="refresh-deposit" class="btn-small">Aggiorna</button>
                     <button id="toggle-deposit-form" class="btn-primary">+ Nuova Giacenza</button>
                 </div>
             </div>
@@ -40,6 +39,18 @@
                 <div class="left">
                     <div class="field">
                         <input id="search-deposit" type="text" placeholder="Cerca articolo..." />
+                    </div>
+                    <div class="field">
+                        <select id="sort-deposit">
+                            <option value="code-asc">Codice (A-Z)</option>
+                            <option value="code-desc">Codice (Z-A)</option>
+                            <option value="variant-asc">Variante (crescente)</option>
+                            <option value="variant-desc">Variante (decrescente)</option>
+                            <option value="name-asc">Nome (A-Z)</option>
+                            <option value="name-desc">Nome (Z-A)</option>
+                            <option value="qty-asc">Quantita (crescente)</option>
+                            <option value="qty-desc">Quantita (decrescente)</option>
+                        </select>
                     </div>
                 </div>
                 <div class="right">

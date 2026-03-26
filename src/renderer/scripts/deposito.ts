@@ -37,12 +37,15 @@ let inventory: InventoryItem[] = [];
 let editingId: string | null = null;
 let filterText = "";
 let currentColorSelections: string[] = [];
+let sortMode = "code-asc";
+let editingColors: string[] = [];
 
 const form = qs<HTMLFormElement>("#deposit-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-deposit-form");
 const tbody = qs<HTMLTableSectionElement>("#deposit-body");
 const searchInput = qs<HTMLInputElement>("#search-deposit");
-const refreshBtn = qs<HTMLButtonElement>("#refresh-deposit");
+const refreshBtn = document.querySelector<HTMLButtonElement>("#refresh-deposit");
+const sortSelect = qs<HTMLSelectElement>("#sort-deposit");
 
 const articleSelect = qs<HTMLSelectElement>("#deposit-article");
 const qtyInput = qs<HTMLInputElement>("#deposit-qty");
@@ -62,6 +65,7 @@ function resetForm() {
     moveType.value = "carico";
     submitBtn.textContent = "Salva";
     editingId = null;
+    editingColors = [];
     currentColorSelections = [];
     colorsBody.innerHTML = "";
 }
@@ -190,6 +194,35 @@ function renderTable() {
         const text = `${article?.code || ""} ${article?.name || ""}`.toLowerCase();
         return text.includes(filterText);
     });
+    filtered.sort((a, b) => {
+        const articleA = getArticleById(a.articleId);
+        const articleB = getArticleById(b.articleId);
+        const codeA = articleA?.code || "";
+        const codeB = articleB?.code || "";
+        const nameA = articleA?.name || "";
+        const nameB = articleB?.name || "";
+        const varA = parseInt(a.variantCode?.replace(`${codeA}-`, "").replace("-", "") || "0", 10);
+        const varB = parseInt(b.variantCode?.replace(`${codeB}-`, "").replace("-", "") || "0", 10);
+        switch (sortMode) {
+            case "code-desc":
+                return codeB.localeCompare(codeA);
+            case "variant-asc":
+                return varA - varB;
+            case "variant-desc":
+                return varB - varA;
+            case "name-asc":
+                return nameA.localeCompare(nameB);
+            case "name-desc":
+                return nameB.localeCompare(nameA);
+            case "qty-asc":
+                return a.quantity - b.quantity;
+            case "qty-desc":
+                return b.quantity - a.quantity;
+            case "code-asc":
+            default:
+                return codeA.localeCompare(codeB);
+        }
+    });
     filtered.forEach((i) => {
         const article = getArticleById(i.articleId);
         const variantLabel = article && i.variantCode
@@ -241,11 +274,31 @@ form.addEventListener("submit", async (e) => {
         .map((_, idx) => currentColorSelections[idx] || "");
 
     if (editingId) {
-        updated = updated.map((i) =>
-            i.id === editingId
-                ? { ...i, quantity: qtyValue, lastUpdated: now }
-                : i
-        );
+        const current = updated.find((i) => i.id === editingId);
+        if (!current) return;
+        const normalizedNew = normalizeColors(variantColors, article.composition.length);
+        const normalizedOld = normalizeColors(editingColors, article.composition.length);
+        const colorsChanged = normalizedNew.join("|") !== normalizedOld.join("|");
+        const target = findVariant(article.id, variantColors, article.composition.length);
+
+        if (colorsChanged && target && target.id !== current.id) {
+            // move quantity to existing variant and remove current
+            target.quantity = qtyValue;
+            target.lastUpdated = now;
+            updated = updated.filter((i) => i.id !== current.id);
+        } else {
+            updated = updated.map((i) =>
+                i.id === editingId
+                    ? {
+                          ...i,
+                          quantity: qtyValue,
+                          colors: variantColors,
+                          variantCode: colorsChanged ? nextVariantCode(article) : i.variantCode,
+                          lastUpdated: now,
+                      }
+                    : i
+            );
+        }
     } else {
         let row = findVariant(article.id, variantColors, article.composition.length);
         if (!row) {
@@ -293,11 +346,14 @@ tbody.addEventListener("click", (e) => {
         articleSelect.disabled = true;
         renderColorRows(getArticleById(row.articleId));
         const selects = colorsBody.querySelectorAll("select");
-        selects.forEach((select, idx) => {
-            const value = row.colors?.[idx] || "";
-            (select as HTMLSelectElement).value = value;
-            (select as HTMLSelectElement).disabled = true;
+        const colorList = row.colors || [];
+        selects.forEach((select) => {
+            const indexStr = select.getAttribute("data-color-index");
+            const index = indexStr ? parseInt(indexStr, 10) : -1;
+            const value = index >= 0 ? colorList[index] : "";
+            (select as HTMLSelectElement).value = value || "";
         });
+        editingColors = [...(row.colors || [])];
         qtyInput.value = row.quantity.toString();
         submitBtn.textContent = "Salva Modifiche";
         setFormVisible(true);
@@ -315,7 +371,12 @@ searchInput.addEventListener("input", () => {
     renderTable();
 });
 
-refreshBtn.addEventListener("click", () => {
+sortSelect.addEventListener("change", () => {
+    sortMode = sortSelect.value;
+    renderTable();
+});
+
+refreshBtn?.addEventListener("click", () => {
     loadData();
 });
 

@@ -1,6 +1,6 @@
 [
   {
-    "id": "1774527537411",
+    "id": "26001",
     "clientId": "1774524912625",
     "clientFirstName": "Elena",
     "clientLastName": "Noris",
@@ -28,6 +28,109 @@
     "notes": "",
     "createdAt": "2026-03-26T12:18:57.411Z",
     "processedDate": "2026-02-25",
+    "paymentReceived": 10
+  },
+  {
+    "id": "26002",
+    "clientId": "1774524912625",
+    "clientFirstName": "Elena",
+    "clientLastName": "Noris",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-02-12",
+    "deliveryDate": "2026-02-25",
+    "items": [
+      {
+        "articleId": "1774532612430",
+        "quantity": 1,
+        "unitPrice": 22,
+        "packaging": false,
+        "colorSelections": [
+          "",
+          "Rosa Chiaro",
+          "Bianco",
+          "Viola",
+          "Nero"
+        ],
+        "variantId": "1774535179793-bbbdeb826dc9d",
+        "variantCode": "YU001A-0001",
+        "depositMissing": 1,
+        "depositUsed": 0
+      }
+    ],
+    "materialCost": 0.79,
+    "laborCost": 20,
+    "finalAmount": 22,
+    "discountPercentage": 0,
+    "status": "confirmed",
+    "notes": "",
+    "createdAt": "2026-03-26T14:26:28.232Z"
+  },
+  {
+    "id": "26003",
+    "clientId": "1774524912625",
+    "clientFirstName": "Elena",
+    "clientLastName": "Noris",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-03-05",
+    "deliveryDate": "2026-03-08",
+    "items": [
+      {
+        "articleId": "1774514248718",
+        "quantity": 1,
+        "unitPrice": 9,
+        "packaging": false,
+        "colorSelections": [
+          "Bianco",
+          "Verde"
+        ],
+        "variantId": "1774536444286-757cd717bbec8",
+        "variantCode": "PL001A-0001",
+        "depositMissing": 0,
+        "depositUsed": 1
+      }
+    ],
+    "materialCost": 0.31,
+    "laborCost": 8,
+    "finalAmount": 9,
+    "discountPercentage": 0,
+    "status": "confirmed",
+    "notes": "",
+    "createdAt": "2026-03-26T14:48:56.751Z"
+  },
+  {
+    "id": "26004",
+    "clientId": "1774536623990",
+    "clientFirstName": "Bruno",
+    "clientLastName": "Pizzi",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-03-10",
+    "deliveryDate": "2026-03-18",
+    "items": [
+      {
+        "articleId": "1774532703248",
+        "quantity": 1,
+        "unitPrice": 9,
+        "packaging": false,
+        "colorSelections": [
+          "Nero"
+        ],
+        "variantId": "1774536690408-a3fd35888d1b5",
+        "variantCode": "PS001A-0000",
+        "depositMissing": 0,
+        "depositUsed": 1
+      }
+    ],
+    "materialCost": 0.34,
+    "laborCost": 8,
+    "finalAmount": 9,
+    "discountPercentage": 0,
+    "status": "processed",
+    "notes": "",
+    "createdAt": "2026-03-26T14:51:33.181Z",
+    "processedDate": "2026-03-18",
     "paymentReceived": 10
   }
 ]

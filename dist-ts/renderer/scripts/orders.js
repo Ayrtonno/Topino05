@@ -51,9 +51,11 @@
   var items = [];
   var filterText = "";
   var filterStatus = "";
+  var sortMode = "date-desc";
   var currentColorSelections = [];
   var orderLoadRetry = false;
   var currentDetailOrderId = null;
+  var openOrderWindows = /* @__PURE__ */ new Map();
   var form = qs("#order-form");
   var toggleBtn = qs("#toggle-form");
   var refreshBtn = qs("#refresh-orders");
@@ -61,6 +63,7 @@
   var itemsBody = qs("#items-body");
   var searchInput = qs("#search-orders");
   var statusFilter = qs("#filter-status");
+  var sortSelect = qs("#sort-orders");
   var statsSection = qs("#orders-stats");
   var toolbarSection = qs("#orders-toolbar");
   var listSection = qs("#orders-list-section");
@@ -97,6 +100,7 @@
   var detailCloseBtn = qs("#order-detail-close");
   var detailConfirmBtn = qs("#order-detail-confirm");
   var detailRefuseBtn = qs("#order-detail-refuse");
+  var detailPdfBtn = qs("#order-detail-pdf");
   function setFormVisible(visible) {
     form.classList.toggle("hidden", !visible);
     toggleBtn.textContent = visible ? "Annulla" : "+ Nuovo Ordine";
@@ -149,6 +153,11 @@
         }
       };
       orders = await safeGet(window.api?.getOrders, []);
+      const normalized = normalizeOrderIds(orders);
+      if (normalized.changed) {
+        await window.api.saveOrders(normalized.updated);
+        orders = normalized.updated;
+      }
       articles = await safeGet(window.api?.getArticles, []);
       materials = await safeGet(window.api?.getMaterials, []);
       inventory = await safeGet(window.api?.getInventory, []);
@@ -328,6 +337,47 @@
   function roundToHalf(value) {
     return Math.round(value * 2) / 2;
   }
+  function getOrderYearKey(order) {
+    const dateStr = order.requestedDate || order.createdAt || order.deliveryDate;
+    const d = dateStr ? new Date(dateStr) : /* @__PURE__ */ new Date();
+    const yy = (d.getFullYear() % 100).toString().padStart(2, "0");
+    return yy;
+  }
+  function isNewOrderId(id) {
+    return /^\d{5}$/.test(id);
+  }
+  function buildOrderIdIndex(list) {
+    const byYear = /* @__PURE__ */ new Map();
+    list.forEach((o) => {
+      if (!isNewOrderId(o.id)) return;
+      const yearKey = o.id.slice(0, 2);
+      const seq = parseInt(o.id.slice(2), 10);
+      if (Number.isNaN(seq)) return;
+      byYear.set(yearKey, Math.max(byYear.get(yearKey) || 0, seq));
+    });
+    return byYear;
+  }
+  function normalizeOrderIds(list) {
+    const updated = [...list];
+    const byYear = buildOrderIdIndex(updated);
+    const toFix = updated.filter((o) => !isNewOrderId(o.id));
+    if (!toFix.length) return { updated, changed: false };
+    toFix.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    toFix.forEach((o) => {
+      const yearKey = getOrderYearKey(o);
+      const next = (byYear.get(yearKey) || 0) + 1;
+      byYear.set(yearKey, next);
+      o.id = `${yearKey}${next.toString().padStart(3, "0")}`;
+    });
+    return { updated, changed: true };
+  }
+  function nextOrderId() {
+    const now = /* @__PURE__ */ new Date();
+    const yearKey = (now.getFullYear() % 100).toString().padStart(2, "0");
+    const byYear = buildOrderIdIndex(orders);
+    const next = (byYear.get(yearKey) || 0) + 1;
+    return `${yearKey}${next.toString().padStart(3, "0")}`;
+  }
   function calculateArticlePricing(article, packaging) {
     let materialCost = 0;
     let materialSellBase = 0;
@@ -446,6 +496,176 @@
       finalAfterDiscount,
       saleTotal
     };
+  }
+  function buildOrderPdfHtml(order) {
+    const summary = calculateOrderSummary(order);
+    const costs = calculateOrderCosts(order.items, order.discountPercentage);
+    const colorsList = order.items.map((item) => formatItemColors(item)).filter((txt) => txt && txt !== "-").join(", ");
+    const packaging = order.items.some((i) => i.packaging) ? "Prodotto impacchettato." : "Prodotto non impacchettato.";
+    const totalRounded = roundToHalf(summary.finalTotal);
+    const title = `Preventivo Ordine ${order.id}`;
+    return `
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        :root {
+            --blue: #2563eb;
+            --soft: #e6f0ff;
+            --soft-2: #d9ebff;
+            --mint: #dff3e3;
+            --text: #0f172a;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background: #ffffff;
+        }
+        .page {
+            padding: 28px 30px;
+        }
+        .header {
+            border: 2px solid #0f172a;
+            padding: 16px 18px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 20px;
+            color: #0f172a;
+            position: relative;
+        }
+        .header::before, .header::after {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 36px;
+            border: 2px solid #0f172a;
+            border-radius: 14px 14px 6px 6px;
+            top: -24px;
+            background: #fff;
+        }
+        .header::before { left: 24px; transform: rotate(-6deg); }
+        .header::after { right: 24px; transform: rotate(6deg); }
+        .box {
+            border: 2px solid #0f172a;
+            margin: 14px 0;
+        }
+        .box .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid #0f172a;
+        }
+        .cell {
+            padding: 6px 8px;
+            text-align: center;
+            font-weight: 600;
+            background: var(--soft);
+            border-right: 1px solid #0f172a;
+        }
+        .cell:last-child { border-right: none; }
+        .value {
+            padding: 6px 8px;
+            text-align: center;
+            font-weight: 700;
+            background: var(--soft-2);
+        }
+        .row:last-child { border-bottom: none; }
+        .totals {
+            display: grid;
+            grid-template-columns: 1fr;
+            border-top: 2px solid #0f172a;
+        }
+        .totals .label {
+            background: #cfe7c9;
+            font-weight: 700;
+            padding: 6px 8px;
+            text-align: center;
+            border-bottom: 1px solid #0f172a;
+        }
+        .totals .amount {
+            background: #e6f6df;
+            font-weight: 800;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        .info {
+            border: 2px solid #0f172a;
+            margin-top: 10px;
+        }
+        .info-title {
+            background: var(--soft-2);
+            text-align: center;
+            font-weight: 700;
+            padding: 6px 8px;
+            border-bottom: 1px solid #0f172a;
+        }
+        .info-body {
+            padding: 8px 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .footnote {
+            margin-top: 8px;
+            text-align: center;
+            color: #b91c1c;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        .pair .cell, .pair .value {
+            border-right: 1px solid #0f172a;
+        }
+        .pair .cell:last-child, .pair .value:last-child { border-right: none; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">${title}</div>
+        <div class="box">
+            <div class="row pair">
+                <div class="cell">Costo Materiale</div>
+                <div class="cell">Manodopera</div>
+            </div>
+            <div class="row pair">
+                <div class="value">EUR ${costs.materialCost.toFixed(2)}</div>
+                <div class="value">EUR ${costs.laborCost.toFixed(2)}</div>
+            </div>
+            <div class="row pair">
+                <div class="cell">Ore</div>
+                <div class="cell">Totale</div>
+            </div>
+            <div class="row pair">
+                <div class="value">${summary.laborHours}</div>
+                <div class="value">EUR ${summary.finalTotal.toFixed(2)}</div>
+            </div>
+            <div class="totals">
+                <div class="label">Totale</div>
+                <div class="amount">EUR ${summary.finalTotal.toFixed(2)}</div>
+            </div>
+            <div class="totals">
+                <div class="label">Totale Arrotondato</div>
+                <div class="amount">EUR ${totalRounded.toFixed(2)}</div>
+            </div>
+        </div>
+
+        <div class="info">
+            <div class="info-title">Informazioni aggiuntive</div>
+            <div class="info-body">
+                Colori utilizzati: ${colorsList || "Nessuno"}.
+                ${packaging}
+            </div>
+        </div>
+        <div class="footnote">Il totale \xE8 arrotondato (eccesso o difetto) ad ogni 50 centesimi.</div>
+    </div>
+</body>
+</html>
+    `.trim();
   }
   function renderOrderDetail(order) {
     currentDetailOrderId = order.id;
@@ -654,6 +874,35 @@
       const matchesStatus = !filterStatus || order.status === filterStatus;
       return matchesText && matchesStatus;
     });
+    filtered.sort((a, b) => {
+      const nameA = getOrderFullName(a).toLowerCase();
+      const nameB = getOrderFullName(b).toLowerCase();
+      const dateA = new Date(a.requestedDate || a.createdAt).getTime();
+      const dateB = new Date(b.requestedDate || b.createdAt).getTime();
+      const totalA = getOrderSaleTotal(a);
+      const totalB = getOrderSaleTotal(b);
+      const depA = getOrderMissingTotal(a);
+      const depB = getOrderMissingTotal(b);
+      switch (sortMode) {
+        case "date-asc":
+          return dateA - dateB;
+        case "client-asc":
+          return nameA.localeCompare(nameB);
+        case "client-desc":
+          return nameB.localeCompare(nameA);
+        case "total-asc":
+          return totalA - totalB;
+        case "total-desc":
+          return totalB - totalA;
+        case "deposit-asc":
+          return depA - depB;
+        case "deposit-desc":
+          return depB - depA;
+        case "date-desc":
+        default:
+          return dateB - dateA;
+      }
+    });
     filtered.forEach((order) => {
       const costs = calculateOrderCosts(order.items, order.discountPercentage);
       const saleTotal = getOrderSaleTotal(order);
@@ -755,6 +1004,10 @@
     filterStatus = statusFilter.value;
     renderOrders();
   });
+  sortSelect?.addEventListener("change", () => {
+    sortMode = sortSelect.value;
+    renderOrders();
+  });
   itemsBody.addEventListener("click", (e) => {
     const target = e.target;
     const action = target.getAttribute("data-action");
@@ -850,7 +1103,7 @@
         });
       }
       const newOrder = {
-        id: Date.now().toString(),
+        id: nextOrderId(),
         clientId: clientSelect.value,
         clientFirstName: firstNameInput.value.trim(),
         clientLastName: lastNameInput.value.trim(),
@@ -918,10 +1171,10 @@
         const oldReq = computeRequiredMaterials(order2.items);
         const deltaMap = /* @__PURE__ */ new Map();
         for (const [key, data] of oldReq.entries()) {
-          const existing = deltaMap.get(key);
+          const existing2 = deltaMap.get(key);
           deltaMap.set(key, {
-            qty: (existing?.qty || 0) + data.qty,
-            colorName: existing?.colorName || data.colorName
+            qty: (existing2?.qty || 0) + data.qty,
+            colorName: existing2?.colorName || data.colorName
           });
         }
         if (deltaMap.size > 0) {
@@ -957,8 +1210,19 @@
     if (!rowId) return;
     const order = orders.find((o) => o.id === rowId);
     if (!order) return;
+    const existing = openOrderWindows.get(order.id);
+    if (existing && !existing.closed) {
+      existing.focus();
+      return;
+    }
     const url = `orders.html?popup=1&view=detail&id=${order.id}`;
-    window.open(url, "_blank", "width=1200,height=800");
+    const win = window.open(url, `order-detail-${order.id}`, "width=1200,height=800");
+    if (win) {
+      openOrderWindows.set(order.id, win);
+      win.addEventListener("beforeunload", () => {
+        openOrderWindows.delete(order.id);
+      });
+    }
   });
   var params = getPopupParams();
   if (params.popup) {
@@ -1042,6 +1306,25 @@
       window.close();
     } else {
       showMessage("Errore aggiornamento ordine", "error");
+    }
+  });
+  detailPdfBtn.addEventListener("click", async () => {
+    const { id } = getPopupParams();
+    if (!id) return;
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    const html = buildOrderPdfHtml(order);
+    const filename = `preventivo-${order.id}.pdf`;
+    try {
+      const result = await window.api.exportOrderPdf({ html, filename });
+      if (result?.ok) {
+        showMessage("PDF esportato!", "success");
+        clearMessage();
+      } else if (!result?.canceled) {
+        showMessage(result?.message || "Errore esportazione PDF", "error");
+      }
+    } catch {
+      showMessage("Errore esportazione PDF", "error");
     }
   });
   loadData();
