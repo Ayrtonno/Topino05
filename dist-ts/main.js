@@ -38,6 +38,7 @@ var MATERIALS_FILE = path.join(dataDir, "materials.json");
 var INVENTORY_FILE = path.join(dataDir, "inventory.json");
 var ARTICLES_FILE = path.join(dataDir, "articles.json");
 var ORDERS_FILE = path.join(dataDir, "orders.json");
+var INCOME_MOVEMENTS_FILE = path.join(dataDir, "income-movements.json");
 var LABOR_CONFIG_FILE = path.join(dataDir, "labor-config.json");
 var DASHBOARD_CONFIG_FILE = path.join(dataDir, "dashboard-config.json");
 var readJsonFile = (filePath, defaultValue) => {
@@ -192,6 +193,12 @@ var getOrders = () => {
 var saveOrders = (orders) => {
   return writeJsonFile(ORDERS_FILE, orders);
 };
+var getIncomeMovements = () => {
+  return readJsonFile(INCOME_MOVEMENTS_FILE, []);
+};
+var saveIncomeMovements = (items) => {
+  return writeJsonFile(INCOME_MOVEMENTS_FILE, items);
+};
 var DEFAULT_LABOR_CONFIG = {
   hourlyRate: 4,
   lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
@@ -286,6 +293,12 @@ import_electron.ipcMain.handle("get-orders", async () => {
 });
 import_electron.ipcMain.handle("save-orders", async (_, orders) => {
   return saveOrders(orders);
+});
+import_electron.ipcMain.handle("get-income-movements", async () => {
+  return getIncomeMovements();
+});
+import_electron.ipcMain.handle("save-income-movements", async (_, items) => {
+  return saveIncomeMovements(items);
 });
 import_electron.ipcMain.handle("get-labor-config", async () => {
   return getLaborConfig();

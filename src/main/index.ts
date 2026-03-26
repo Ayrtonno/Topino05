@@ -9,6 +9,8 @@ import {
     saveArticles,
     getOrders,
     saveOrders,
+    getIncomeMovements,
+    saveIncomeMovements,
     getLaborConfig,
     saveLaborConfig,
     getDashboardConfig,
@@ -110,6 +112,15 @@ ipcMain.handle("get-orders", async () => {
 
 ipcMain.handle("save-orders", async (_, orders) => {
     return saveOrders(orders);
+});
+
+// IPC Handlers - Income Movements
+ipcMain.handle("get-income-movements", async () => {
+    return getIncomeMovements();
+});
+
+ipcMain.handle("save-income-movements", async (_, items) => {
+    return saveIncomeMovements(items);
 });
 
 // IPC Handlers - Labor Config

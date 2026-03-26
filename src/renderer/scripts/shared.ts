@@ -32,6 +32,7 @@ export function clearMessage(delayMs = 2000) {
 }
 
 export function formatDate(dateIso: string) {
+    if (!dateIso) return "-";
     try {
         return new Date(dateIso).toLocaleDateString();
     } catch {

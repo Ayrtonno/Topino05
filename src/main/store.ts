@@ -16,6 +16,7 @@ const MATERIALS_FILE = path.join(dataDir, "materials.json");
 const INVENTORY_FILE = path.join(dataDir, "inventory.json");
 const ARTICLES_FILE = path.join(dataDir, "articles.json");
 const ORDERS_FILE = path.join(dataDir, "orders.json");
+const INCOME_MOVEMENTS_FILE = path.join(dataDir, "income-movements.json");
 const LABOR_CONFIG_FILE = path.join(dataDir, "labor-config.json");
 const DASHBOARD_CONFIG_FILE = path.join(dataDir, "dashboard-config.json");
 
@@ -193,6 +194,15 @@ export const getOrders = (): Order[] => {
 
 export const saveOrders = (orders: Order[]): boolean => {
     return writeJsonFile(ORDERS_FILE, orders);
+};
+
+// ==================== INCOME MOVEMENTS ====================
+export const getIncomeMovements = (): any[] => {
+    return readJsonFile(INCOME_MOVEMENTS_FILE, []);
+};
+
+export const saveIncomeMovements = (items: any[]): boolean => {
+    return writeJsonFile(INCOME_MOVEMENTS_FILE, items);
 };
 
 // ==================== LABOR CONFIG ====================

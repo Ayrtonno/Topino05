@@ -17,6 +17,7 @@
                 <a data-page="inventory" href="inventory.html">Magazzino</a>
                 <a data-page="articles" href="articles.html">Articoli</a>
                 <a data-page="orders" href="orders.html">Ordini</a>
+                <a data-page="orders-production" href="orders-production.html">Ordini in Produzione</a>
             </nav>
         </aside>
         <main class="content">
@@ -26,14 +27,14 @@
                     <p>Gestione ordini, costi e stato avanzamento.</p>
                 </div>
                 <div class="actions">
-                    <span class="chip">Light Mode</span>
+                    <button id="refresh-orders" class="btn-small">Aggiorna</button>
                     <button id="toggle-form" class="btn-primary">+ Nuovo Ordine</button>
                 </div>
             </div>
 
             <div id="message" class="message"></div>
 
-            <div class="stat-grid">
+            <div id="orders-stats" class="stat-grid">
                 <div class="stat-card">
                     <div class="label">Ordini Totali</div>
                     <div class="value" id="stat-total-orders">0</div>
@@ -43,16 +44,20 @@
                     <div class="value" id="stat-total-revenue">EUR 0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">Costi</div>
+                    <div class="label">Costi Materiali</div>
                     <div class="value" id="stat-total-costs">EUR 0</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">Profitto</div>
-                    <div class="value" id="stat-total-profit">EUR 0</div>
+                    <div class="value" id="stat-total-profit-no-labor">EUR 0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Profitto Netto</div>
+                    <div class="value" id="stat-total-profit-with-labor">EUR 0</div>
                 </div>
             </div>
 
-            <div class="toolbar">
+            <div id="orders-toolbar" class="toolbar">
                 <div class="left">
                     <div class="field">
                         <input id="search-orders" type="text" placeholder="Cerca cliente, articolo..." />
@@ -60,11 +65,8 @@
                     <div class="field">
                         <select id="filter-status">
                             <option value="">Tutti gli stati</option>
-                            <option value="draft">Bozza</option>
-                            <option value="sent">Inviato</option>
-                            <option value="accepted">Accettato</option>
-                            <option value="rejected">Rifiutato</option>
-                            <option value="completed">Completato</option>
+                            <option value="pending">Pending</option>
+                            <option value="refused">Refused</option>
                         </select>
                     </div>
                 </div>
@@ -76,12 +78,30 @@
             <form id="order-form" class="form hidden">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nome Cliente *</label>
-                        <input id="order-client" type="text" placeholder="Nome cliente" />
+                        <label>Nome *</label>
+                        <input id="order-first-name" type="text" placeholder="Nome" />
+                    </div>
+                    <div class="form-group">
+                        <label>Cognome *</label>
+                        <input id="order-last-name" type="text" placeholder="Cognome" />
                     </div>
                     <div class="form-group">
                         <label>Email</label>
                         <input id="order-email" type="email" placeholder="email@example.com" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefono</label>
+                        <input id="order-phone" type="tel" placeholder="+39 ..." />
+                    </div>
+                    <div class="form-group">
+                        <label>Data richiesta ordine</label>
+                        <input id="order-request-date" type="date" />
+                    </div>
+                    <div class="form-group">
+                        <label>Data prevista consegna</label>
+                        <input id="order-delivery-date" type="date" />
                     </div>
                 </div>
 
@@ -98,7 +118,50 @@
                             <label>Quantita *</label>
                             <input id="item-qty" type="number" min="1" value="1" />
                         </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <label style="visibility:hidden;">Packaging</label>
+                            <label class="checkbox">
+                                <input id="item-packaging" type="checkbox" />
+                                Packaging (+0,50)
+                            </label>
+                        </div>
                         <button id="add-item" type="button" class="btn-small" style="align-self:flex-end;">Aggiungi Articolo</button>
+                    </div>
+
+                    <div class="card" style="margin-top: 8px;">
+                        <h4>Colori Materiali</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Materiale</th>
+                                        <th>Descrizione</th>
+                                        <th>Quantita</th>
+                                        <th>Colore</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="item-colors-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 8px;">
+                        <h4>Preview Prezzi</h4>
+                        <div class="preview-grid">
+                            <div class="preview-item">
+                                <label>Prezzo Vendita Materiale</label>
+                                <div id="order-preview-material-sell" class="preview-value">EUR 0.00</div>
+                            </div>
+                            <div class="preview-item">
+                                <label>Ore di Lavoro</label>
+                                <div id="order-preview-hours" class="preview-value">0h</div>
+                            </div>
+                            <div class="preview-item total">
+                                <label>Prezzo Vendita Finale</label>
+                                <div id="order-preview-final" class="preview-value">EUR 0.00</div>
+                                <div class="muted">Arrotondato a 0,50 + Packaging</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="table-container">
@@ -107,6 +170,7 @@
                                 <tr>
                                     <th>Articolo</th>
                                     <th>Qty</th>
+                                    <th>Packaging</th>
                                     <th>Prezzo Unit.</th>
                                     <th>Totale</th>
                                     <th></th>
@@ -122,16 +186,6 @@
                         <label>Sconto %</label>
                         <input id="order-discount" type="number" value="0" />
                     </div>
-                    <div class="form-group">
-                        <label>Stato</label>
-                        <select id="order-status">
-                            <option value="draft">Bozza</option>
-                            <option value="sent">Inviato</option>
-                            <option value="accepted">Accettato</option>
-                            <option value="rejected">Rifiutato</option>
-                            <option value="completed">Completato</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="form-group">
@@ -142,11 +196,12 @@
                 <button id="submit-order" type="submit" class="btn-primary">Crea Ordine</button>
             </form>
 
-            <div class="table-header">
+            <div id="orders-list-section">
+                <div class="table-header">
                 <div class="title">Elenco Ordini</div>
                 <div class="meta">Mostra tutti gli ordini salvati</div>
-            </div>
-            <div class="table-container">
+                </div>
+                <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -163,6 +218,81 @@
                     <tbody id="orders-body"></tbody>
                 </table>
                 <div id="orders-empty" class="empty-state hidden">Nessun ordine presente.</div>
+                </div>
+            </div>
+
+            <div id="order-detail-section" class="card hidden">
+                <div class="table-header" style="margin:0 0 10px 0;">
+                    <div class="title" id="order-detail-title">Dettaglio Ordine</div>
+                    <div class="actions">
+                        <button id="order-detail-confirm" class="btn-small">Conferma</button>
+                        <button id="order-detail-refuse" class="btn-small btn-danger">Rifiuta</button>
+                        <button id="order-detail-edit" class="btn-small">Modifica</button>
+                        <button id="order-detail-close" class="btn-small">Chiudi</button>
+                    </div>
+                </div>
+
+                <div class="preview-grid">
+                    <div class="preview-item">
+                        <label>Profitto (senza ore)</label>
+                        <div id="detail-profit-no-labor" class="preview-value">EUR 0.00</div>
+                    </div>
+                    <div class="preview-item total">
+                        <label>Profitto (con ore)</label>
+                        <div id="detail-profit-with-labor" class="preview-value">EUR 0.00</div>
+                        <div class="muted">Valore ore scalato dal profitto</div>
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-top:10px;">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <div id="detail-client">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <div id="detail-email">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefono</label>
+                        <div id="detail-phone">-</div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data Richiesta</label>
+                        <div id="detail-request-date">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Consegna</label>
+                        <div id="detail-delivery-date">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Stato</label>
+                        <div id="detail-status">-</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <div id="detail-notes">-</div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Codice</th>
+                                <th>Articolo</th>
+                                <th>Qty</th>
+                                <th>Packaging</th>
+                                <th>Colori</th>
+                                <th>Prezzo Unit.</th>
+                                <th>Totale</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-items-body"></tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>

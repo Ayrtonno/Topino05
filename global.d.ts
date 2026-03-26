@@ -57,20 +57,36 @@ declare namespace Models {
         articleId: string;
         quantity: number;
         unitPrice: number; // prezzo unitario articolo
+        packaging?: boolean;
+        colorSelections?: string[];
     }
 
     interface Order {
         id: string;
-        clientName: string;
+        clientFirstName?: string;
+        clientLastName?: string;
         clientEmail?: string;
+        clientPhone?: string;
+        requestedDate?: string;
+        deliveryDate?: string;
         items: OrderItem[];
         materialCost: number; // costo materia prima totale
         laborCost: number; // costo lavoro totale
         discountPercentage: number;
         finalAmount: number; // totale dopo sconto
         createdAt: string;
-        status: "draft" | "sent" | "accepted" | "rejected" | "completed";
+        status: "pending" | "refused" | "confirmed" | "processed";
         notes?: string;
+        processedDate?: string;
+        paymentReceived?: number;
+    }
+
+    interface IncomeMovement {
+        id: string;
+        orderId: string;
+        amount: number;
+        receivedDate: string;
+        createdAt: string;
     }
 
     // KPI Dashboard
@@ -113,6 +129,10 @@ declare global {
         // Orders
         getOrders: () => Promise<Order[]>;
         saveOrders: (orders: Order[]) => Promise<boolean>;
+
+        // Income Movements
+        getIncomeMovements: () => Promise<IncomeMovement[]>;
+        saveIncomeMovements: (items: IncomeMovement[]) => Promise<boolean>;
 
         // LaborConfig
         getLaborConfig: () => Promise<LaborConfig>;

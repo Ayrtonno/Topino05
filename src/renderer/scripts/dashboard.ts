@@ -51,7 +51,7 @@ async function loadData() {
 }
 
 function getKpi() {
-    const completedOrders = orders.filter((o) => o.status === "completed");
+    const completedOrders = orders.filter((o) => o.status === "processed");
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
@@ -61,7 +61,12 @@ function getKpi() {
         return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
     });
 
-    const totalRevenue = monthOrders.reduce((sum, o) => sum + o.finalAmount, 0);
+    const totalRevenue = monthOrders.reduce((sum, o) => {
+        if (o.status === "processed" && typeof (o as any).paymentReceived === "number") {
+            return sum + (o as any).paymentReceived;
+        }
+        return sum + o.finalAmount;
+    }, 0);
     const totalCost = monthOrders.reduce(
         (sum, o) => sum + o.materialCost + o.laborCost,
         0

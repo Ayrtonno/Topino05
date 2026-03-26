@@ -15,6 +15,9 @@ var api = {
   // Orders API
   getOrders: () => import_electron.ipcRenderer.invoke("get-orders"),
   saveOrders: (orders) => import_electron.ipcRenderer.invoke("save-orders", orders),
+  // Income Movements API
+  getIncomeMovements: () => import_electron.ipcRenderer.invoke("get-income-movements"),
+  saveIncomeMovements: (items) => import_electron.ipcRenderer.invoke("save-income-movements", items),
   // Labor Config API
   getLaborConfig: () => import_electron.ipcRenderer.invoke("get-labor-config"),
   saveLaborConfig: (config) => import_electron.ipcRenderer.invoke("save-labor-config", config),

@@ -41,8 +41,11 @@ const previewMaterialSell = qs<HTMLDivElement>("#preview-material-sell");
 const previewLaborCost = qs<HTMLDivElement>("#preview-labor-cost");
 const previewLaborSell = qs<HTMLDivElement>("#preview-labor-sell");
 const previewColorSurcharge = qs<HTMLDivElement>("#preview-color-surcharge");
+const previewMaterialFinal = qs<HTMLDivElement>("#preview-material-final");
 const previewTotalSell = qs<HTMLDivElement>("#preview-total-sell");
+const previewTotalRounded = qs<HTMLDivElement>("#preview-total-rounded");
 const previewMaterialMargin = qs<HTMLDivElement>("#preview-material-margin");
+const previewTotalGain = qs<HTMLDivElement>("#preview-total-gain");
 
 function getQueryId() {
     const params = new URLSearchParams(window.location.search);
@@ -102,20 +105,29 @@ async function loadData() {
         });
 
         const colorSurcharge = article.composition.length * COLOR_SURCHARGE;
-        const materialSell = (materialSellBase + colorSurcharge) * (1 + article.materialMarkupPct / 100);
+        const materialFinalBase = materialSellBase + colorSurcharge;
+        const materialSell = materialFinalBase * (1 + article.materialMarkupPct / 100);
         const laborCost = article.laborHoursRequired * hourlyRate;
         const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
         const materialMargin = materialSell - materialCost + colorSurcharge;
+        const totalSell = materialSell + laborSell;
+        const totalRounded = Math.round(totalSell * 2) / 2;
+        const totalGain = totalRounded - materialCost;
 
         previewMaterialCost.textContent = `EUR ${materialCost.toFixed(2)}`;
         previewMaterialSell.textContent = `EUR ${materialSell.toFixed(2)}`;
         previewLaborCost.textContent = `EUR ${laborCost.toFixed(2)}`;
         previewLaborSell.textContent = `EUR ${laborSell.toFixed(2)}`;
         previewColorSurcharge.textContent = `EUR ${colorSurcharge.toFixed(2)}`;
-        previewTotalSell.textContent = `EUR ${(materialSell + laborSell).toFixed(2)}`;
+        previewMaterialFinal.textContent = `EUR ${materialFinalBase.toFixed(2)}`;
+        previewTotalSell.textContent = `EUR ${totalSell.toFixed(2)}`;
+        previewTotalRounded.textContent = `EUR ${totalRounded.toFixed(2)}`;
         previewMaterialMargin.textContent = `EUR ${materialMargin.toFixed(2)}`;
         previewMaterialMargin.classList.remove("text-success", "text-danger");
         previewMaterialMargin.classList.add(materialMargin >= 0 ? "text-success" : "text-danger");
+        previewTotalGain.textContent = `EUR ${totalGain.toFixed(2)}`;
+        previewTotalGain.classList.remove("text-success", "text-danger");
+        previewTotalGain.classList.add(totalGain >= 0 ? "text-success" : "text-danger");
     } catch {
         showMessage("Errore nel caricamento dati", "error");
     }

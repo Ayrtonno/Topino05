@@ -92,6 +92,10 @@ body {
     overflow: auto;
 }
 
+.app.single .content {
+    margin-left: 0;
+}
+
 .topbar {
     display: flex;
     align-items: center;

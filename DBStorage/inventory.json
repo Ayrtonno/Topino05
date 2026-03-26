@@ -10,22 +10,22 @@
     "id": "inv_lana_azzurro_acqua",
     "materialId": "mat_lana",
     "colorName": "Azzurro Acqua",
-    "quantity": 57,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "quantity": 47,
+    "lastUpdated": "2026-03-26T10:43:48.172Z"
   },
   {
     "id": "inv_lana_bianco",
     "materialId": "mat_lana",
     "colorName": "Bianco",
-    "quantity": 14,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "quantity": 2,
+    "lastUpdated": "2026-03-26T10:43:48.172Z"
   },
   {
     "id": "inv_lana_blu_notte",
     "materialId": "mat_lana",
     "colorName": "Blu Notte",
     "quantity": 28,
-    "lastUpdated": "2026-03-26T00:00:00.000Z"
+    "lastUpdated": "2026-03-26T10:43:48.172Z"
   },
   {
     "id": "inv_lana_ciano",

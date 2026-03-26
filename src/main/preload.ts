@@ -22,6 +22,12 @@ const api = {
     saveOrders: (orders: Order[]) =>
         ipcRenderer.invoke("save-orders", orders) as Promise<boolean>,
 
+    // Income Movements API
+    getIncomeMovements: () =>
+        ipcRenderer.invoke("get-income-movements") as Promise<any[]>,
+    saveIncomeMovements: (items: any[]) =>
+        ipcRenderer.invoke("save-income-movements", items) as Promise<boolean>,
+
     // Labor Config API
     getLaborConfig: () =>
         ipcRenderer.invoke("get-labor-config") as Promise<LaborConfig>,

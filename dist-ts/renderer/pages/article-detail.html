@@ -17,6 +17,7 @@
                 <a data-page="inventory" href="inventory.html">Magazzino</a>
                 <a data-page="articles" href="articles.html">Articoli</a>
                 <a data-page="orders" href="orders.html">Ordini</a>
+                <a data-page="orders-production" href="orders-production.html">Ordini in Produzione</a>
             </nav>
         </aside>
         <main class="content">
@@ -89,6 +90,23 @@
                         <div id="preview-material-sell" class="preview-value">EUR 0.00</div>
                     </div>
                     <div class="preview-item">
+                        <label>Ricarica Colore/Comp.</label>
+                        <div id="preview-color-surcharge" class="preview-value">EUR 0.00</div>
+                    </div>
+                    <div class="preview-item">
+                        <label>Prezzo Materiale Finale</label>
+                        <div id="preview-material-final" class="preview-value">EUR 0.00</div>
+                        <div class="muted">Prezzo Materiale + Ricarica Colore/Comp.</div>
+                    </div>
+                    <div class="preview-item total">
+                        <label>Totale Vendita (Materiale + Lavoro)</label>
+                        <div id="preview-total-sell" class="preview-value">EUR 0.00</div>
+                    </div>
+                    <div class="preview-item total">
+                        <label>Totale Vendita Arrotondata</label>
+                        <div id="preview-total-rounded" class="preview-value">EUR 0.00</div>
+                    </div>
+                    <div class="preview-item">
                         <label>Costo Lavoro</label>
                         <div id="preview-labor-cost" class="preview-value">EUR 0.00</div>
                     </div>
@@ -97,16 +115,12 @@
                         <div id="preview-labor-sell" class="preview-value">EUR 0.00</div>
                     </div>
                     <div class="preview-item">
-                        <label>Ricarica Colore/Comp.</label>
-                        <div id="preview-color-surcharge" class="preview-value">EUR 0.00</div>
-                    </div>
-                    <div class="preview-item total">
-                        <label>Totale Vendita (Materiale + Lavoro)</label>
-                        <div id="preview-total-sell" class="preview-value">EUR 0.00</div>
-                    </div>
-                    <div class="preview-item">
                         <label>Marginalita Materiale</label>
                         <div id="preview-material-margin" class="preview-value">EUR 0.00</div>
+                    </div>
+                    <div class="preview-item">
+                        <label>Guadagno Complessivo</label>
+                        <div id="preview-total-gain" class="preview-value">EUR 0.00</div>
                     </div>
                 </div>
             </div>
