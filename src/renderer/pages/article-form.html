@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuovo Articolo</title>
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/page.css">
+</head>
+<body data-page="articles">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">Preventivatore <span>v1</span></div>
+            <nav class="nav">
+                <a data-page="dashboard" href="index.html">Dashboard</a>
+                <a data-page="materials" href="materials.html">Materiali</a>
+                <a data-page="inventory" href="inventory.html">Magazzino</a>
+                <a data-page="articles" href="articles.html">Articoli</a>
+                <a data-page="orders" href="orders.html">Ordini</a>
+            </nav>
+        </aside>
+        <main class="content">
+            <div class="topbar">
+                <div class="page-title">
+                    <h1 id="form-title">Nuovo Articolo</h1>
+                    <p>Compila i dati dell'articolo e la composizione materiali.</p>
+                </div>
+                <div class="actions">
+                    <a class="btn-small" href="articles.html">Torna alla lista</a>
+                </div>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <form id="article-form" class="form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Codice Articolo *</label>
+                        <input id="article-code" type="text" placeholder="Es: GU001A" />
+                    </div>
+                    <div class="form-group">
+                        <label>Nome Articolo *</label>
+                        <input id="article-name" type="text" placeholder="Nome descrittivo" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ore Lavoro</label>
+                        <input id="article-labor" type="number" step="0.5" value="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Ricarica Materiale %</label>
+                        <input id="article-material-markup" type="number" value="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Ricarica Lavoro %</label>
+                        <input id="article-labor-markup" type="number" value="0" />
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Composizione</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Materiale *</label>
+                            <select id="comp-material">
+                                <option value="">Seleziona materiale</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Colore (opzionale)</label>
+                            <input id="comp-color" type="text" placeholder="Es: Rosso, Blu" />
+                        </div>
+                        <div class="form-group">
+                            <label>Quantita *</label>
+                            <input id="comp-qty" type="number" value="0" />
+                            <div id="comp-unit-label" class="muted">Unita: -</div>
+                        </div>
+                        <button id="add-comp" type="button" class="btn-small" style="align-self:flex-end;">Aggiungi</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Materiale</th>
+                                    <th>Colore</th>
+                                    <th>Quantita</th>
+                                    <th>Costo</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="composition-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="composition-cost" style="margin-top:8px; font-weight:700;">Costo Materiale: 0</div>
+                </div>
+
+            <button id="submit-article" type="submit" class="btn-primary">Salva Articolo</button>
+        </form>
+        </main>
+    </div>
+
+    <script src="../scripts/shared.js"></script>
+    <script src="../scripts/article-form.js"></script>
+</body>
+</html>

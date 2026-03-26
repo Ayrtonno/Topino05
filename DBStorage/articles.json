@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1774514248718",
+    "code": "PL001A",
+    "name": "Funghetto Portalabello",
+    "composition": [
+      {
+        "materialId": "mat_lana",
+        "colorName": "Bianco",
+        "quantity": 6
+      },
+      {
+        "materialId": "mat_lana",
+        "colorName": "Blu Notte",
+        "quantity": 5
+      }
+    ],
+    "laborHoursRequired": 2,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-03-26T08:37:28.718Z"
+  }
+]

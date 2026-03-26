@@ -22,7 +22,11 @@ const DASHBOARD_CONFIG_FILE = path.join(dataDir, "dashboard-config.json");
 const readJsonFile = (filePath: string, defaultValue: any) => {
     try {
         if (fs.existsSync(filePath)) {
-            const data = fs.readFileSync(filePath, "utf-8");
+            let data = fs.readFileSync(filePath, "utf-8");
+            // Strip BOM if present
+            if (data.charCodeAt(0) === 0xfeff) {
+                data = data.slice(1);
+            }
             return JSON.parse(data);
         }
     } catch (error) {
@@ -110,6 +114,18 @@ function migrateArticles(data: any) {
                 }
                 return next;
             });
+        }
+        if (article.materialMarkupPct === undefined) {
+            article.materialMarkupPct = article.marginPercentage ?? 0;
+            changed = true;
+        }
+        if (article.laborMarkupPct === undefined) {
+            article.laborMarkupPct = 0;
+            changed = true;
+        }
+        if (article.marginPercentage !== undefined) {
+            delete article.marginPercentage;
+            changed = true;
         }
         return article;
     });

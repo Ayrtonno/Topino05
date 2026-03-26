@@ -111,15 +111,19 @@
   }
   function calculateArticlePrice(article) {
     let materialCost = 0;
+    let materialSellBase = 0;
     for (const comp of article.composition) {
       const material = materials.find((m) => m.id === comp.materialId);
       if (material) {
         materialCost += material.costPerUnit * comp.quantity;
+        materialSellBase += (material.sellingPricePerUnit || material.costPerUnit) * comp.quantity;
       }
     }
     const laborCost = article.laborHoursRequired * laborConfig.hourlyRate;
-    const totalCost = materialCost + laborCost;
-    const finalPrice = totalCost * (1 + article.marginPercentage / 100);
+    const colorSurcharge = article.composition.length * 0.1;
+    const materialSell = (materialSellBase + colorSurcharge) * (1 + article.materialMarkupPct / 100);
+    const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
+    const finalPrice = materialSell + laborSell;
     return parseFloat(finalPrice.toFixed(2));
   }
   function calculateOrderCosts(itemsList, discount) {
@@ -165,11 +169,18 @@
     const updated = [...inventory];
     for (const [key, delta] of deltaMap.entries()) {
       const [materialId, colorKey] = key.split("::");
-      const row = updated.find(
+      let row = updated.find(
         (i) => i.materialId === materialId && normalizeColor(i.colorName) === colorKey
       );
       if (!row) {
-        return { ok: false, message: "Giacenza mancante per materiale/colore" };
+        row = {
+          id: Date.now().toString(),
+          materialId,
+          colorName: colorKey ? colorKey : void 0,
+          quantity: 0,
+          lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        updated.push(row);
       }
       if (row.quantity + delta < 0) {
         return { ok: false, message: "Giacenza insufficiente per materiale/colore" };

@@ -31,6 +31,7 @@ const materialSelect = qs<HTMLSelectElement>("#inv-material");
 const colorInput = qs<HTMLInputElement>("#inv-color");
 const qtyInput = qs<HTMLInputElement>("#inv-qty");
 const unitLabel = qs<HTMLDivElement>("#inv-unit-label");
+const moveType = qs<HTMLSelectElement>("#inv-move-type");
 const submitBtn = qs<HTMLButtonElement>("#submit-inventory");
 
 function setFormVisible(visible: boolean) {
@@ -43,6 +44,7 @@ function resetForm() {
     colorInput.value = "";
     qtyInput.value = "0";
     unitLabel.textContent = "Unita: -";
+    moveType.value = "carico";
     submitBtn.textContent = "Salva";
     editingId = null;
 }
@@ -137,31 +139,55 @@ form.addEventListener("submit", async (e) => {
     }
 
     const colorValue = colorInput.value.trim();
-    const data: InventoryItem = {
-        id: editingId ?? Date.now().toString(),
-        materialId: materialSelect.value,
-        colorName: colorValue || undefined,
-        quantity: parseFloat(qtyInput.value) || 0,
-        lastUpdated: new Date().toISOString(),
-    };
+    const qtyValue = parseFloat(qtyInput.value) || 0;
+    const now = new Date().toISOString();
 
     let updated: InventoryItem[];
     if (editingId) {
-        updated = items.map((i) => (i.id === editingId ? data : i));
+        updated = items.map((i) =>
+            i.id === editingId
+                ? {
+                      ...i,
+                      materialId: materialSelect.value,
+                      colorName: colorValue || undefined,
+                      quantity: qtyValue,
+                      lastUpdated: now,
+                  }
+                : i
+        );
     } else {
         // merge if same material+color exists
         const existing = items.find((i) =>
-            i.materialId === data.materialId &&
-            normalizeColor(i.colorName) === normalizeColor(data.colorName)
+            i.materialId === materialSelect.value &&
+            normalizeColor(i.colorName) === normalizeColor(colorValue)
         );
+        const sign = moveType.value === "scarico" ? -1 : 1;
         if (existing) {
+            const nextQty = existing.quantity + qtyValue * sign;
+            if (nextQty < 0) {
+                showMessage("Giacenza insufficiente per lo scarico", "error");
+                return;
+            }
             updated = items.map((i) =>
                 i.id === existing.id
-                    ? { ...i, quantity: i.quantity + data.quantity, lastUpdated: data.lastUpdated }
+                    ? { ...i, quantity: nextQty, lastUpdated: now }
                     : i
             );
         } else {
-            updated = [...items, data];
+            if (sign < 0) {
+                showMessage("Giacenza non esistente per lo scarico", "error");
+                return;
+            }
+            updated = [
+                ...items,
+                {
+                    id: Date.now().toString(),
+                    materialId: materialSelect.value,
+                    colorName: colorValue || undefined,
+                    quantity: qtyValue,
+                    lastUpdated: now,
+                },
+            ];
         }
     }
 

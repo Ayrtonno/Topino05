@@ -1,11 +1,47 @@
 [
   {
-    "id": "1774511669327",
+    "id": "mat_lana",
     "name": "Lana",
     "costPerUnit": 0.028,
     "sellingPricePerUnit": 0.06,
     "stockQuantity": 0,
     "unit": "grammi",
-    "lastUpdated": "2026-03-26T07:54:29.327Z"
+    "lastUpdated": "2026-03-26T08:09:28.574Z"
+  },
+  {
+    "id": "mat_ovatta",
+    "name": "Ovatta",
+    "costPerUnit": 0.03,
+    "sellingPricePerUnit": 0.06,
+    "stockQuantity": 0,
+    "unit": "grammi",
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "mat_fettuccia",
+    "name": "Fettuccia",
+    "costPerUnit": 0.02,
+    "sellingPricePerUnit": 0.035,
+    "stockQuantity": 0,
+    "unit": "grammi",
+    "lastUpdated": "2026-03-26T08:10:34.129Z"
+  },
+  {
+    "id": "mat_base_borsa",
+    "name": "Base Borsa",
+    "costPerUnit": 7.5,
+    "sellingPricePerUnit": 10,
+    "stockQuantity": 0,
+    "unit": "pezzi",
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "mat_ganci_coppia",
+    "name": "Ganci (Coppia)",
+    "costPerUnit": 3.25,
+    "sellingPricePerUnit": 4,
+    "stockQuantity": 0,
+    "unit": "pezzi",
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
   }
 ]

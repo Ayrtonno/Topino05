@@ -43,7 +43,10 @@ var DASHBOARD_CONFIG_FILE = path.join(dataDir, "dashboard-config.json");
 var readJsonFile = (filePath, defaultValue) => {
   try {
     if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, "utf-8");
+      let data = fs.readFileSync(filePath, "utf-8");
+      if (data.charCodeAt(0) === 65279) {
+        data = data.slice(1);
+      }
       return JSON.parse(data);
     }
   } catch (error) {
@@ -128,6 +131,18 @@ function migrateArticles(data) {
         return next;
       });
     }
+    if (article.materialMarkupPct === void 0) {
+      article.materialMarkupPct = article.marginPercentage ?? 0;
+      changed = true;
+    }
+    if (article.laborMarkupPct === void 0) {
+      article.laborMarkupPct = 0;
+      changed = true;
+    }
+    if (article.marginPercentage !== void 0) {
+      delete article.marginPercentage;
+      changed = true;
+    }
     return article;
   });
   return { data: migrated, changed };
@@ -195,6 +210,8 @@ var saveDashboardConfig = (config) => {
 
 // src/main/index.ts
 var mainWindow;
+import_electron.app.commandLine.appendSwitch("disable-gpu");
+import_electron.app.commandLine.appendSwitch("disable-software-rasterizer");
 var createWindow = () => {
   mainWindow = new import_electron.BrowserWindow({
     width: 1400,
@@ -205,6 +222,23 @@ var createWindow = () => {
       contextIsolation: true,
       sandbox: true
     }
+  });
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const child = new import_electron.BrowserWindow({
+      width: 1100,
+      height: 800,
+      parent: mainWindow || void 0,
+      webPreferences: {
+        preload: path2.join(__dirname, "preload.js"),
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true
+      }
+    });
+    if (url.startsWith("file://")) {
+      child.loadURL(url);
+    }
+    return { action: "deny" };
   });
   const rendererPath = path2.join(__dirname, "renderer", "pages", "index.html");
   mainWindow.loadFile(rendererPath);

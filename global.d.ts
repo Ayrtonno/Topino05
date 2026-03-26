@@ -41,7 +41,8 @@ declare namespace Models {
         name: string;
         composition: ArticleComposition[];
         laborHoursRequired: number; // ore di lavoro
-        marginPercentage: number; // margine
+        materialMarkupPct: number; // ricarica materiale %
+        laborMarkupPct: number; // ricarica lavoro %
         createdAt: string;
     }
 

@@ -17,6 +17,10 @@ import {
 
 let mainWindow: BrowserWindow | null;
 
+// Avoid noisy GPU crash logs on some Windows setups
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-software-rasterizer");
+
 const createWindow = () => {
     mainWindow = new BrowserWindow({
         width: 1400,
@@ -27,6 +31,24 @@ const createWindow = () => {
             contextIsolation: true,
             sandbox: true,
         },
+    });
+
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        const child = new BrowserWindow({
+            width: 1100,
+            height: 800,
+            parent: mainWindow || undefined,
+            webPreferences: {
+                preload: path.join(__dirname, "preload.js"),
+                nodeIntegration: false,
+                contextIsolation: true,
+                sandbox: true,
+            },
+        });
+        if (url.startsWith("file://")) {
+            child.loadURL(url);
+        }
+        return { action: "deny" };
     });
 
     const rendererPath = path.join(__dirname, "renderer", "pages", "index.html");
