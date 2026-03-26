@@ -24,14 +24,22 @@ type Article = {
     id: string;
     code: string;
     name: string;
-    composition: { materialId: string; quantityGramms: number }[];
+    composition: { materialId: string; colorName?: string; quantity: number }[];
     laborHoursRequired: number;
     marginPercentage: number;
 };
 
 type Material = {
     id: string;
-    costPerGramm: number;
+    costPerUnit: number;
+};
+
+type InventoryItem = {
+    id: string;
+    materialId: string;
+    colorName?: string;
+    quantity: number;
+    lastUpdated: string;
 };
 
 type LaborConfig = {
@@ -41,15 +49,20 @@ type LaborConfig = {
 let orders: Order[] = [];
 let articles: Article[] = [];
 let materials: Material[] = [];
+let inventory: InventoryItem[] = [];
 let laborConfig: LaborConfig = { hourlyRate: 4 };
 let editingId: string | null = null;
 let items: OrderItem[] = [];
 let detailsOpenId: string | null = null;
+let filterText = "";
+let filterStatus = "";
 
 const form = qs<HTMLFormElement>("#order-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
 const ordersBody = qs<HTMLTableSectionElement>("#orders-body");
 const itemsBody = qs<HTMLTableSectionElement>("#items-body");
+const searchInput = qs<HTMLInputElement>("#search-orders");
+const statusFilter = qs<HTMLSelectElement>("#filter-status");
 
 const clientInput = qs<HTMLInputElement>("#order-client");
 const emailInput = qs<HTMLInputElement>("#order-email");
@@ -86,6 +99,7 @@ async function loadData() {
         orders = await window.api.getOrders();
         articles = await window.api.getArticles();
         materials = await window.api.getMaterials();
+        inventory = await window.api.getInventory();
         laborConfig = await window.api.getLaborConfig();
         renderArticleOptions();
         renderOrders();
@@ -117,7 +131,7 @@ function calculateArticlePrice(article: Article) {
     for (const comp of article.composition) {
         const material = materials.find((m) => m.id === comp.materialId);
         if (material) {
-            materialCost += material.costPerGramm * comp.quantityGramms;
+            materialCost += material.costPerUnit * comp.quantity;
         }
     }
     const laborCost = article.laborHoursRequired * laborConfig.hourlyRate;
@@ -136,7 +150,7 @@ function calculateOrderCosts(itemsList: OrderItem[], discount: number) {
         for (const comp of article.composition) {
             const material = materials.find((m) => m.id === comp.materialId);
             if (material) {
-                materialCost += material.costPerGramm * comp.quantityGramms * item.quantity;
+                materialCost += material.costPerUnit * comp.quantity * item.quantity;
             }
         }
         laborCost += article.laborHoursRequired * laborConfig.hourlyRate * item.quantity;
@@ -151,6 +165,45 @@ function calculateOrderCosts(itemsList: OrderItem[], discount: number) {
         laborCost: parseFloat(laborCost.toFixed(2)),
         finalAmount: parseFloat(finalAmount.toFixed(2)),
     };
+}
+
+function normalizeColor(value?: string) {
+    return (value || "").trim().toLowerCase();
+}
+
+function computeRequiredMaterials(orderItems: OrderItem[]) {
+    const map = new Map<string, number>();
+    for (const item of orderItems) {
+        const article = articles.find((a) => a.id === item.articleId);
+        if (!article) continue;
+        for (const comp of article.composition) {
+            const key = `${comp.materialId}::${normalizeColor(comp.colorName)}`;
+            const qty = comp.quantity * item.quantity;
+            map.set(key, (map.get(key) || 0) + qty);
+        }
+    }
+    return map;
+}
+
+function applyInventoryDelta(deltaMap: Map<string, number>) {
+    const updated = [...inventory];
+    for (const [key, delta] of deltaMap.entries()) {
+        const [materialId, colorKey] = key.split("::");
+        const row = updated.find(
+            (i) =>
+                i.materialId === materialId &&
+                normalizeColor(i.colorName) === colorKey
+        );
+        if (!row) {
+            return { ok: false, message: "Giacenza mancante per materiale/colore" };
+        }
+        if (row.quantity + delta < 0) {
+            return { ok: false, message: "Giacenza insufficiente per materiale/colore" };
+        }
+        row.quantity += delta;
+        row.lastUpdated = new Date().toISOString();
+    }
+    return { ok: true, updated };
 }
 
 function renderItems() {
@@ -185,7 +238,17 @@ function renderOrders() {
     if (statTotalCosts) statTotalCosts.textContent = `EUR ${totalCosts.toFixed(2)}`;
     if (statTotalProfit) statTotalProfit.textContent = `EUR ${totalProfit.toFixed(2)}`;
 
-    orders.forEach((order) => {
+    const filtered = orders.filter((order) => {
+        const articleNames = order.items
+            .map((i) => `${getArticleCode(i.articleId)} ${getArticleName(i.articleId)}`)
+            .join(" ");
+        const text = `${order.clientName} ${order.clientEmail || ""} ${articleNames}`.toLowerCase();
+        const matchesText = text.includes(filterText);
+        const matchesStatus = !filterStatus || order.status === filterStatus;
+        return matchesText && matchesStatus;
+    });
+
+    filtered.forEach((order) => {
         const costs = calculateOrderCosts(order.items, order.discountPercentage);
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -246,7 +309,7 @@ function renderOrders() {
         }
     });
     if (empty) {
-        empty.classList.toggle("hidden", orders.length > 0);
+        empty.classList.toggle("hidden", filtered.length > 0);
     }
 }
 
@@ -282,6 +345,16 @@ addItemBtn.addEventListener("click", () => {
     clearMessage();
 });
 
+searchInput?.addEventListener("input", () => {
+    filterText = searchInput.value.trim().toLowerCase();
+    renderOrders();
+});
+
+statusFilter?.addEventListener("change", () => {
+    filterStatus = statusFilter.value;
+    renderOrders();
+});
+
 itemsBody.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     const action = target.getAttribute("data-action");
@@ -301,8 +374,22 @@ form.addEventListener("submit", async (e) => {
 
     const costs = calculateOrderCosts(items, parseFloat(discountInput.value) || 0);
     let updated: Order[];
+    const previousInventory = [...inventory];
+
+    const newReq = computeRequiredMaterials(items);
+    let deltaMap = new Map<string, number>();
 
     if (editingId) {
+        const oldOrder = orders.find((o) => o.id === editingId);
+        if (oldOrder) {
+            const oldReq = computeRequiredMaterials(oldOrder.items);
+            for (const [key, qty] of oldReq.entries()) {
+                deltaMap.set(key, (deltaMap.get(key) || 0) + qty);
+            }
+            for (const [key, qty] of newReq.entries()) {
+                deltaMap.set(key, (deltaMap.get(key) || 0) - qty);
+            }
+        }
         updated = orders.map((o) =>
             o.id === editingId
                 ? {
@@ -318,6 +405,9 @@ form.addEventListener("submit", async (e) => {
                 : o
         );
     } else {
+        for (const [key, qty] of newReq.entries()) {
+            deltaMap.set(key, (deltaMap.get(key) || 0) - qty);
+        }
         const newOrder: Order = {
             id: Date.now().toString(),
             clientName: clientInput.value.trim(),
@@ -334,6 +424,20 @@ form.addEventListener("submit", async (e) => {
         updated = [...orders, newOrder];
     }
 
+    if (deltaMap.size > 0) {
+        const invResult = applyInventoryDelta(deltaMap);
+        if (!invResult.ok) {
+            showMessage(invResult.message || "Errore giacenza", "error");
+            return;
+        }
+        const invSaved = await window.api.saveInventory(invResult.updated as InventoryItem[]);
+        if (!invSaved) {
+            showMessage("Errore salvataggio magazzino", "error");
+            return;
+        }
+        inventory = invResult.updated as InventoryItem[];
+    }
+
     const success = await window.api.saveOrders(updated);
     if (success) {
         orders = updated;
@@ -342,6 +446,11 @@ form.addEventListener("submit", async (e) => {
         resetForm();
         showMessage("Ordine salvato!", "success");
         clearMessage();
+    } else {
+        // rollback inventory if order save fails
+        await window.api.saveInventory(previousInventory);
+        inventory = previousInventory;
+        showMessage("Errore salvataggio ordine", "error");
     }
 });
 
@@ -374,6 +483,25 @@ ordersBody.addEventListener("click", async (e) => {
 
     if (action === "delete") {
         if (!window.confirm("Eliminare questo ordine?")) return;
+        const previousInventory = [...inventory];
+        const oldReq = computeRequiredMaterials(order.items);
+        const deltaMap = new Map<string, number>();
+        for (const [key, qty] of oldReq.entries()) {
+            deltaMap.set(key, (deltaMap.get(key) || 0) + qty);
+        }
+        if (deltaMap.size > 0) {
+            const invResult = applyInventoryDelta(deltaMap);
+            if (!invResult.ok) {
+                showMessage(invResult.message || "Errore giacenza", "error");
+                return;
+            }
+            const invSaved = await window.api.saveInventory(invResult.updated as InventoryItem[]);
+            if (!invSaved) {
+                showMessage("Errore salvataggio magazzino", "error");
+                return;
+            }
+            inventory = invResult.updated as InventoryItem[];
+        }
         const updated = orders.filter((o) => o.id !== id);
         const success = await window.api.saveOrders(updated);
         if (success) {
@@ -381,6 +509,10 @@ ordersBody.addEventListener("click", async (e) => {
             renderOrders();
             showMessage("Ordine eliminato!", "success");
             clearMessage();
+        } else {
+            await window.api.saveInventory(previousInventory);
+            inventory = previousInventory;
+            showMessage("Errore eliminazione ordine", "error");
         }
     }
 });

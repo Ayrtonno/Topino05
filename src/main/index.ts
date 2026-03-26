@@ -3,8 +3,8 @@ import * as path from "path";
 import {
     getMaterials,
     saveMaterials,
-    getColors,
-    saveColors,
+    getInventory,
+    saveInventory,
     getArticles,
     saveArticles,
     getOrders,
@@ -63,13 +63,13 @@ ipcMain.handle("save-materials", async (_, materials) => {
     return saveMaterials(materials);
 });
 
-// IPC Handlers - Colors
-ipcMain.handle("get-colors", async () => {
-    return getColors();
+// IPC Handlers - Inventory
+ipcMain.handle("get-inventory", async () => {
+    return getInventory();
 });
 
-ipcMain.handle("save-colors", async (_, colors) => {
-    return saveColors(colors);
+ipcMain.handle("save-inventory", async (_, items) => {
+    return saveInventory(items);
 });
 
 // IPC Handlers - Articles

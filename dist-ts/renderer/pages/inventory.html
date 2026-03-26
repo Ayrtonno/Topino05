@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colori</title>
+    <title>Magazzino</title>
     <link rel="stylesheet" href="../styles/base.css">
     <link rel="stylesheet" href="../styles/page.css">
 </head>
-<body data-page="colors">
+<body data-page="inventory">
     <div class="app">
         <aside class="sidebar">
             <div class="logo">Preventivatore <span>v1</span></div>
             <nav class="nav">
                 <a data-page="dashboard" href="index.html">Dashboard</a>
                 <a data-page="materials" href="materials.html">Materiali</a>
-                <a data-page="colors" href="colors.html">Colori</a>
+                <a data-page="inventory" href="inventory.html">Magazzino</a>
                 <a data-page="articles" href="articles.html">Articoli</a>
                 <a data-page="orders" href="orders.html">Ordini</a>
             </nav>
@@ -22,12 +22,12 @@
         <main class="content">
             <div class="topbar">
                 <div class="page-title">
-                    <h1>Giacenza Colori</h1>
-                    <p>Gestione colori e disponibilita per materiale.</p>
+                    <h1>Magazzino</h1>
+                    <p>Giacenze per materiale e colore (opzionale).</p>
                 </div>
                 <div class="actions">
-                    <span class="chip">Palette</span>
-                    <button id="toggle-form" class="btn-primary">+ Nuovo Colore</button>
+                    <span class="chip">Stock</span>
+                    <button id="toggle-form" class="btn-primary">+ Nuova Giacenza</button>
                 </div>
             </div>
 
@@ -36,7 +36,7 @@
             <div class="toolbar">
                 <div class="left">
                     <div class="field">
-                        <input id="search-colors" type="text" placeholder="Cerca colore..." />
+                        <input id="search-inventory" type="text" placeholder="Cerca materiale/colore..." />
                     </div>
                     <div class="field">
                         <select id="filter-material">
@@ -45,40 +45,38 @@
                     </div>
                 </div>
                 <div class="right">
-                    <span class="badge primary">Palette</span>
+                    <span class="badge primary">Magazzino</span>
                 </div>
             </div>
 
-            <form id="color-form" class="form hidden">
-                <div class="form-group">
-                    <label>Materiale *</label>
-                    <select id="color-material">
-                        <option value="">Seleziona un materiale</option>
-                    </select>
+            <form id="inventory-form" class="form hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Materiale *</label>
+                        <select id="inv-material">
+                            <option value="">Seleziona un materiale</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Colore (opzionale)</label>
+                        <input id="inv-color" type="text" placeholder="Es: Rosso, Blu" />
+                    </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nome Colore *</label>
-                        <input id="color-name" type="text" placeholder="Es: Rosso, Blu" />
-                    </div>
-                    <div class="form-group">
-                        <label>Codice Colore</label>
-                        <input id="color-code" type="text" placeholder="Es: #FF0000" />
+                        <label>Quantita *</label>
+                        <input id="inv-qty" type="number" value="0" />
+                        <div id="inv-unit-label" class="muted">Unita: -</div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Stock in Grammi *</label>
-                    <input id="color-stock" type="number" value="0" />
-                </div>
-
-                <button id="submit-color" type="submit" class="btn-primary">Aggiungi Colore</button>
+                <button id="submit-inventory" type="submit" class="btn-primary">Salva</button>
             </form>
 
             <div class="table-header">
-                <div class="title">Elenco Colori</div>
-                <div class="meta">Giacenze per materiale</div>
+                <div class="title">Giacenze</div>
+                <div class="meta">Valore calcolato dai costi materiali</div>
             </div>
             <div class="table-container">
                 <table>
@@ -86,20 +84,22 @@
                         <tr>
                             <th>Materiale</th>
                             <th>Colore</th>
-                            <th>Codice</th>
-                            <th>Stock (g)</th>
+                            <th>Quantita</th>
+                            <th>Unita</th>
+                            <th>Costo Unit.</th>
+                            <th>Valore</th>
                             <th>Ultimo Aggiornamento</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
-                    <tbody id="colors-body"></tbody>
+                    <tbody id="inventory-body"></tbody>
                 </table>
-                <div id="colors-empty" class="empty-state hidden">Nessun colore presente.</div>
+                <div id="inventory-empty" class="empty-state hidden">Nessuna giacenza presente.</div>
             </div>
         </main>
     </div>
 
     <script src="../scripts/shared.js"></script>
-    <script src="../scripts/colors.js"></script>
+    <script src="../scripts/inventory.js"></script>
 </body>
 </html>

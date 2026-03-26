@@ -39,21 +39,20 @@ npm run build
 ## Struttura progetto (sintesi)
 
 - `src/main/`: main process Electron e IPC
-- `src/renderer/`: UI React
+- `src/renderer/`: UI HTML/CSS/TS
 - `public/`: template HTML base
 - `tools/`: script di build
 
 ## Dati JSON
 
 Percorso:
-- Windows: `%APPDATA%/Preventivatore Magazzino/data/`
-- macOS: `~/Library/Application Support/Preventivatore Magazzino/data/`
-- Linux: `~/.config/Preventivatore Magazzino/data/`
+- `DBStorage/` nella root del progetto (condivisibile su GitHub)
 
 File principali:
-- `products.json`
+- `materials.json`
 - `inventory.json`
-- `quotes.json`
+- `articles.json`
+- `orders.json`
 
 ## Troubleshooting
 

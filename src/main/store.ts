@@ -4,8 +4,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
 
-const userDataPath = app.getPath("userData");
-const dataDir = path.join(userDataPath, "data");
+const appRoot = process.cwd();
+const dataDir = path.join(appRoot, "DBStorage");
 
 // Ensure data directory exists
 if (!fs.existsSync(dataDir)) {
@@ -13,7 +13,7 @@ if (!fs.existsSync(dataDir)) {
 }
 
 const MATERIALS_FILE = path.join(dataDir, "materials.json");
-const COLORS_FILE = path.join(dataDir, "colors.json");
+const INVENTORY_FILE = path.join(dataDir, "inventory.json");
 const ARTICLES_FILE = path.join(dataDir, "articles.json");
 const ORDERS_FILE = path.join(dataDir, "orders.json");
 const LABOR_CONFIG_FILE = path.join(dataDir, "labor-config.json");
@@ -41,27 +41,124 @@ const writeJsonFile = (filePath: string, data: any) => {
     }
 };
 
+function migrateMaterials(data: any) {
+    if (!Array.isArray(data)) return { data, changed: false };
+    let changed = false;
+    const migrated = data.map((m: any) => {
+        const material = { ...m };
+        if (material.costPerUnit === undefined && material.costPerGramm !== undefined) {
+            material.costPerUnit = material.costPerGramm;
+            delete material.costPerGramm;
+            changed = true;
+        }
+        if (material.sellingPricePerUnit === undefined && material.sellingPricePerGramm !== undefined) {
+            material.sellingPricePerUnit = material.sellingPricePerGramm;
+            delete material.sellingPricePerGramm;
+            changed = true;
+        }
+        if (material.stockQuantity === undefined && material.currentStockGramms !== undefined) {
+            material.stockQuantity = material.currentStockGramms;
+            delete material.currentStockGramms;
+            changed = true;
+        }
+        if (!material.unit) {
+            material.unit = "grammi";
+            changed = true;
+        }
+        return material;
+    });
+    return { data: migrated, changed };
+}
+
+function migrateInventoryFromColors(colorsData: any) {
+    if (!Array.isArray(colorsData)) return [];
+    return colorsData.map((c: any) => ({
+        id: c.id ?? Date.now().toString(),
+        materialId: c.materialId,
+        colorName: c.colorName,
+        quantity: c.stockQuantity ?? c.stockInGramms ?? 0,
+        lastUpdated: c.lastUpdated ?? new Date().toISOString(),
+    }));
+}
+
+function migrateArticles(data: any) {
+    if (!Array.isArray(data)) return { data, changed: false };
+    let changed = false;
+    const legacyColors = readJsonFile(path.join(dataDir, "colors.json"), []);
+    const colorMap = new Map<string, string>();
+    if (Array.isArray(legacyColors)) {
+        legacyColors.forEach((c: any) => {
+            if (c.id && c.colorName) {
+                colorMap.set(c.id, c.colorName);
+            }
+        });
+    }
+    const migrated = data.map((a: any) => {
+        const article = { ...a };
+        if (Array.isArray(article.composition)) {
+            article.composition = article.composition.map((comp: any) => {
+                const next = { ...comp };
+                if (next.quantity === undefined && next.quantityGramms !== undefined) {
+                    next.quantity = next.quantityGramms;
+                    delete next.quantityGramms;
+                    changed = true;
+                }
+                if (next.colorName === undefined && next.colorId !== undefined) {
+                    next.colorName = colorMap.get(next.colorId);
+                    delete next.colorId;
+                    changed = true;
+                }
+                return next;
+            });
+        }
+        return article;
+    });
+    return { data: migrated, changed };
+}
+
+function readAndMigrate<T>(
+    filePath: string,
+    defaultValue: T,
+    migrate: (data: any) => { data: any; changed: boolean },
+) {
+    const data = readJsonFile(filePath, defaultValue);
+    const result = migrate(data);
+    if (result.changed) {
+        writeJsonFile(filePath, result.data);
+    }
+    return result.data as T;
+}
+
 // ==================== MATERIALS ====================
 export const getMaterials = (): Material[] => {
-    return readJsonFile(MATERIALS_FILE, []);
+    return readAndMigrate(MATERIALS_FILE, [], migrateMaterials);
 };
 
 export const saveMaterials = (materials: Material[]): boolean => {
     return writeJsonFile(MATERIALS_FILE, materials);
 };
 
-// ==================== COLORS ====================
-export const getColors = (): Color[] => {
-    return readJsonFile(COLORS_FILE, []);
+// ==================== INVENTORY ====================
+export const getInventory = (): InventoryItem[] => {
+    if (fs.existsSync(INVENTORY_FILE)) {
+        return readJsonFile(INVENTORY_FILE, []);
+    }
+    // Migrate legacy colors.json to inventory.json if present
+    const legacyColors = readJsonFile(path.join(dataDir, "colors.json"), []);
+    const migrated = migrateInventoryFromColors(legacyColors);
+    if (migrated.length > 0) {
+        writeJsonFile(INVENTORY_FILE, migrated);
+    }
+    return migrated;
 };
 
-export const saveColors = (colors: Color[]): boolean => {
-    return writeJsonFile(COLORS_FILE, colors);
+export const saveInventory = (items: InventoryItem[]): boolean => {
+    return writeJsonFile(INVENTORY_FILE, items);
 };
 
 // ==================== ARTICLES ====================
 export const getArticles = (): Article[] => {
-    return readJsonFile(ARTICLES_FILE, []);
+    return readAndMigrate(ARTICLES_FILE, [], migrateArticles);
 };
 
 export const saveArticles = (articles: Article[]): boolean => {
@@ -113,14 +210,13 @@ export const saveDashboardConfig = (config: any): boolean => {
 export function calculateArticleCost(
     article: Article,
     materials: Material[],
-    colors: Color[],
 ): number {
     let cost = 0;
 
     for (const comp of article.composition) {
         const material = materials.find((m) => m.id === comp.materialId);
         if (material) {
-            cost += material.costPerGramm * comp.quantityGramms;
+            cost += material.costPerUnit * comp.quantity;
         }
     }
 
@@ -143,10 +239,9 @@ export function calculateLaborCost(
 export function calculateArticlePrice(
     article: Article,
     materials: Material[],
-    colors: Color[],
     laborConfig: LaborConfig,
 ): number {
-    const materialCost = calculateArticleCost(article, materials, colors);
+    const materialCost = calculateArticleCost(article, materials);
     const laborCost = calculateLaborCost(article, laborConfig);
     const totalCost = materialCost + laborCost;
     const marginAmount = totalCost * (article.marginPercentage / 100);

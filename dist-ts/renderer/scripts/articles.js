@@ -34,14 +34,16 @@
   // src/renderer/scripts/articles.ts
   var articles = [];
   var materials = [];
-  var colors = [];
   var editingId = null;
   var composition = [];
+  var filterText = "";
   var form = qs("#article-form");
   var toggleBtn = qs("#toggle-form");
   var tbody = qs("#articles-body");
   var compBody = qs("#composition-body");
   var compCost = qs("#composition-cost");
+  var unitLabel = qs("#comp-unit-label");
+  var searchInput = qs("#search-articles");
   var codeInput = qs("#article-code");
   var nameInput = qs("#article-name");
   var laborInput = qs("#article-labor");
@@ -73,7 +75,6 @@
     try {
       articles = await window.api.getArticles();
       materials = await window.api.getMaterials();
-      colors = await window.api.getColors();
       renderMaterialOptions();
       renderTable();
     } catch {
@@ -89,39 +90,29 @@
       compMaterial.appendChild(opt);
     });
   }
-  function renderColorOptions(materialId) {
-    compColor.innerHTML = '<option value="">Seleziona colore</option>';
-    colors.filter((c) => c.materialId === materialId).forEach((c) => {
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.colorName;
-      compColor.appendChild(opt);
-    });
-  }
   function getMaterialName(id) {
     return materials.find((m) => m.id === id)?.name || "-";
-  }
-  function getColorName(id) {
-    return colors.find((c) => c.id === id)?.colorName || "-";
   }
   function compositionCost() {
     return composition.reduce((total, comp) => {
       const material = materials.find((m) => m.id === comp.materialId);
-      return total + (material?.costPerGramm || 0) * comp.quantityGramms;
+      return total + (material?.costPerUnit || 0) * comp.quantity;
     }, 0);
   }
   function renderComposition() {
     compBody.innerHTML = "";
     composition.forEach((comp, idx) => {
       const material = getMaterialName(comp.materialId);
-      const color = getColorName(comp.colorId);
-      const materialCost = materials.find((m) => m.id === comp.materialId)?.costPerGramm || 0;
+      const color = comp.colorName || "-";
+      const materialData = materials.find((m) => m.id === comp.materialId);
+      const materialCost = materialData?.costPerUnit || 0;
+      const unitLabel2 = materialData?.unit === "pezzi" ? "pz" : "g";
       const tr = document.createElement("tr");
       tr.innerHTML = `
             <td>${material}</td>
             <td>${color}</td>
-            <td>${comp.quantityGramms}</td>
-            <td>EUR ${(materialCost * comp.quantityGramms).toFixed(3)}</td>
+            <td>${comp.quantity} ${unitLabel2}</td>
+            <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
             <td><button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button></td>
         `;
       compBody.appendChild(tr);
@@ -131,7 +122,11 @@
   function renderTable() {
     tbody.innerHTML = "";
     const empty = document.getElementById("articles-empty");
-    articles.forEach((a) => {
+    const filtered = articles.filter((a) => {
+      const text = `${a.code} ${a.name}`.toLowerCase();
+      return text.includes(filterText);
+    });
+    filtered.forEach((a) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
             <td>${a.code}</td>
@@ -148,13 +143,13 @@
       tbody.appendChild(tr);
     });
     if (empty) {
-      empty.classList.toggle("hidden", articles.length > 0);
+      empty.classList.toggle("hidden", filtered.length > 0);
     }
   }
   function compositionCostFor(article) {
     return article.composition.reduce((total, comp) => {
       const material = materials.find((m) => m.id === comp.materialId);
-      return total + (material?.costPerGramm || 0) * comp.quantityGramms;
+      return total + (material?.costPerUnit || 0) * comp.quantity;
     }, 0);
   }
   toggleBtn.addEventListener("click", () => {
@@ -164,11 +159,14 @@
   });
   compMaterial.addEventListener("change", () => {
     const materialId = compMaterial.value;
-    compColor.disabled = !materialId;
-    renderColorOptions(materialId);
+    const materialData = materials.find((m) => m.id === materialId);
+    if (unitLabel) {
+      const label = materialData?.unit === "pezzi" ? "pz" : "g";
+      unitLabel.textContent = materialData ? `Unita: ${label}` : "Unita: -";
+    }
   });
   addCompBtn.addEventListener("click", () => {
-    if (!compMaterial.value || !compColor.value || !compQty.value) {
+    if (!compMaterial.value || !compQty.value) {
       showMessage("Completa tutti i campi della composizione", "error");
       return;
     }
@@ -179,13 +177,15 @@
     }
     composition.push({
       materialId: compMaterial.value,
-      colorId: compColor.value,
-      quantityGramms: qty
+      colorName: compColor.value.trim() || void 0,
+      quantity: qty
     });
     compMaterial.value = "";
-    compColor.innerHTML = '<option value="">Seleziona colore</option>';
-    compColor.disabled = true;
+    compColor.value = "";
     compQty.value = "0";
+    if (unitLabel) {
+      unitLabel.textContent = "Unita: -";
+    }
     renderComposition();
     showMessage("Componente aggiunto!", "success");
     clearMessage();
@@ -198,6 +198,10 @@
     const index = parseInt(indexStr, 10);
     composition = composition.filter((_, i) => i !== index);
     renderComposition();
+  });
+  searchInput?.addEventListener("input", () => {
+    filterText = searchInput.value.trim().toLowerCase();
+    renderTable();
   });
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

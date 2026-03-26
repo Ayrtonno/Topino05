@@ -7,10 +7,10 @@ const api = {
     saveMaterials: (materials: Material[]) =>
         ipcRenderer.invoke("save-materials", materials) as Promise<boolean>,
 
-    // Colors API
-    getColors: () => ipcRenderer.invoke("get-colors") as Promise<Color[]>,
-    saveColors: (colors: Color[]) =>
-        ipcRenderer.invoke("save-colors", colors) as Promise<boolean>,
+    // Inventory API
+    getInventory: () => ipcRenderer.invoke("get-inventory") as Promise<InventoryItem[]>,
+    saveInventory: (items: InventoryItem[]) =>
+        ipcRenderer.invoke("save-inventory", items) as Promise<boolean>,
 
     // Articles API
     getArticles: () => ipcRenderer.invoke("get-articles") as Promise<Article[]>,

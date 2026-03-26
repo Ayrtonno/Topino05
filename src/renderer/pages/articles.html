@@ -14,7 +14,7 @@
             <nav class="nav">
                 <a data-page="dashboard" href="index.html">Dashboard</a>
                 <a data-page="materials" href="materials.html">Materiali</a>
-                <a data-page="colors" href="colors.html">Colori</a>
+                <a data-page="inventory" href="inventory.html">Magazzino</a>
                 <a data-page="articles" href="articles.html">Articoli</a>
                 <a data-page="orders" href="orders.html">Ordini</a>
             </nav>
@@ -77,14 +77,13 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Colore *</label>
-                            <select id="comp-color" disabled>
-                                <option value="">Seleziona colore</option>
-                            </select>
+                            <label>Colore (opzionale)</label>
+                            <input id="comp-color" type="text" placeholder="Es: Rosso, Blu" />
                         </div>
                         <div class="form-group">
-                            <label>Quantita (g) *</label>
+                            <label>Quantita *</label>
                             <input id="comp-qty" type="number" value="0" />
+                            <div id="comp-unit-label" class="muted">Unita: -</div>
                         </div>
                         <button id="add-comp" type="button" class="btn-small" style="align-self:flex-end;">Aggiungi</button>
                     </div>
@@ -95,7 +94,7 @@
                                 <tr>
                                     <th>Materiale</th>
                                     <th>Colore</th>
-                                    <th>Quantita (g)</th>
+                                    <th>Quantita</th>
                                     <th>Costo</th>
                                     <th></th>
                                 </tr>

@@ -235,6 +235,11 @@ body {
     border: 1px solid #fecaca;
 }
 
+.muted {
+    color: var(--muted);
+    font-size: 12px;
+}
+
 .hidden {
     display: none !important;
 }

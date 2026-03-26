@@ -42,9 +42,13 @@
   var colors = [];
   var materials = [];
   var editingId = null;
+  var filterText = "";
+  var filterMaterial = "";
   var form = qs("#color-form");
   var toggleBtn = qs("#toggle-form");
   var tbody = qs("#colors-body");
+  var searchInput = qs("#search-colors");
+  var filterSelect = qs("#filter-material");
   var materialSelect = qs("#color-material");
   var nameInput = qs("#color-name");
   var codeInput = qs("#color-code");
@@ -74,24 +78,38 @@
   }
   function renderMaterialOptions() {
     materialSelect.innerHTML = '<option value="">Seleziona un materiale</option>';
+    filterSelect.innerHTML = '<option value="">Tutti i materiali</option>';
     materials.forEach((m) => {
       const opt = document.createElement("option");
       opt.value = m.id;
       opt.textContent = m.name;
       materialSelect.appendChild(opt);
+      const optFilter = document.createElement("option");
+      optFilter.value = m.id;
+      optFilter.textContent = m.name;
+      filterSelect.appendChild(optFilter);
     });
   }
   function renderTable() {
     tbody.innerHTML = "";
     const empty = document.getElementById("colors-empty");
-    colors.forEach((c) => {
+    const filtered = colors.filter((c) => {
+      const materialName = materials.find((m) => m.id === c.materialId)?.name || "";
+      const matchesText = c.colorName.toLowerCase().includes(filterText) || materialName.toLowerCase().includes(filterText);
+      const matchesMaterial = !filterMaterial || c.materialId === filterMaterial;
+      return matchesText && matchesMaterial;
+    });
+    filtered.forEach((c) => {
       const materialName = materials.find((m) => m.id === c.materialId)?.name || "-";
+      const unit = materials.find((m) => m.id === c.materialId)?.unit || "grammi";
+      const unitLabel = unit === "pezzi" ? "pz" : "g";
       const tr = document.createElement("tr");
       tr.innerHTML = `
             <td>${materialName}</td>
             <td>${c.colorName}</td>
             <td>${c.colorCode || "-"}</td>
-            <td>${c.stockInGramms.toFixed(0)}</td>
+            <td>${c.stockQuantity.toFixed(0)} ${unitLabel}</td>
+            <td>${unit}</td>
             <td>${formatDate(c.lastUpdated)}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${c.id}">Modifica</button>
@@ -101,9 +119,17 @@
       tbody.appendChild(tr);
     });
     if (empty) {
-      empty.classList.toggle("hidden", colors.length > 0);
+      empty.classList.toggle("hidden", filtered.length > 0);
     }
   }
+  searchInput?.addEventListener("input", () => {
+    filterText = searchInput.value.trim().toLowerCase();
+    renderTable();
+  });
+  filterSelect?.addEventListener("change", () => {
+    filterMaterial = filterSelect.value;
+    renderTable();
+  });
   toggleBtn.addEventListener("click", () => {
     const visible = form.classList.contains("hidden");
     if (visible) resetForm();
@@ -120,7 +146,7 @@
       materialId: materialSelect.value,
       colorName: nameInput.value.trim(),
       colorCode: codeInput.value.trim(),
-      stockInGramms: parseFloat(stockInput.value) || 0,
+      stockQuantity: parseFloat(stockInput.value) || 0,
       lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
     };
     let updated;
@@ -151,7 +177,7 @@
       materialSelect.value = color.materialId;
       nameInput.value = color.colorName;
       codeInput.value = color.colorCode || "";
-      stockInput.value = color.stockInGramms.toString();
+      stockInput.value = color.stockQuantity.toString();
       submitBtn.textContent = "Salva Modifiche";
       setFormVisible(true);
     }

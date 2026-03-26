@@ -2,8 +2,8 @@ import { qs, showMessage, clearMessage } from "./shared";
 
 type ArticleComposition = {
     materialId: string;
-    colorId: string;
-    quantityGramms: number;
+    colorName?: string;
+    quantity: number;
 };
 
 type Article = {
@@ -19,26 +19,23 @@ type Article = {
 type Material = {
     id: string;
     name: string;
-    costPerGramm: number;
-};
-
-type Color = {
-    id: string;
-    materialId: string;
-    colorName: string;
+    costPerUnit: number;
+    unit: "grammi" | "pezzi";
 };
 
 let articles: Article[] = [];
 let materials: Material[] = [];
-let colors: Color[] = [];
 let editingId: string | null = null;
 let composition: ArticleComposition[] = [];
+let filterText = "";
 
 const form = qs<HTMLFormElement>("#article-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
 const tbody = qs<HTMLTableSectionElement>("#articles-body");
 const compBody = qs<HTMLTableSectionElement>("#composition-body");
 const compCost = qs<HTMLDivElement>("#composition-cost");
+const unitLabel = qs<HTMLDivElement>("#comp-unit-label");
+const searchInput = qs<HTMLInputElement>("#search-articles");
 
 const codeInput = qs<HTMLInputElement>("#article-code");
 const nameInput = qs<HTMLInputElement>("#article-name");
@@ -47,7 +44,7 @@ const marginInput = qs<HTMLInputElement>("#article-margin");
 const submitBtn = qs<HTMLButtonElement>("#submit-article");
 
 const compMaterial = qs<HTMLSelectElement>("#comp-material");
-const compColor = qs<HTMLSelectElement>("#comp-color");
+const compColor = qs<HTMLInputElement>("#comp-color");
 const compQty = qs<HTMLInputElement>("#comp-qty");
 const addCompBtn = qs<HTMLButtonElement>("#add-comp");
 
@@ -75,7 +72,6 @@ async function loadData() {
     try {
         articles = await window.api.getArticles();
         materials = await window.api.getMaterials();
-        colors = await window.api.getColors();
         renderMaterialOptions();
         renderTable();
     } catch {
@@ -93,28 +89,14 @@ function renderMaterialOptions() {
     });
 }
 
-function renderColorOptions(materialId: string) {
-    compColor.innerHTML = '<option value="">Seleziona colore</option>';
-    colors.filter((c) => c.materialId === materialId).forEach((c) => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = c.colorName;
-        compColor.appendChild(opt);
-    });
-}
-
 function getMaterialName(id: string) {
     return materials.find((m) => m.id === id)?.name || "-";
-}
-
-function getColorName(id: string) {
-    return colors.find((c) => c.id === id)?.colorName || "-";
 }
 
 function compositionCost() {
     return composition.reduce((total, comp) => {
         const material = materials.find((m) => m.id === comp.materialId);
-        return total + (material?.costPerGramm || 0) * comp.quantityGramms;
+        return total + (material?.costPerUnit || 0) * comp.quantity;
     }, 0);
 }
 
@@ -122,14 +104,16 @@ function renderComposition() {
     compBody.innerHTML = "";
     composition.forEach((comp, idx) => {
         const material = getMaterialName(comp.materialId);
-        const color = getColorName(comp.colorId);
-        const materialCost = materials.find((m) => m.id === comp.materialId)?.costPerGramm || 0;
+        const color = comp.colorName || "-";
+        const materialData = materials.find((m) => m.id === comp.materialId);
+        const materialCost = materialData?.costPerUnit || 0;
+        const unitLabel = materialData?.unit === "pezzi" ? "pz" : "g";
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${material}</td>
             <td>${color}</td>
-            <td>${comp.quantityGramms}</td>
-            <td>EUR ${(materialCost * comp.quantityGramms).toFixed(3)}</td>
+            <td>${comp.quantity} ${unitLabel}</td>
+            <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
             <td><button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button></td>
         `;
         compBody.appendChild(tr);
@@ -140,7 +124,11 @@ function renderComposition() {
 function renderTable() {
     tbody.innerHTML = "";
     const empty = document.getElementById("articles-empty");
-    articles.forEach((a) => {
+    const filtered = articles.filter((a) => {
+        const text = `${a.code} ${a.name}`.toLowerCase();
+        return text.includes(filterText);
+    });
+    filtered.forEach((a) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${a.code}</td>
@@ -157,14 +145,14 @@ function renderTable() {
         tbody.appendChild(tr);
     });
     if (empty) {
-        empty.classList.toggle("hidden", articles.length > 0);
+        empty.classList.toggle("hidden", filtered.length > 0);
     }
 }
 
 function compositionCostFor(article: Article) {
     return article.composition.reduce((total, comp) => {
         const material = materials.find((m) => m.id === comp.materialId);
-        return total + (material?.costPerGramm || 0) * comp.quantityGramms;
+        return total + (material?.costPerUnit || 0) * comp.quantity;
     }, 0);
 }
 
@@ -176,12 +164,15 @@ toggleBtn.addEventListener("click", () => {
 
 compMaterial.addEventListener("change", () => {
     const materialId = compMaterial.value;
-    compColor.disabled = !materialId;
-    renderColorOptions(materialId);
+    const materialData = materials.find((m) => m.id === materialId);
+    if (unitLabel) {
+        const label = materialData?.unit === "pezzi" ? "pz" : "g";
+        unitLabel.textContent = materialData ? `Unita: ${label}` : "Unita: -";
+    }
 });
 
 addCompBtn.addEventListener("click", () => {
-    if (!compMaterial.value || !compColor.value || !compQty.value) {
+    if (!compMaterial.value || !compQty.value) {
         showMessage("Completa tutti i campi della composizione", "error");
         return;
     }
@@ -192,13 +183,15 @@ addCompBtn.addEventListener("click", () => {
     }
     composition.push({
         materialId: compMaterial.value,
-        colorId: compColor.value,
-        quantityGramms: qty,
+        colorName: compColor.value.trim() || undefined,
+        quantity: qty,
     });
     compMaterial.value = "";
-    compColor.innerHTML = '<option value="">Seleziona colore</option>';
-    compColor.disabled = true;
+    compColor.value = "";
     compQty.value = "0";
+    if (unitLabel) {
+        unitLabel.textContent = "Unita: -";
+    }
     renderComposition();
     showMessage("Componente aggiunto!", "success");
     clearMessage();
@@ -212,6 +205,11 @@ compBody.addEventListener("click", (e) => {
     const index = parseInt(indexStr, 10);
     composition = composition.filter((_, i) => i !== index);
     renderComposition();
+});
+
+searchInput?.addEventListener("input", () => {
+    filterText = searchInput.value.trim().toLowerCase();
+    renderTable();
 });
 
 form.addEventListener("submit", async (e) => {

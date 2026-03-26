@@ -12,28 +12,27 @@ declare namespace Models {
     interface Material {
         id: string;
         name: string;
-        costPerGramm: number; // prezzo al grammo
-        sellingPricePerGramm: number;
-        currentStockGramms: number;
+        costPerUnit: number; // prezzo unitario (€/g o €/pz)
+        sellingPricePerUnit: number;
+        stockQuantity: number;
         unit: "grammi" | "pezzi";
         lastUpdated: string;
     }
 
     // Colors - colori disponibili con stock
-    interface Color {
+    interface InventoryItem {
         id: string;
         materialId: string;
-        colorName: string;
-        colorCode?: string;
-        stockInGramms: number; // giacenza in grammi
+        colorName?: string;
+        quantity: number;
         lastUpdated: string;
     }
 
     // Articles - articoli composti da materiale+colore in quantità
     interface ArticleComposition {
         materialId: string;
-        colorId: string;
-        quantityGramms: number;
+        colorName?: string;
+        quantity: number;
     }
 
     interface Article {
@@ -88,7 +87,7 @@ declare namespace Models {
 declare global {
     // Type aliases for convenience
     type Material = Models.Material;
-    type Color = Models.Color;
+    type InventoryItem = Models.InventoryItem;
     type Article = Models.Article;
     type ArticleComposition = Models.ArticleComposition;
     type Order = Models.Order;
@@ -103,8 +102,8 @@ declare global {
         saveMaterials: (materials: Material[]) => Promise<boolean>;
 
         // Colors
-        getColors: () => Promise<Color[]>;
-        saveColors: (colors: Color[]) => Promise<boolean>;
+        getInventory: () => Promise<InventoryItem[]>;
+        saveInventory: (items: InventoryItem[]) => Promise<boolean>;
 
         // Articles
         getArticles: () => Promise<Article[]>;

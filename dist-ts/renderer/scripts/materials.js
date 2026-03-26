@@ -34,13 +34,14 @@
   // src/renderer/scripts/materials.ts
   var materials = [];
   var editingId = null;
+  var filterText = "";
   var form = qs("#material-form");
   var toggleBtn = qs("#toggle-form");
   var tbody = qs("#materials-body");
+  var searchInput = qs("#search-materials");
   var nameInput = qs("#mat-name");
   var costInput = qs("#mat-cost");
   var sellingInput = qs("#mat-selling");
-  var stockInput = qs("#mat-stock");
   var unitSelect = qs("#mat-unit");
   var submitBtn = qs("#submit-material");
   function setFormVisible(visible) {
@@ -51,7 +52,6 @@
     nameInput.value = "";
     costInput.value = "0";
     sellingInput.value = "0";
-    stockInput.value = "0";
     unitSelect.value = "grammi";
     submitBtn.textContent = "Aggiungi Materiale";
     editingId = null;
@@ -67,13 +67,16 @@
   function renderTable() {
     tbody.innerHTML = "";
     const empty = document.getElementById("materials-empty");
-    materials.forEach((m) => {
+    const filtered = materials.filter(
+      (m) => m.name.toLowerCase().includes(filterText)
+    );
+    filtered.forEach((m) => {
+      const unitLabel = m.unit === "pezzi" ? "\u20AC/pz" : "\u20AC/g";
       const tr = document.createElement("tr");
       tr.innerHTML = `
             <td>${m.name}</td>
-            <td>${m.costPerGramm.toFixed(3)}</td>
-            <td>${m.sellingPricePerGramm.toFixed(3)}</td>
-            <td>${m.currentStockGramms.toFixed(0)}</td>
+            <td>${m.costPerUnit.toFixed(3)} ${unitLabel}</td>
+            <td>${m.sellingPricePerUnit.toFixed(3)} ${unitLabel}</td>
             <td>${m.unit}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${m.id}">Modifica</button>
@@ -83,9 +86,13 @@
       tbody.appendChild(tr);
     });
     if (empty) {
-      empty.classList.toggle("hidden", materials.length > 0);
+      empty.classList.toggle("hidden", filtered.length > 0);
     }
   }
+  searchInput?.addEventListener("input", () => {
+    filterText = searchInput.value.trim().toLowerCase();
+    renderTable();
+  });
   toggleBtn.addEventListener("click", () => {
     const visible = form.classList.contains("hidden");
     if (visible) {
@@ -102,9 +109,9 @@
     const data = {
       id: editingId ?? Date.now().toString(),
       name: nameInput.value.trim(),
-      costPerGramm: parseFloat(costInput.value) || 0,
-      sellingPricePerGramm: parseFloat(sellingInput.value) || 0,
-      currentStockGramms: parseFloat(stockInput.value) || 0,
+      costPerUnit: parseFloat(costInput.value) || 0,
+      sellingPricePerUnit: parseFloat(sellingInput.value) || 0,
+      stockQuantity: 0,
       unit: unitSelect.value,
       lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
     };
@@ -134,9 +141,8 @@
     if (action === "edit") {
       editingId = id;
       nameInput.value = material.name;
-      costInput.value = material.costPerGramm.toString();
-      sellingInput.value = material.sellingPricePerGramm.toString();
-      stockInput.value = material.currentStockGramms.toString();
+      costInput.value = material.costPerUnit.toString();
+      sellingInput.value = material.sellingPricePerUnit.toString();
       unitSelect.value = material.unit;
       submitBtn.textContent = "Salva Modifiche";
       setFormVisible(true);

@@ -60,7 +60,7 @@ I dati verranno salvati automaticamente in file JSON.
 
 ## Dove si salvano i dati?
 
-Windows: `%APPDATA%\Preventivatore Magazzino\data\`
+Cartella `DBStorage/` nella root del progetto.
 
 Puoi trovare i file:
 - `products.json`

@@ -14,7 +14,7 @@
             <nav class="nav">
                 <a data-page="dashboard" href="index.html">Dashboard</a>
                 <a data-page="materials" href="materials.html">Materiali</a>
-                <a data-page="colors" href="colors.html">Colori</a>
+                <a data-page="inventory" href="inventory.html">Magazzino</a>
                 <a data-page="articles" href="articles.html">Articoli</a>
                 <a data-page="orders" href="orders.html">Ordini</a>
             </nav>
@@ -51,26 +51,22 @@
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Costo per Grammo (EUR) *</label>
-                        <input id="mat-cost" type="number" step="0.001" value="0" />
-                    </div>
-                    <div class="form-group">
-                        <label>Prezzo Vendita per Grammo (EUR)</label>
-                        <input id="mat-selling" type="number" step="0.001" value="0" />
-                    </div>
+                <div class="form-group">
+                    <label>Costo unitario (EUR) *</label>
+                    <input id="mat-cost" type="number" step="0.001" value="0" />
+                </div>
+                <div class="form-group">
+                    <label>Prezzo vendita unitario (EUR)</label>
+                    <input id="mat-selling" type="number" step="0.001" value="0" />
+                </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Stock Iniziale (grammi)</label>
-                        <input id="mat-stock" type="number" value="0" />
-                    </div>
-                    <div class="form-group">
-                        <label>Unita di Misura</label>
+                        <label>Unita di misura</label>
                         <select id="mat-unit">
-                            <option value="grammi">Grammi</option>
-                            <option value="pezzi">Pezzi</option>
+                            <option value="grammi">Grammi (€/g)</option>
+                            <option value="pezzi">Pezzi (€/pz)</option>
                         </select>
                     </div>
                 </div>
@@ -87,9 +83,8 @@
                     <thead>
                         <tr>
                             <th>Nome</th>
-                            <th>Costo EUR/g</th>
-                            <th>Prezzo Vendita EUR/g</th>
-                            <th>Stock Attuale</th>
+                            <th>Costo unitario</th>
+                            <th>Prezzo vendita</th>
                             <th>Unita</th>
                             <th>Azioni</th>
                         </tr>

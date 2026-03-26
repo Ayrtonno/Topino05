@@ -42,14 +42,19 @@
   var orders = [];
   var articles = [];
   var materials = [];
+  var inventory = [];
   var laborConfig = { hourlyRate: 4 };
   var editingId = null;
   var items = [];
   var detailsOpenId = null;
+  var filterText = "";
+  var filterStatus = "";
   var form = qs("#order-form");
   var toggleBtn = qs("#toggle-form");
   var ordersBody = qs("#orders-body");
   var itemsBody = qs("#items-body");
+  var searchInput = qs("#search-orders");
+  var statusFilter = qs("#filter-status");
   var clientInput = qs("#order-client");
   var emailInput = qs("#order-email");
   var discountInput = qs("#order-discount");
@@ -81,6 +86,7 @@
       orders = await window.api.getOrders();
       articles = await window.api.getArticles();
       materials = await window.api.getMaterials();
+      inventory = await window.api.getInventory();
       laborConfig = await window.api.getLaborConfig();
       renderArticleOptions();
       renderOrders();
@@ -108,7 +114,7 @@
     for (const comp of article.composition) {
       const material = materials.find((m) => m.id === comp.materialId);
       if (material) {
-        materialCost += material.costPerGramm * comp.quantityGramms;
+        materialCost += material.costPerUnit * comp.quantity;
       }
     }
     const laborCost = article.laborHoursRequired * laborConfig.hourlyRate;
@@ -125,7 +131,7 @@
       for (const comp of article.composition) {
         const material = materials.find((m) => m.id === comp.materialId);
         if (material) {
-          materialCost += material.costPerGramm * comp.quantityGramms * item.quantity;
+          materialCost += material.costPerUnit * comp.quantity * item.quantity;
         }
       }
       laborCost += article.laborHoursRequired * laborConfig.hourlyRate * item.quantity;
@@ -138,6 +144,40 @@
       laborCost: parseFloat(laborCost.toFixed(2)),
       finalAmount: parseFloat(finalAmount.toFixed(2))
     };
+  }
+  function normalizeColor(value) {
+    return (value || "").trim().toLowerCase();
+  }
+  function computeRequiredMaterials(orderItems) {
+    const map = /* @__PURE__ */ new Map();
+    for (const item of orderItems) {
+      const article = articles.find((a) => a.id === item.articleId);
+      if (!article) continue;
+      for (const comp of article.composition) {
+        const key = `${comp.materialId}::${normalizeColor(comp.colorName)}`;
+        const qty = comp.quantity * item.quantity;
+        map.set(key, (map.get(key) || 0) + qty);
+      }
+    }
+    return map;
+  }
+  function applyInventoryDelta(deltaMap) {
+    const updated = [...inventory];
+    for (const [key, delta] of deltaMap.entries()) {
+      const [materialId, colorKey] = key.split("::");
+      const row = updated.find(
+        (i) => i.materialId === materialId && normalizeColor(i.colorName) === colorKey
+      );
+      if (!row) {
+        return { ok: false, message: "Giacenza mancante per materiale/colore" };
+      }
+      if (row.quantity + delta < 0) {
+        return { ok: false, message: "Giacenza insufficiente per materiale/colore" };
+      }
+      row.quantity += delta;
+      row.lastUpdated = (/* @__PURE__ */ new Date()).toISOString();
+    }
+    return { ok: true, updated };
   }
   function renderItems() {
     itemsBody.innerHTML = "";
@@ -167,7 +207,14 @@
     if (statTotalRevenue) statTotalRevenue.textContent = `EUR ${totalRevenue.toFixed(2)}`;
     if (statTotalCosts) statTotalCosts.textContent = `EUR ${totalCosts.toFixed(2)}`;
     if (statTotalProfit) statTotalProfit.textContent = `EUR ${totalProfit.toFixed(2)}`;
-    orders.forEach((order) => {
+    const filtered = orders.filter((order) => {
+      const articleNames = order.items.map((i) => `${getArticleCode(i.articleId)} ${getArticleName(i.articleId)}`).join(" ");
+      const text = `${order.clientName} ${order.clientEmail || ""} ${articleNames}`.toLowerCase();
+      const matchesText = text.includes(filterText);
+      const matchesStatus = !filterStatus || order.status === filterStatus;
+      return matchesText && matchesStatus;
+    });
+    filtered.forEach((order) => {
       const costs = calculateOrderCosts(order.items, order.discountPercentage);
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -227,7 +274,7 @@
       }
     });
     if (empty) {
-      empty.classList.toggle("hidden", orders.length > 0);
+      empty.classList.toggle("hidden", filtered.length > 0);
     }
   }
   toggleBtn.addEventListener("click", () => {
@@ -258,6 +305,14 @@
     showMessage("Articolo aggiunto!", "success");
     clearMessage();
   });
+  searchInput?.addEventListener("input", () => {
+    filterText = searchInput.value.trim().toLowerCase();
+    renderOrders();
+  });
+  statusFilter?.addEventListener("change", () => {
+    filterStatus = statusFilter.value;
+    renderOrders();
+  });
   itemsBody.addEventListener("click", (e) => {
     const target = e.target;
     const action = target.getAttribute("data-action");
@@ -275,7 +330,20 @@
     }
     const costs = calculateOrderCosts(items, parseFloat(discountInput.value) || 0);
     let updated;
+    const previousInventory = [...inventory];
+    const newReq = computeRequiredMaterials(items);
+    let deltaMap = /* @__PURE__ */ new Map();
     if (editingId) {
+      const oldOrder = orders.find((o) => o.id === editingId);
+      if (oldOrder) {
+        const oldReq = computeRequiredMaterials(oldOrder.items);
+        for (const [key, qty] of oldReq.entries()) {
+          deltaMap.set(key, (deltaMap.get(key) || 0) + qty);
+        }
+        for (const [key, qty] of newReq.entries()) {
+          deltaMap.set(key, (deltaMap.get(key) || 0) - qty);
+        }
+      }
       updated = orders.map(
         (o) => o.id === editingId ? {
           ...o,
@@ -289,6 +357,9 @@
         } : o
       );
     } else {
+      for (const [key, qty] of newReq.entries()) {
+        deltaMap.set(key, (deltaMap.get(key) || 0) - qty);
+      }
       const newOrder = {
         id: Date.now().toString(),
         clientName: clientInput.value.trim(),
@@ -304,6 +375,19 @@
       };
       updated = [...orders, newOrder];
     }
+    if (deltaMap.size > 0) {
+      const invResult = applyInventoryDelta(deltaMap);
+      if (!invResult.ok) {
+        showMessage(invResult.message || "Errore giacenza", "error");
+        return;
+      }
+      const invSaved = await window.api.saveInventory(invResult.updated);
+      if (!invSaved) {
+        showMessage("Errore salvataggio magazzino", "error");
+        return;
+      }
+      inventory = invResult.updated;
+    }
     const success = await window.api.saveOrders(updated);
     if (success) {
       orders = updated;
@@ -312,6 +396,10 @@
       resetForm();
       showMessage("Ordine salvato!", "success");
       clearMessage();
+    } else {
+      await window.api.saveInventory(previousInventory);
+      inventory = previousInventory;
+      showMessage("Errore salvataggio ordine", "error");
     }
   });
   ordersBody.addEventListener("click", async (e) => {
@@ -339,6 +427,25 @@
     }
     if (action === "delete") {
       if (!window.confirm("Eliminare questo ordine?")) return;
+      const previousInventory = [...inventory];
+      const oldReq = computeRequiredMaterials(order.items);
+      const deltaMap = /* @__PURE__ */ new Map();
+      for (const [key, qty] of oldReq.entries()) {
+        deltaMap.set(key, (deltaMap.get(key) || 0) + qty);
+      }
+      if (deltaMap.size > 0) {
+        const invResult = applyInventoryDelta(deltaMap);
+        if (!invResult.ok) {
+          showMessage(invResult.message || "Errore giacenza", "error");
+          return;
+        }
+        const invSaved = await window.api.saveInventory(invResult.updated);
+        if (!invSaved) {
+          showMessage("Errore salvataggio magazzino", "error");
+          return;
+        }
+        inventory = invResult.updated;
+      }
       const updated = orders.filter((o) => o.id !== id);
       const success = await window.api.saveOrders(updated);
       if (success) {
@@ -346,6 +453,10 @@
         renderOrders();
         showMessage("Ordine eliminato!", "success");
         clearMessage();
+      } else {
+        await window.api.saveInventory(previousInventory);
+        inventory = previousInventory;
+        showMessage("Errore eliminazione ordine", "error");
       }
     }
   });
