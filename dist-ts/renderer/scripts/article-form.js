@@ -37,6 +37,7 @@
   var composition = [];
   var hourlyRate = 0;
   var editingId = null;
+  var editingCompIndex = null;
   var form = qs("#article-form");
   var compBody = qs("#composition-body");
   var compCost = qs("#composition-cost");
@@ -47,12 +48,23 @@
   var materialMarkupInput = qs("#article-material-markup");
   var laborMarkupInput = qs("#article-labor-markup");
   var submitBtn = qs("#submit-article");
+  var wizardPrev = qs("#wizard-prev");
+  var wizardNext = qs("#wizard-next");
+  var wizardCancel = qs("#wizard-cancel");
+  var wizardSteps = Array.from(document.querySelectorAll(".wizard-step"));
+  var wizardSections = Array.from(document.querySelectorAll(".wizard-section"));
+  var wizardProgress = qs("#wizard-progress-bar");
+  var currentStep = 1;
+  var returnUrl = "articles.html";
+  var isPopup = false;
   var compMaterial = qs("#comp-material");
-  var compColor = qs("#comp-color");
+  var compDesc = qs("#comp-desc");
   var compQty = qs("#comp-qty");
   var addCompBtn = qs("#add-comp");
   function getQueryId() {
     const params = new URLSearchParams(window.location.search);
+    returnUrl = params.get("return") || "articles.html";
+    isPopup = params.get("popup") === "1";
     return params.get("id");
   }
   function renderMaterialOptions() {
@@ -77,28 +89,76 @@
     compBody.innerHTML = "";
     composition.forEach((comp, idx) => {
       const material = getMaterialName(comp.materialId);
-      const color = comp.colorName || "-";
+      const desc = comp.description || "-";
       const materialData = materials.find((m) => m.id === comp.materialId);
       const materialCost = materialData?.costPerUnit || 0;
       const unitLabel2 = materialData?.unit === "pezzi" ? "pz" : "g";
       const tr = document.createElement("tr");
-      tr.innerHTML = `
-            <td>${material}</td>
-            <td>${color}</td>
-            <td>${comp.quantity} ${unitLabel2}</td>
-            <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
-            <td><button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button></td>
-        `;
+      if (editingCompIndex === idx) {
+        const options = materials.map((m) => `<option value="${m.id}" ${m.id === comp.materialId ? "selected" : ""}>${m.name}</option>`).join("");
+        tr.innerHTML = `
+                <td>
+                    <select class="inline-field inline-material">
+                        <option value="">Seleziona materiale</option>
+                        ${options}
+                    </select>
+                </td>
+                <td><input class="inline-field inline-desc" type="text" value="${comp.description || ""}"/></td>
+                <td><input class="inline-field inline-qty" type="number" value="${comp.quantity}"/></td>
+                <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
+                <td>
+                    <button class="btn-small" data-action="save" data-index="${idx}">Salva</button>
+                    <button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button>
+                </td>
+            `;
+        tr.classList.add("row-editing");
+      } else {
+        tr.innerHTML = `
+                <td>${material}</td>
+                <td>${desc}</td>
+                <td>${comp.quantity} ${unitLabel2}</td>
+                <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
+                <td>
+                    <button class="btn-small" data-action="edit" data-index="${idx}">Modifica</button>
+                    <button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button>
+                </td>
+            `;
+      }
       compBody.appendChild(tr);
     });
     compCost.textContent = `Costo Materiale: EUR ${compositionCost().toFixed(2)}`;
   }
+  function setStep(step) {
+    currentStep = step;
+    wizardSteps.forEach((el) => {
+      const s = parseInt(el.getAttribute("data-step") || "1", 10);
+      el.classList.toggle("active", s === currentStep);
+    });
+    wizardSections.forEach((el) => {
+      const s = parseInt(el.getAttribute("data-step") || "1", 10);
+      el.classList.toggle("hidden", s !== currentStep);
+    });
+    wizardPrev.disabled = currentStep === 1;
+    wizardNext.classList.toggle("hidden", currentStep === 3);
+    submitBtn.classList.toggle("hidden", currentStep !== 3);
+    if (wizardProgress) {
+      const percent = (currentStep - 1) / 2 * 100;
+      wizardProgress.style.width = `${percent}%`;
+    }
+  }
   async function loadData() {
     try {
+      if (!window.api) {
+        throw new Error("API non disponibile");
+      }
       articles = await window.api.getArticles();
       materials = await window.api.getMaterials();
-      const laborConfig = await window.api.getLaborConfig();
-      hourlyRate = laborConfig.hourlyRate || 0;
+      try {
+        const laborConfig = await window.api.getLaborConfig();
+        hourlyRate = laborConfig.hourlyRate || 0;
+      } catch {
+        hourlyRate = 0;
+      }
       renderMaterialOptions();
       const id = getQueryId();
       if (id) {
@@ -117,8 +177,11 @@
         }
       }
       renderComposition();
-    } catch {
-      showMessage("Errore nel caricamento dei dati", "error");
+      setStep(1);
+    } catch (err) {
+      console.error("[article-form] loadData failed:", err);
+      const msg = err instanceof Error ? err.message : "Errore nel caricamento dei dati";
+      showMessage(`Errore nel caricamento dei dati: ${msg}`, "error");
     }
   }
   compMaterial.addEventListener("change", () => {
@@ -139,13 +202,14 @@
       showMessage("Quantita non valida", "error");
       return;
     }
-    composition.push({
+    const nextComp = {
       materialId: compMaterial.value,
-      colorName: compColor.value.trim() || void 0,
+      description: compDesc.value.trim() || void 0,
       quantity: qty
-    });
+    };
+    composition.push(nextComp);
     compMaterial.value = "";
-    compColor.value = "";
+    compDesc.value = "";
     compQty.value = "0";
     unitLabel.textContent = "Unita: -";
     renderComposition();
@@ -156,10 +220,61 @@
     const target = e.target;
     const action = target.getAttribute("data-action");
     const indexStr = target.getAttribute("data-index");
-    if (action !== "remove" || indexStr === null) return;
+    if (!action || indexStr === null) return;
     const index = parseInt(indexStr, 10);
-    composition = composition.filter((_, i) => i !== index);
-    renderComposition();
+    if (action === "edit") {
+      editingCompIndex = index;
+      renderComposition();
+      return;
+    }
+    if (action === "save") {
+      const row = target.closest("tr");
+      if (!row) return;
+      const matSelect = row.querySelector(".inline-material");
+      const descInput = row.querySelector(".inline-desc");
+      const qtyInput = row.querySelector(".inline-qty");
+      if (!matSelect || !qtyInput) return;
+      if (!matSelect.value) {
+        showMessage("Seleziona materiale", "error");
+        return;
+      }
+      const qty = parseFloat(qtyInput.value) || 0;
+      if (qty <= 0) {
+        showMessage("Quantita non valida", "error");
+        return;
+      }
+      composition = composition.map(
+        (c, i) => i === index ? {
+          ...c,
+          materialId: matSelect.value,
+          description: descInput?.value.trim() || void 0,
+          quantity: qty
+        } : c
+      );
+      editingCompIndex = null;
+      renderComposition();
+      return;
+    }
+    if (action === "remove") {
+      composition = composition.filter((_, i) => i !== index);
+      if (editingCompIndex === index) {
+        editingCompIndex = null;
+      }
+      renderComposition();
+    }
+  });
+  wizardPrev.addEventListener("click", () => {
+    if (currentStep > 1) setStep(currentStep - 1);
+  });
+  wizardNext.addEventListener("click", () => {
+    if (currentStep < 3) setStep(currentStep + 1);
+  });
+  wizardCancel.addEventListener("click", () => {
+    if (isPopup) {
+      window.close();
+      return;
+    }
+    window.location.href = returnUrl;
   });
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -187,7 +302,11 @@
     if (success) {
       showMessage("Articolo salvato!", "success");
       clearMessage();
-      window.location.href = "articles.html";
+      if (isPopup) {
+        window.close();
+        return;
+      }
+      window.location.href = returnUrl;
     }
   });
   loadData();

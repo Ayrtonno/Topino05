@@ -26,8 +26,8 @@
                     <p>Composizione, margini e tempi di lavorazione.</p>
                 </div>
                 <div class="actions">
-                    <span class="chip">Catalogo</span>
-                    <a class="btn-primary" href="article-form.html" target="_blank" rel="noopener">+ Nuovo Articolo</a>
+                    <button id="refresh-articles" class="btn-small">Aggiorna</button>
+                    <a class="btn-primary" href="article-form.html?return=articles.html&popup=1" target="_blank" rel="noopener">+ Nuovo Articolo</a>
                 </div>
             </div>
 
@@ -48,7 +48,7 @@
                 <div class="title">Elenco Articoli</div>
                 <div class="meta">Composizione e margini</div>
             </div>
-            <div class="table-container">
+            <div class="table-container list-scroll">
                 <table>
                     <thead>
                         <tr>
@@ -67,39 +67,6 @@
                 <div id="articles-empty" class="empty-state hidden">Nessun articolo presente.</div>
             </div>
 
-            <div class="card">
-                <h3>Preview Costi e Prezzi</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Costo Materiale</label>
-                        <div id="preview-material-cost">EUR 0.00</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Prezzo Materiale (+ ricariche)</label>
-                        <div id="preview-material-sell">EUR 0.00</div>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Costo Lavoro</label>
-                        <div id="preview-labor-cost">EUR 0.00</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Prezzo Lavoro (+ ricariche)</label>
-                        <div id="preview-labor-sell">EUR 0.00</div>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Ricarica Colore/Comp.</label>
-                        <div id="preview-color-surcharge">EUR 0.00</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Totale Vendita (Materiale + Lavoro)</label>
-                        <div id="preview-total-sell">EUR 0.00</div>
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
 

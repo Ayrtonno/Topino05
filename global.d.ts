@@ -31,7 +31,7 @@ declare namespace Models {
     // Articles - articoli composti da materiale+colore in quantità
     interface ArticleComposition {
         materialId: string;
-        colorName?: string;
+        description?: string;
         quantity: number;
     }
 

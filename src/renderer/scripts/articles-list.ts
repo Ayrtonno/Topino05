@@ -4,7 +4,7 @@ type Article = {
     id: string;
     code: string;
     name: string;
-    composition: { materialId: string; colorName?: string; quantity: number }[];
+    composition: { materialId: string; description?: string; quantity: number }[];
     laborHoursRequired: number;
     materialMarkupPct: number;
     laborMarkupPct: number;
@@ -22,6 +22,7 @@ let filterText = "";
 
 const tbody = qs<HTMLTableSectionElement>("#articles-body");
 const searchInput = qs<HTMLInputElement>("#search-articles");
+const refreshBtn = qs<HTMLButtonElement>("#refresh-articles");
 
 async function loadData() {
     try {
@@ -58,8 +59,8 @@ function renderTable() {
             <td>${a.materialMarkupPct}%</td>
             <td>${a.laborMarkupPct}%</td>
             <td>${compositionCostFor(a).toFixed(2)}</td>
-            <td>
-                <a class="btn-small" href="article-form.html?id=${a.id}" target="_blank" rel="noopener">Modifica</a>
+            <td class="actions-cell">
+                <a class="btn-small" href="article-form.html?id=${a.id}&return=articles.html&popup=1" target="_blank" rel="noopener">Modifica</a>
                 <button class="btn-small btn-danger" data-action="delete" data-id="${a.id}">Elimina</button>
             </td>
         `;
@@ -73,6 +74,10 @@ function renderTable() {
 searchInput?.addEventListener("input", () => {
     filterText = searchInput.value.trim().toLowerCase();
     renderTable();
+});
+
+refreshBtn?.addEventListener("click", () => {
+    loadData();
 });
 
 tbody.addEventListener("click", async (e) => {
@@ -91,6 +96,9 @@ tbody.addEventListener("click", async (e) => {
             showMessage("Articolo eliminato!", "success");
             clearMessage();
         }
+        return;
+    }
+    if (target.closest("a") || target.closest("button")) {
         return;
     }
 

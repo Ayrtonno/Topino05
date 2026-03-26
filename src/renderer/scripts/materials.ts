@@ -18,6 +18,7 @@ const form = qs<HTMLFormElement>("#material-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
 const tbody = qs<HTMLTableSectionElement>("#materials-body");
 const searchInput = qs<HTMLInputElement>("#search-materials");
+const refreshBtn = qs<HTMLButtonElement>("#refresh-materials");
 
 const nameInput = qs<HTMLInputElement>("#mat-name");
 const costInput = qs<HTMLInputElement>("#mat-cost");
@@ -77,6 +78,10 @@ function renderTable() {
 searchInput?.addEventListener("input", () => {
     filterText = searchInput.value.trim().toLowerCase();
     renderTable();
+});
+
+refreshBtn?.addEventListener("click", () => {
+    loadMaterials();
 });
 
 toggleBtn.addEventListener("click", () => {

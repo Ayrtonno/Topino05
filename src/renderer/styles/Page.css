@@ -58,6 +58,50 @@
     gap: 12px;
 }
 
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.preview-item {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+}
+
+.preview-item label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.preview-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: inherit;
+}
+
+.preview-value.text-success {
+    color: #15803d;
+}
+
+.preview-value.text-danger {
+    color: #b91c1c;
+}
+
+.preview-item.total {
+    background: #eef6ff;
+    border-color: #c7defc;
+}
+
 .btn-primary {
     padding: 8px 14px;
     background: var(--primary);
@@ -85,6 +129,142 @@
     margin-right: 6px;
 }
 
+.btn-inline {
+    height: 38px;
+    align-self: end;
+}
+
+.composition-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr;
+    gap: 12px;
+    align-items: end;
+}
+
+.composition-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.composition-row .form-group {
+    background: #f9fafb;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    min-height: 86px;
+    display: flex;
+    flex-direction: column;
+}
+
+.composition-row .form-group label {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.composition-row .form-group .muted {
+    margin-top: 4px;
+    min-height: 16px;
+}
+
+.composition-row .form-group input,
+.composition-row .form-group select {
+    background: #fff;
+}
+
+.composition-row .btn-inline {
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    background: #eaf3ff;
+    color: #1e88ff;
+    border: 1px solid #c7e0ff;
+}
+
+.composition-row .btn-inline:hover {
+    background: #dbeeff;
+}
+
+.composition-actions .btn-inline {
+    background: #eaf3ff;
+    box-shadow: none;
+    border: 1px solid #c7e0ff;
+    font-weight: 700;
+}
+
+.wizard {
+    display: grid;
+    gap: 16px;
+}
+
+.wizard-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.wizard-progress {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.wizard-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--primary);
+    transition: width 0.2s ease;
+}
+
+.wizard-step {
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wizard-step.active {
+    background: #eaf3ff;
+    border-color: #c7e0ff;
+    color: var(--primary);
+    box-shadow: inset 0 0 0 1px rgba(0, 120, 212, 0.2);
+}
+
+.wizard-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.wizard-actions .right {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 900px) {
+    .composition-row {
+        grid-template-columns: 1fr;
+    }
+    .btn-inline {
+        width: 100%;
+    }
+}
+
 .btn-small:hover {
     background-color: #d1d5db;
 }
@@ -101,6 +281,11 @@
 .table-container {
     overflow-x: auto;
     margin-top: 10px;
+}
+
+.table-container.list-scroll {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
 }
 
 .table-header {
@@ -130,6 +315,7 @@ table {
     overflow: hidden;
     border: 1px solid var(--border);
     box-shadow: none;
+    table-layout: fixed;
 }
 
 table thead {
@@ -143,12 +329,43 @@ table th {
     font-weight: 600;
     color: #374151;
     font-size: 12px;
+    position: sticky;
+    top: 0;
+    background-color: #f3f4f6;
+    z-index: 2;
 }
 
 table td {
     padding: 10px 12px;
     border-bottom: 1px solid #f3f4f6;
     font-size: 13px;
+}
+
+td.actions-cell {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.inline-field {
+    width: 100%;
+    height: 30px;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.inline-field:focus {
+    border-color: #4aa3ff;
+    box-shadow: 0 0 0 2px rgba(74, 163, 255, 0.25);
+}
+
+.row-editing {
+    background: #f8fbff;
 }
 
 table tbody tr:hover {

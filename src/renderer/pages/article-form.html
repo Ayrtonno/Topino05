@@ -8,76 +8,71 @@
     <link rel="stylesheet" href="../styles/page.css">
 </head>
 <body data-page="articles">
-    <div class="app">
-        <aside class="sidebar">
-            <div class="logo">Preventivatore <span>v1</span></div>
-            <nav class="nav">
-                <a data-page="dashboard" href="index.html">Dashboard</a>
-                <a data-page="materials" href="materials.html">Materiali</a>
-                <a data-page="inventory" href="inventory.html">Magazzino</a>
-                <a data-page="articles" href="articles.html">Articoli</a>
-                <a data-page="orders" href="orders.html">Ordini</a>
-            </nav>
-        </aside>
+    <div class="app single">
         <main class="content">
             <div class="topbar">
                 <div class="page-title">
                     <h1 id="form-title">Nuovo Articolo</h1>
                     <p>Compila i dati dell'articolo e la composizione materiali.</p>
                 </div>
-                <div class="actions">
-                    <a class="btn-small" href="articles.html">Torna alla lista</a>
-                </div>
             </div>
 
             <div id="message" class="message"></div>
 
-            <form id="article-form" class="form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Codice Articolo *</label>
-                        <input id="article-code" type="text" placeholder="Es: GU001A" />
-                    </div>
-                    <div class="form-group">
-                        <label>Nome Articolo *</label>
-                        <input id="article-name" type="text" placeholder="Nome descrittivo" />
-                    </div>
+            <form id="article-form" class="wizard">
+                <div class="wizard-steps">
+                    <div class="wizard-step active" data-step="1">1. Dati Articolo</div>
+                    <div class="wizard-step" data-step="2">2. Composizione</div>
+                    <div class="wizard-step" data-step="3">3. Ricariche</div>
+                </div>
+                <div class="wizard-progress">
+                    <div id="wizard-progress-bar" class="wizard-progress-bar"></div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Ore Lavoro</label>
-                        <input id="article-labor" type="number" step="0.5" value="0" />
-                    </div>
-                    <div class="form-group">
-                        <label>Ricarica Materiale %</label>
-                        <input id="article-material-markup" type="number" value="0" />
-                    </div>
-                    <div class="form-group">
-                        <label>Ricarica Lavoro %</label>
-                        <input id="article-labor-markup" type="number" value="0" />
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3>Composizione</h3>
+                <section class="wizard-section" data-step="1">
+                    <h3>Dati Articolo</h3>
                     <div class="form-row">
+                        <div class="form-group">
+                            <label>Codice Articolo *</label>
+                            <input id="article-code" type="text" placeholder="Es: GU001A" />
+                        </div>
+                        <div class="form-group">
+                            <label>Nome Articolo *</label>
+                            <input id="article-name" type="text" placeholder="Nome descrittivo" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ore Lavoro</label>
+                            <input id="article-labor" type="number" step="0.5" value="0" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="wizard-section hidden" data-step="2">
+                    <h3>Composizione</h3>
+                    <div class="composition-row">
                         <div class="form-group">
                             <label>Materiale *</label>
                             <select id="comp-material">
                                 <option value="">Seleziona materiale</option>
                             </select>
+                            <div class="muted">&nbsp;</div>
                         </div>
                         <div class="form-group">
-                            <label>Colore (opzionale)</label>
-                            <input id="comp-color" type="text" placeholder="Es: Rosso, Blu" />
+                            <label>Descrizione (opzionale)</label>
+                            <input id="comp-desc" type="text" placeholder="Es: corpo borsa, manici..." />
+                            <div class="muted">&nbsp;</div>
                         </div>
                         <div class="form-group">
                             <label>Quantita *</label>
                             <input id="comp-qty" type="number" value="0" />
                             <div id="comp-unit-label" class="muted">Unita: -</div>
                         </div>
-                        <button id="add-comp" type="button" class="btn-small" style="align-self:flex-end;">Aggiungi</button>
+                    </div>
+                    <div class="composition-actions">
+                        <button id="add-comp" type="button" class="btn-small btn-inline">Aggiungi</button>
                     </div>
 
                     <div class="table-container">
@@ -85,20 +80,41 @@
                             <thead>
                                 <tr>
                                     <th>Materiale</th>
-                                    <th>Colore</th>
+                                    <th>Descrizione</th>
                                     <th>Quantita</th>
                                     <th>Costo</th>
-                                    <th></th>
+                                    <th>Azioni</th>
                                 </tr>
                             </thead>
                             <tbody id="composition-body"></tbody>
                         </table>
                     </div>
                     <div id="composition-cost" style="margin-top:8px; font-weight:700;">Costo Materiale: 0</div>
-                </div>
+                </section>
 
-            <button id="submit-article" type="submit" class="btn-primary">Salva Articolo</button>
-        </form>
+                <section class="wizard-section hidden" data-step="3">
+                    <h3>Ricariche</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ricarica Materiale %</label>
+                            <input id="article-material-markup" type="number" value="0" />
+                        </div>
+                        <div class="form-group">
+                            <label>Ricarica Lavoro %</label>
+                            <input id="article-labor-markup" type="number" value="0" />
+                        </div>
+                    </div>
+                </section>
+
+                <div class="wizard-actions">
+                    <button id="wizard-prev" type="button" class="btn-small">Indietro</button>
+                    <div class="right">
+                        <button id="wizard-cancel" type="button" class="btn-small">Annulla</button>
+                        <button id="wizard-next" type="button" class="btn-primary">Avanti</button>
+                        <button id="submit-article" type="submit" class="btn-primary hidden">Salva Articolo</button>
+                    </div>
+                </div>
+            </form>
         </main>
     </div>
 

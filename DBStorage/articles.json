@@ -6,13 +6,13 @@
     "composition": [
       {
         "materialId": "mat_lana",
-        "colorName": "Bianco",
-        "quantity": 6
+        "quantity": 6,
+        "description": "Gambo"
       },
       {
         "materialId": "mat_lana",
-        "colorName": "Blu Notte",
-        "quantity": 5
+        "quantity": 5,
+        "description": "Cappuccio"
       }
     ],
     "laborHoursRequired": 2,

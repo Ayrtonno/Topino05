@@ -1,21 +1,128 @@
 [
-  { "id": "inv_lana_arancio_scuro", "materialId": "mat_lana", "colorName": "Arancio Scuro", "quantity": 27, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_azzurro_acqua", "materialId": "mat_lana", "colorName": "Azzurro Acqua", "quantity": 57, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_bianco", "materialId": "mat_lana", "colorName": "Bianco", "quantity": 14, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_blu_notte", "materialId": "mat_lana", "colorName": "Blu Notte", "quantity": 28, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_ciano", "materialId": "mat_lana", "colorName": "Ciano", "quantity": 46, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_giallo", "materialId": "mat_lana", "colorName": "Giallo", "quantity": 49, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_giallo_chiaro", "materialId": "mat_lana", "colorName": "Giallo Chiaro", "quantity": 33, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_giallo_scuro", "materialId": "mat_lana", "colorName": "Giallo Scuro", "quantity": 6, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_grigio", "materialId": "mat_lana", "colorName": "Grigio", "quantity": 45, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_marrone_chiaro", "materialId": "mat_lana", "colorName": "Marrone Chiaro", "quantity": 85, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_marrone_scuro", "materialId": "mat_lana", "colorName": "Marrone Scuro", "quantity": 49, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_nero", "materialId": "mat_lana", "colorName": "Nero", "quantity": 82, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_rosa_chiaro", "materialId": "mat_lana", "colorName": "Rosa Chiaro", "quantity": 41, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_rosa_scuro", "materialId": "mat_lana", "colorName": "Rosa Scuro", "quantity": 33, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_rosso", "materialId": "mat_lana", "colorName": "Rosso", "quantity": 90, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_verde", "materialId": "mat_lana", "colorName": "Verde", "quantity": 82, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_verde_acqua", "materialId": "mat_lana", "colorName": "Verde Acqua", "quantity": 76, "lastUpdated": "2026-03-26T00:00:00.000Z" },
-  { "id": "inv_lana_viola", "materialId": "mat_lana", "colorName": "Viola", "quantity": 15, "lastUpdated": "2026-03-26T00:00:00.000Z" }
+  {
+    "id": "inv_lana_arancio_scuro",
+    "materialId": "mat_lana",
+    "colorName": "Arancio Scuro",
+    "quantity": 27,
+    "lastUpdated": "2026-03-26T10:03:05.319Z"
+  },
+  {
+    "id": "inv_lana_azzurro_acqua",
+    "materialId": "mat_lana",
+    "colorName": "Azzurro Acqua",
+    "quantity": 57,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_bianco",
+    "materialId": "mat_lana",
+    "colorName": "Bianco",
+    "quantity": 14,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_blu_notte",
+    "materialId": "mat_lana",
+    "colorName": "Blu Notte",
+    "quantity": 28,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_ciano",
+    "materialId": "mat_lana",
+    "colorName": "Ciano",
+    "quantity": 46,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_giallo",
+    "materialId": "mat_lana",
+    "colorName": "Giallo",
+    "quantity": 49,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_giallo_chiaro",
+    "materialId": "mat_lana",
+    "colorName": "Giallo Chiaro",
+    "quantity": 33,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_giallo_scuro",
+    "materialId": "mat_lana",
+    "colorName": "Giallo Scuro",
+    "quantity": 6,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_grigio",
+    "materialId": "mat_lana",
+    "colorName": "Grigio",
+    "quantity": 45,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_marrone_chiaro",
+    "materialId": "mat_lana",
+    "colorName": "Marrone Chiaro",
+    "quantity": 85,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_marrone_scuro",
+    "materialId": "mat_lana",
+    "colorName": "Marrone Scuro",
+    "quantity": 49,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_nero",
+    "materialId": "mat_lana",
+    "colorName": "Nero",
+    "quantity": 82,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_rosa_chiaro",
+    "materialId": "mat_lana",
+    "colorName": "Rosa Chiaro",
+    "quantity": 41,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_rosa_scuro",
+    "materialId": "mat_lana",
+    "colorName": "Rosa Scuro",
+    "quantity": 33,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_rosso",
+    "materialId": "mat_lana",
+    "colorName": "Rosso",
+    "quantity": 90,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_verde",
+    "materialId": "mat_lana",
+    "colorName": "Verde",
+    "quantity": 82,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_verde_acqua",
+    "materialId": "mat_lana",
+    "colorName": "Verde Acqua",
+    "quantity": 76,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  },
+  {
+    "id": "inv_lana_viola",
+    "materialId": "mat_lana",
+    "colorName": "Viola",
+    "quantity": 15,
+    "lastUpdated": "2026-03-26T00:00:00.000Z"
+  }
 ]
-

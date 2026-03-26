@@ -49,6 +49,7 @@
   var tbody = qs("#inventory-body");
   var searchInput = qs("#search-inventory");
   var filterSelect = qs("#filter-material");
+  var refreshBtn = qs("#refresh-inventory");
   var materialSelect = qs("#inv-material");
   var colorInput = qs("#inv-color");
   var qtyInput = qs("#inv-qty");
@@ -240,6 +241,9 @@
   filterSelect?.addEventListener("change", () => {
     filterMaterial = filterSelect.value;
     renderTable();
+  });
+  refreshBtn?.addEventListener("click", () => {
+    loadData();
   });
   loadData();
 })();

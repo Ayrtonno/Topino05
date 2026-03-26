@@ -37,6 +37,7 @@
   var filterText = "";
   var tbody = qs("#articles-body");
   var searchInput = qs("#search-articles");
+  var refreshBtn = qs("#refresh-articles");
   async function loadData() {
     try {
       articles = await window.api.getArticles();
@@ -70,8 +71,8 @@
             <td>${a.materialMarkupPct}%</td>
             <td>${a.laborMarkupPct}%</td>
             <td>${compositionCostFor(a).toFixed(2)}</td>
-            <td>
-                <a class="btn-small" href="article-form.html?id=${a.id}" target="_blank" rel="noopener">Modifica</a>
+            <td class="actions-cell">
+                <a class="btn-small" href="article-form.html?id=${a.id}&return=articles.html&popup=1" target="_blank" rel="noopener">Modifica</a>
                 <button class="btn-small btn-danger" data-action="delete" data-id="${a.id}">Elimina</button>
             </td>
         `;
@@ -84,6 +85,9 @@
   searchInput?.addEventListener("input", () => {
     filterText = searchInput.value.trim().toLowerCase();
     renderTable();
+  });
+  refreshBtn?.addEventListener("click", () => {
+    loadData();
   });
   tbody.addEventListener("click", async (e) => {
     const target = e.target;
@@ -101,6 +105,9 @@
         showMessage("Articolo eliminato!", "success");
         clearMessage();
       }
+      return;
+    }
+    if (target.closest("a") || target.closest("button")) {
       return;
     }
     if (rowId) {

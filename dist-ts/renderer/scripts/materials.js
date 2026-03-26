@@ -39,6 +39,7 @@
   var toggleBtn = qs("#toggle-form");
   var tbody = qs("#materials-body");
   var searchInput = qs("#search-materials");
+  var refreshBtn = qs("#refresh-materials");
   var nameInput = qs("#mat-name");
   var costInput = qs("#mat-cost");
   var sellingInput = qs("#mat-selling");
@@ -92,6 +93,9 @@
   searchInput?.addEventListener("input", () => {
     filterText = searchInput.value.trim().toLowerCase();
     renderTable();
+  });
+  refreshBtn?.addEventListener("click", () => {
+    loadMaterials();
   });
   toggleBtn.addEventListener("click", () => {
     const visible = form.classList.contains("hidden");

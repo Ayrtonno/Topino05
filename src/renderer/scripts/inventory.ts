@@ -26,6 +26,7 @@ const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
 const tbody = qs<HTMLTableSectionElement>("#inventory-body");
 const searchInput = qs<HTMLInputElement>("#search-inventory");
 const filterSelect = qs<HTMLSelectElement>("#filter-material");
+const refreshBtn = qs<HTMLButtonElement>("#refresh-inventory");
 
 const materialSelect = qs<HTMLSelectElement>("#inv-material");
 const colorInput = qs<HTMLInputElement>("#inv-color");
@@ -243,6 +244,10 @@ searchInput?.addEventListener("input", () => {
 filterSelect?.addEventListener("change", () => {
     filterMaterial = filterSelect.value;
     renderTable();
+});
+
+refreshBtn?.addEventListener("click", () => {
+    loadData();
 });
 
 loadData();

@@ -128,6 +128,11 @@ function migrateArticles(data) {
           delete next.colorId;
           changed = true;
         }
+        if (next.description === void 0 && next.colorName !== void 0) {
+          next.description = next.colorName;
+          delete next.colorName;
+          changed = true;
+        }
         return next;
       });
     }

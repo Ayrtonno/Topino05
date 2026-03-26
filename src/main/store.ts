@@ -112,6 +112,11 @@ function migrateArticles(data: any) {
                     delete next.colorId;
                     changed = true;
                 }
+                if (next.description === undefined && next.colorName !== undefined) {
+                    next.description = next.colorName;
+                    delete next.colorName;
+                    changed = true;
+                }
                 return next;
             });
         }

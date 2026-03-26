@@ -2,7 +2,7 @@ import { qs, showMessage } from "./shared";
 
 type ArticleComposition = {
     materialId: string;
-    colorName?: string;
+    description?: string;
     quantity: number;
 };
 
@@ -42,6 +42,7 @@ const previewLaborCost = qs<HTMLDivElement>("#preview-labor-cost");
 const previewLaborSell = qs<HTMLDivElement>("#preview-labor-sell");
 const previewColorSurcharge = qs<HTMLDivElement>("#preview-color-surcharge");
 const previewTotalSell = qs<HTMLDivElement>("#preview-total-sell");
+const previewMaterialMargin = qs<HTMLDivElement>("#preview-material-margin");
 
 function getQueryId() {
     const params = new URLSearchParams(window.location.search);
@@ -72,7 +73,8 @@ async function loadData() {
         detailHours.textContent = `${article.laborHoursRequired}h`;
         detailMatMarkup.textContent = `${article.materialMarkupPct}%`;
         detailLabMarkup.textContent = `${article.laborMarkupPct}%`;
-        editLink.href = `article-form.html?id=${article.id}`;
+        const returnUrl = encodeURIComponent(`article-detail.html?id=${article.id}`);
+        editLink.href = `article-form.html?id=${article.id}&return=${returnUrl}&popup=1`;
         editLink.target = "_blank";
         editLink.rel = "noopener";
 
@@ -92,7 +94,7 @@ async function loadData() {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${material?.name || "-"}</td>
-                <td>${comp.colorName || "-"}</td>
+                <td>${comp.description || "-"}</td>
                 <td>${comp.quantity} ${unitLabel}</td>
                 <td>EUR ${rowCost.toFixed(2)}</td>
             `;
@@ -103,6 +105,7 @@ async function loadData() {
         const materialSell = (materialSellBase + colorSurcharge) * (1 + article.materialMarkupPct / 100);
         const laborCost = article.laborHoursRequired * hourlyRate;
         const laborSell = laborCost * (1 + article.laborMarkupPct / 100);
+        const materialMargin = materialSell - materialCost + colorSurcharge;
 
         previewMaterialCost.textContent = `EUR ${materialCost.toFixed(2)}`;
         previewMaterialSell.textContent = `EUR ${materialSell.toFixed(2)}`;
@@ -110,6 +113,9 @@ async function loadData() {
         previewLaborSell.textContent = `EUR ${laborSell.toFixed(2)}`;
         previewColorSurcharge.textContent = `EUR ${colorSurcharge.toFixed(2)}`;
         previewTotalSell.textContent = `EUR ${(materialSell + laborSell).toFixed(2)}`;
+        previewMaterialMargin.textContent = `EUR ${materialMargin.toFixed(2)}`;
+        previewMaterialMargin.classList.remove("text-success", "text-danger");
+        previewMaterialMargin.classList.add(materialMargin >= 0 ? "text-success" : "text-danger");
     } catch {
         showMessage("Errore nel caricamento dati", "error");
     }

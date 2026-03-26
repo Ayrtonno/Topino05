@@ -158,7 +158,7 @@
       const article = articles.find((a) => a.id === item.articleId);
       if (!article) continue;
       for (const comp of article.composition) {
-        const key = `${comp.materialId}::${normalizeColor(comp.colorName)}`;
+        const key = `${comp.materialId}::`;
         const qty = comp.quantity * item.quantity;
         map.set(key, (map.get(key) || 0) + qty);
       }
