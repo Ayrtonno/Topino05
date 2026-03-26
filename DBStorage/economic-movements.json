@@ -1,0 +1,11 @@
+[
+  {
+    "id": "bootstrap-2025-12",
+    "date": "2025-12-01",
+    "type": "expense",
+    "category": "initial-stock",
+    "amount": 163.01,
+    "note": "Bootstrap storico: costo materia prima iniziale e materiale usato (dicembre 2025).",
+    "createdAt": "2026-03-26T20:39:02.417Z"
+  }
+]

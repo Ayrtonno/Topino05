@@ -113,6 +113,31 @@ declare namespace Models {
         createdAt: string;
     }
 
+    interface EconomicMovement {
+        id: string;
+        date: string;
+        type: "expense" | "income";
+        category: string;
+        amount: number;
+        note?: string;
+        createdAt: string;
+    }
+
+    interface MaterialMovement {
+        id: string;
+        date: string;
+        direction: "in" | "out";
+        materialId: string;
+        materialName: string;
+        colorName?: string;
+        quantity: number;
+        unitCost: number;
+        totalValue: number;
+        source: "inventory";
+        note?: string;
+        createdAt: string;
+    }
+
     // KPI Dashboard
     interface KPI {
         totalOrders: number;
@@ -136,6 +161,8 @@ declare global {
     type OrderItem = Models.OrderItem;
     type LaborConfig = Models.LaborConfig;
     type KPI = Models.KPI;
+    type EconomicMovement = Models.EconomicMovement;
+    type MaterialMovement = Models.MaterialMovement;
 
     // Electron API interface
     interface ElectronAPI {
@@ -166,6 +193,14 @@ declare global {
         // Income Movements
         getIncomeMovements: () => Promise<IncomeMovement[]>;
         saveIncomeMovements: (items: IncomeMovement[]) => Promise<boolean>;
+
+        // Economic Movements
+        getEconomicMovements: () => Promise<EconomicMovement[]>;
+        saveEconomicMovements: (items: EconomicMovement[]) => Promise<boolean>;
+
+        // Material Movements
+        getMaterialMovements: () => Promise<MaterialMovement[]>;
+        saveMaterialMovements: (items: MaterialMovement[]) => Promise<boolean>;
 
         // LaborConfig
         getLaborConfig: () => Promise<LaborConfig>;

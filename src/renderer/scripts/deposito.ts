@@ -265,7 +265,7 @@ function renderTable() {
             <td>${formatDate(i.lastUpdated || "")}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${i.id}">Modifica</button>
-                <button class="btn-small btn-danger" data-action="delete" data-id="${i.id}" ${canDelete ? "" : "disabled"} title="${deleteTitle}">Elimina</button>
+                <button class="btn-small btn-danger" data-action="delete" data-id="${i.id}" title="${deleteTitle}">Elimina</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -407,7 +407,8 @@ tbody.addEventListener("click", (e) => {
         editingId = id;
         articleSelect.value = row.articleId;
         articleSelect.disabled = true;
-        renderColorRows(getArticleById(row.articleId));
+        const article = getArticleById(row.articleId);
+        renderColorRows(article);
         const selects = colorsBody.querySelectorAll("select");
         const colorList = row.colors || [];
         selects.forEach((select) => {
@@ -416,6 +417,9 @@ tbody.addEventListener("click", (e) => {
             const value = index >= 0 ? colorList[index] : "";
             (select as HTMLSelectElement).value = value || "";
         });
+        currentColorSelections = Array.from({
+            length: article?.composition.length || colorList.length,
+        }).map((_, idx) => colorList[idx] || "");
         editingColors = [...(row.colors || [])];
         qtyInput.value = row.quantity.toString();
         submitBtn.textContent = "Salva Modifiche";
@@ -425,6 +429,7 @@ tbody.addEventListener("click", (e) => {
     if (action === "delete") {
         if (!canDeleteVariant(row)) {
             showMessage(getDeleteBlockedReason(row), "error");
+            clearMessage(2500);
             return;
         }
         if (!window.confirm("Eliminare questa variante di deposito?")) return;

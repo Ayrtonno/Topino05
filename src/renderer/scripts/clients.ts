@@ -1,4 +1,4 @@
-import { qs, showMessage, clearMessage } from "./shared";
+import { qs, showMessage, clearMessage, openSingletonWindow } from "./shared";
 
 type Client = {
     id: string;
@@ -112,7 +112,11 @@ newBtn.addEventListener("click", () => {
         window.close();
         return;
     }
-    window.open("clients.html?popup=1", "_blank", "width=900,height=700");
+    openSingletonWindow(
+        "clients-popup",
+        "clients.html?popup=1",
+        "width=900,height=700",
+    );
 });
 
 form.addEventListener("submit", async (e) => {
@@ -175,7 +179,11 @@ body.addEventListener("click", async (e) => {
     if (!client) return;
 
     if (action === "edit") {
-        window.open(`clients.html?popup=1&id=${id}`, "_blank", "width=900,height=700");
+        openSingletonWindow(
+            "clients-popup",
+            `clients.html?popup=1&id=${id}`,
+            "width=900,height=700",
+        );
     }
 
     if (action === "delete") {

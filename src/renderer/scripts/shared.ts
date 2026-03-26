@@ -40,4 +40,58 @@ export function formatDate(dateIso: string) {
     }
 }
 
+type PopupRegistry = Record<string, Window | null>;
+type PopupLocks = Record<string, number>;
+
+declare global {
+    interface Window {
+        __topinoPopupRegistry?: PopupRegistry;
+        __topinoPopupLocks?: PopupLocks;
+    }
+}
+
+export function openSingletonWindow(
+    key: string,
+    url: string,
+    features: string,
+    throttleMs = 450,
+) {
+    const now = Date.now();
+    if (!window.__topinoPopupLocks) {
+        window.__topinoPopupLocks = {};
+    }
+    const lastOpen = window.__topinoPopupLocks[key] || 0;
+    if (now - lastOpen < throttleMs) {
+        const existingFast = window.__topinoPopupRegistry?.[key];
+        if (existingFast && !existingFast.closed) {
+            existingFast.focus();
+            return existingFast;
+        }
+        return null;
+    }
+    window.__topinoPopupLocks[key] = now;
+
+    if (!window.__topinoPopupRegistry) {
+        window.__topinoPopupRegistry = {};
+    }
+    const existing = window.__topinoPopupRegistry[key];
+    if (existing && !existing.closed) {
+        existing.focus();
+        existing.location.href = url;
+        return existing;
+    }
+
+    const popupName = `topino-${key}`;
+    const win = window.open(url, popupName, features);
+    if (win) {
+        window.__topinoPopupRegistry[key] = win;
+        win.addEventListener("beforeunload", () => {
+            if (window.__topinoPopupRegistry?.[key] === win) {
+                window.__topinoPopupRegistry[key] = null;
+            }
+        });
+    }
+    return win;
+}
+
 setActiveNav();

@@ -53,18 +53,20 @@
           "Nero"
         ],
         "variantId": "1774535179793-bbbdeb826dc9d",
-        "variantCode": "YU001A-0001",
-        "depositMissing": 1,
-        "depositUsed": 0
+        "variantCode": "YU001A-0000",
+        "depositMissing": 0,
+        "depositUsed": 1
       }
     ],
     "materialCost": 0.79,
     "laborCost": 20,
     "finalAmount": 22,
     "discountPercentage": 0,
-    "status": "confirmed",
+    "status": "processed",
     "notes": "",
-    "createdAt": "2026-03-26T14:26:28.232Z"
+    "createdAt": "2026-03-26T14:26:28.232Z",
+    "processedDate": "2026-03-14",
+    "paymentReceived": 22
   },
   {
     "id": "26003",
@@ -95,9 +97,11 @@
     "laborCost": 8,
     "finalAmount": 9,
     "discountPercentage": 0,
-    "status": "confirmed",
+    "status": "processed",
     "notes": "",
-    "createdAt": "2026-03-26T14:48:56.751Z"
+    "createdAt": "2026-03-26T14:48:56.751Z",
+    "processedDate": "2026-03-12",
+    "paymentReceived": 9
   },
   {
     "id": "26004",
@@ -134,7 +138,42 @@
     "paymentReceived": 10
   },
   {
-    "id": "26005",
+    "id": "26006",
+    "clientId": "1774554701479",
+    "clientFirstName": "Maria",
+    "clientLastName": "Carletto",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-03-14",
+    "deliveryDate": "2026-03-27",
+    "items": [
+      {
+        "articleId": "1774538675917",
+        "quantity": 1,
+        "unitPrice": 64,
+        "packaging": false,
+        "colorSelections": [
+          "",
+          "Giallo"
+        ],
+        "variantId": "1774555152140-c9cbf128df70e",
+        "variantCode": "BF001C-0000",
+        "depositMissing": 0,
+        "depositUsed": 1
+      }
+    ],
+    "materialCost": 19.25,
+    "laborCost": 32,
+    "finalAmount": 64,
+    "discountPercentage": 0,
+    "status": "processed",
+    "notes": "",
+    "createdAt": "2026-03-26T19:59:23.747Z",
+    "processedDate": "2026-03-27",
+    "paymentReceived": 50
+  },
+  {
+    "id": "26007",
     "clientId": "1774524912625",
     "clientFirstName": "Elena",
     "clientLastName": "Noris",
@@ -154,7 +193,7 @@
           "Verde",
           ""
         ],
-        "variantId": "1774554189725-845080f89bec7",
+        "variantId": "1774555452193-e76245793b545",
         "variantCode": "BF001E-0000",
         "depositMissing": 1,
         "depositUsed": 0
@@ -166,6 +205,6 @@
     "discountPercentage": 0,
     "status": "pending",
     "notes": "",
-    "createdAt": "2026-03-26T19:43:15.264Z"
+    "createdAt": "2026-03-26T20:05:24.347Z"
   }
 ]

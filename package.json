@@ -7,12 +7,15 @@
   "author": "Topino",
   "license": "MIT",
   "scripts": {
-    "start": "npm run build:ts && electron .",
+    "prestart": "npm run build:ts",
+    "start": "electron .",
     "start:dev": "electron .",
     "rebuild": "npm run build:ts",
     "build:ts": "node tools/build-ts.js",
-    "build:dir": "npm run build:ts && electron-builder --dir",
-    "build": "npm run build:ts && electron-builder --win",
+    "prebuild:dir": "npm run build:ts",
+    "build:dir": "electron-builder --dir",
+    "prebuild": "npm run build:ts",
+    "build": "electron-builder --win",
     "test": "echo \"No tests configured\""
   },
   "dependencies": {

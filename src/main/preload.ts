@@ -38,6 +38,18 @@ const api = {
     saveIncomeMovements: (items: any[]) =>
         ipcRenderer.invoke("save-income-movements", items) as Promise<boolean>,
 
+    // Economic Movements API
+    getEconomicMovements: () =>
+        ipcRenderer.invoke("get-economic-movements") as Promise<any[]>,
+    saveEconomicMovements: (items: any[]) =>
+        ipcRenderer.invoke("save-economic-movements", items) as Promise<boolean>,
+
+    // Material Movements API
+    getMaterialMovements: () =>
+        ipcRenderer.invoke("get-material-movements") as Promise<any[]>,
+    saveMaterialMovements: (items: any[]) =>
+        ipcRenderer.invoke("save-material-movements", items) as Promise<boolean>,
+
     // Labor Config API
     getLaborConfig: () =>
         ipcRenderer.invoke("get-labor-config") as Promise<LaborConfig>,

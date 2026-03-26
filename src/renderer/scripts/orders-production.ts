@@ -1,5 +1,7 @@
 ﻿﻿import { qs, showMessage, clearMessage, formatDate } from "./shared";
 
+import { openSingletonWindow } from "./shared";
+
 type OrderItem = {
     articleId: string;
     quantity: number;
@@ -83,8 +85,6 @@ let articleInventory: ArticleInventoryItem[] = [];
 let filterText = "";
 let filterStatus = "";
 let sortMode = "date-desc";
-const openProductionWindows = new Map<string, Window>();
-let openingProductionLock = false;
 
 const refreshBtn = qs<HTMLButtonElement>("#refresh-production");
 const productionBody = qs<HTMLTableSectionElement>("#production-body");
@@ -105,6 +105,7 @@ const detailProfitNoLabor = qs<HTMLDivElement>("#production-profit-no-labor");
 const detailProfitWithLabor = qs<HTMLDivElement>(
     "#production-profit-with-labor",
 );
+const detailEditBtn = qs<HTMLButtonElement>("#production-edit");
 const detailProcessBtn = qs<HTMLButtonElement>("#production-process");
 const detailCloseBtn = qs<HTMLButtonElement>("#production-close");
 const detailPdfBtn = qs<HTMLButtonElement>("#production-pdf");
@@ -446,7 +447,7 @@ function buildOrderPdfHtml(order: Order) {
                 .join("");
             return `
             <div class="info-item">
-                <div class="info-item-title">Articolo: ${article.name}</div>
+                <div class="info-item-title">${article.name}</div>
                 <div class="info-lines">${lines || ""}</div>
             </div>
         `;
@@ -899,35 +900,26 @@ sortSelect?.addEventListener("change", () => {
 });
 
 productionBody.addEventListener("click", (e) => {
-    if (openingProductionLock) return;
     const target = e.target as HTMLElement;
     const row = target.closest("tr") as HTMLTableRowElement | null;
     const rowId = row?.dataset.id;
     if (!rowId) return;
-    const existing = openProductionWindows.get(rowId);
-    if (existing && !existing.closed) {
-        existing.focus();
-        return;
-    }
-    openingProductionLock = true;
     const url = `orders-production.html?popup=1&view=detail&id=${rowId}`;
-    const win = window.open(
+    openSingletonWindow(
+        "orders-production-popup",
         url,
-        `production-detail-${rowId}`,
         "width=1200,height=800",
     );
-    if (win) {
-        openProductionWindows.set(rowId, win);
-        win.addEventListener("beforeunload", () => {
-            openProductionWindows.delete(rowId);
-        });
-    }
-    setTimeout(() => {
-        openingProductionLock = false;
-    }, 400);
 });
 
 detailCloseBtn.addEventListener("click", () => window.close());
+
+detailEditBtn.addEventListener("click", () => {
+    const { id } = getPopupParams();
+    if (!id) return;
+    const url = `orders.html?popup=1&id=${id}`;
+    openSingletonWindow("orders-popup", url, "width=1200,height=800");
+});
 
 detailProcessBtn.addEventListener("click", async () => {
     const { id } = getPopupParams();

@@ -1,4 +1,4 @@
-import { qs, showMessage, clearMessage } from "./shared";
+import { qs, showMessage, clearMessage, openSingletonWindow } from "./shared";
 
 type Article = {
     id: string;
@@ -222,7 +222,7 @@ dupConfirmBtn.addEventListener("click", async () => {
         articles = updated;
         renderTable();
         const url = `article-form.html?id=${newArticle.id}&return=articles.html&popup=1`;
-        window.open(url, "_blank", "width=1200,height=800");
+        openSingletonWindow("article-form-popup", url, "width=1200,height=800");
         showMessage("Articolo duplicato!", "success");
         clearMessage();
         closeDuplicateModal();

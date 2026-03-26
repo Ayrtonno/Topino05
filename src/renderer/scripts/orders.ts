@@ -1,5 +1,7 @@
 ﻿﻿import { qs, showMessage, clearMessage, formatDate } from "./shared";
 
+import { openSingletonWindow } from "./shared";
+
 type OrderItem = {
     articleId: string;
     quantity: number;
@@ -102,7 +104,6 @@ let sortMode = "date-desc";
 let currentColorSelections: string[] = [];
 let orderLoadRetry = false;
 let currentDetailOrderId: string | null = null;
-const openOrderWindows = new Map<string, Window>();
 
 const form = qs<HTMLFormElement>("#order-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
@@ -670,7 +671,7 @@ function buildOrderPdfHtml(order: Order) {
                 .join("");
             return `
             <div class="info-item">
-                <div class="info-item-title">Articolo: ${article.name}</div>
+                <div class="info-item-title">${article.name}</div>
                 <div class="info-lines">${lines || ""}</div>
             </div>
         `;
@@ -1292,7 +1293,7 @@ toggleBtn.addEventListener("click", () => {
         return;
     }
     const url = "orders.html?popup=1";
-    window.open(url, "_blank", "width=1200,height=800");
+    openSingletonWindow("orders-popup", url, "width=1200,height=800");
 });
 
 itemArticle.addEventListener("change", () => {
@@ -1596,23 +1597,8 @@ ordersBody.addEventListener("click", async (e) => {
     if (!rowId) return;
     const order = orders.find((o) => o.id === rowId);
     if (!order) return;
-    const existing = openOrderWindows.get(order.id);
-    if (existing && !existing.closed) {
-        existing.focus();
-        return;
-    }
     const url = `orders.html?popup=1&view=detail&id=${order.id}`;
-    const win = window.open(
-        url,
-        `order-detail-${order.id}`,
-        "width=1200,height=800",
-    );
-    if (win) {
-        openOrderWindows.set(order.id, win);
-        win.addEventListener("beforeunload", () => {
-            openOrderWindows.delete(order.id);
-        });
-    }
+    openSingletonWindow("orders-popup", url, "width=1200,height=800");
 });
 
 const params = getPopupParams();
@@ -1771,3 +1757,6 @@ if (retryParams.popup && retryParams.id) {
         }
     }, 200);
 }
+
+
+

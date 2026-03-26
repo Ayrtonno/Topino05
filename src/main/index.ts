@@ -15,6 +15,10 @@ import {
     saveOrders,
     getIncomeMovements,
     saveIncomeMovements,
+    getEconomicMovements,
+    saveEconomicMovements,
+    getMaterialMovements,
+    saveMaterialMovements,
     getLaborConfig,
     saveLaborConfig,
     getDashboardConfig,
@@ -153,6 +157,24 @@ ipcMain.handle("get-income-movements", async () => {
 
 ipcMain.handle("save-income-movements", async (_, items) => {
     return saveIncomeMovements(items);
+});
+
+// IPC Handlers - Economic Movements
+ipcMain.handle("get-economic-movements", async () => {
+    return getEconomicMovements();
+});
+
+ipcMain.handle("save-economic-movements", async (_, items) => {
+    return saveEconomicMovements(items);
+});
+
+// IPC Handlers - Material Movements
+ipcMain.handle("get-material-movements", async () => {
+    return getMaterialMovements();
+});
+
+ipcMain.handle("save-material-movements", async (_, items) => {
+    return saveMaterialMovements(items);
 });
 
 // IPC Handlers - Labor Config

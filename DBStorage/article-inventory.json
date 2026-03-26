@@ -13,16 +13,16 @@
   {
     "id": "1774535179793-bbbdeb826dc9d",
     "articleId": "1774532612430",
-    "variantCode": "YU001A-0001",
+    "variantCode": "YU001A-0000",
     "colors": [
       "",
-      "",
-      "",
-      "",
-      ""
+      "Rosa Chiaro",
+      "Bianco",
+      "Viola",
+      "Nero"
     ],
-    "quantity": 1,
-    "lastUpdated": "2026-03-26T14:44:09.921Z"
+    "quantity": 0,
+    "lastUpdated": "2026-03-26T20:12:58.843Z"
   },
   {
     "id": "1774536444286-757cd717bbec8",
@@ -32,8 +32,8 @@
       "Bianco",
       "Verde"
     ],
-    "quantity": 1,
-    "lastUpdated": "2026-03-26T14:47:24.286Z"
+    "quantity": 0,
+    "lastUpdated": "2026-03-26T20:12:03.661Z"
   },
   {
     "id": "1774536690408-a3fd35888d1b5",
@@ -46,7 +46,18 @@
     "lastUpdated": "2026-03-26T15:16:28.228Z"
   },
   {
-    "id": "1774554189725-845080f89bec7",
+    "id": "1774555152140-c9cbf128df70e",
+    "articleId": "1774538675917",
+    "variantCode": "BF001C-0000",
+    "colors": [
+      "",
+      "Giallo"
+    ],
+    "quantity": 0,
+    "lastUpdated": "2026-03-26T20:00:32.432Z"
+  },
+  {
+    "id": "1774555452193-e76245793b545",
     "articleId": "1774554132982",
     "variantCode": "BF001E-0000",
     "colors": [
@@ -55,7 +66,7 @@
       "Verde",
       ""
     ],
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T19:43:09.725Z"
+    "quantity": 1,
+    "lastUpdated": "2026-03-26T20:05:39.907Z"
   }
 ]

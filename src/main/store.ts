@@ -19,6 +19,8 @@ const ARTICLES_FILE = path.join(dataDir, "articles.json");
 const CLIENTS_FILE = path.join(dataDir, "clients.json");
 const ORDERS_FILE = path.join(dataDir, "orders.json");
 const INCOME_MOVEMENTS_FILE = path.join(dataDir, "income-movements.json");
+const ECONOMIC_MOVEMENTS_FILE = path.join(dataDir, "economic-movements.json");
+const MATERIAL_MOVEMENTS_FILE = path.join(dataDir, "material-movements.json");
 const LABOR_CONFIG_FILE = path.join(dataDir, "labor-config.json");
 const DASHBOARD_CONFIG_FILE = path.join(dataDir, "dashboard-config.json");
 
@@ -223,6 +225,106 @@ export const getIncomeMovements = (): any[] => {
 
 export const saveIncomeMovements = (items: any[]): boolean => {
     return writeJsonFile(INCOME_MOVEMENTS_FILE, items);
+};
+
+function round2(value: number) {
+    return parseFloat(value.toFixed(2));
+}
+
+function calculateInventoryMaterialCost(
+    materials: Material[],
+    inventory: InventoryItem[],
+) {
+    return inventory.reduce((sum, row) => {
+        const material = materials.find((m) => m.id === row.materialId);
+        if (!material) return sum;
+        return sum + material.costPerUnit * row.quantity;
+    }, 0);
+}
+
+function calculateArticleInventoryMaterialCost(
+    articles: Article[],
+    materials: Material[],
+    articleInventory: ArticleInventoryItem[],
+) {
+    return articleInventory.reduce((sum, stockRow) => {
+        if (!stockRow.quantity) return sum;
+        const article = articles.find((a) => a.id === stockRow.articleId);
+        if (!article) return sum;
+        const unitMaterialCost = article.composition.reduce((acc, comp) => {
+            const material = materials.find((m) => m.id === comp.materialId);
+            if (!material) return acc;
+            return acc + material.costPerUnit * comp.quantity;
+        }, 0);
+        return sum + unitMaterialCost * stockRow.quantity;
+    }, 0);
+}
+
+function bootstrapEconomicMovements(): any[] {
+    const materials = getMaterials();
+    const inventory = getInventory();
+    const articles = getArticles();
+    const articleInventory = getArticleInventory();
+    const orders = getOrders().filter((o) => o.status !== "refused");
+
+    const currentRawStockCost = calculateInventoryMaterialCost(
+        materials,
+        inventory,
+    );
+    const currentFinishedStockCost = calculateArticleInventoryMaterialCost(
+        articles,
+        materials,
+        articleInventory,
+    );
+    const historicalOrderMaterialCost = orders.reduce(
+        (sum, o) => sum + (o.materialCost || 0),
+        0,
+    );
+    const bootstrapAmount = round2(
+        currentRawStockCost +
+            currentFinishedStockCost +
+            historicalOrderMaterialCost,
+    );
+
+    if (bootstrapAmount <= 0) return [];
+
+    return [
+        {
+            id: "bootstrap-2025-12",
+            date: "2025-12-01",
+            type: "expense",
+            category: "initial-stock",
+            amount: bootstrapAmount,
+            note: "Bootstrap storico: costo materia prima iniziale e materiale usato (dicembre 2025).",
+            createdAt: new Date().toISOString(),
+        },
+    ];
+}
+
+// ==================== ECONOMIC MOVEMENTS ====================
+export const getEconomicMovements = (): any[] => {
+    const items = readJsonFile(ECONOMIC_MOVEMENTS_FILE, []);
+    if (Array.isArray(items) && items.length > 0) {
+        return items;
+    }
+    const bootstrap = bootstrapEconomicMovements();
+    if (bootstrap.length > 0) {
+        writeJsonFile(ECONOMIC_MOVEMENTS_FILE, bootstrap);
+    }
+    return bootstrap;
+};
+
+export const saveEconomicMovements = (items: any[]): boolean => {
+    return writeJsonFile(ECONOMIC_MOVEMENTS_FILE, items);
+};
+
+// ==================== MATERIAL MOVEMENTS ====================
+export const getMaterialMovements = (): any[] => {
+    return readJsonFile(MATERIAL_MOVEMENTS_FILE, []);
+};
+
+export const saveMaterialMovements = (items: any[]): boolean => {
+    return writeJsonFile(MATERIAL_MOVEMENTS_FILE, items);
 };
 
 // ==================== LABOR CONFIG ====================

@@ -26,7 +26,7 @@
         <main class="content report">
             <div class="topbar">
                 <div class="page-title">
-                    <h1>Mega Report</h1>
+                    <h1>Dashboard</h1>
                     <p>Analisi completa di ordini, ricavi, guadagni e margini.</p>
                 </div>
                 <div class="actions">
@@ -43,7 +43,7 @@
                         <option value="1">Ultimo mese</option>
                         <option value="3">Ultimi 3 mesi</option>
                         <option value="6">Ultimi 6 mesi</option>
-                        <option value="12">Ultimo anno</option>
+                        <option value="12" selected>Ultimo anno</option>
                         <option value="custom">Da - A</option>
                     </select>
                 </div>
@@ -95,16 +95,32 @@
                     <div class="label">Profitto Netto</div>
                     <div id="kpi-net-profit" class="value">EUR 0.00</div>
                 </div>
+                <div class="report-kpi">
+                    <div class="label">Costo Materia in Giacenza</div>
+                    <div id="kpi-stock-material-cost" class="value">EUR 0.00</div>
+                </div>
+                <div class="report-kpi">
+                    <div class="label">Valore Prodotti in Magazzino</div>
+                    <div id="kpi-finished-stock-value" class="value">EUR 0.00</div>
+                </div>
             </div>
 
             <div class="report-grid">
-                <div class="report-card wide">
+                <div class="report-card">
                     <div class="card-title">Ricavi (stack) e Composizione</div>
                     <svg id="chart-revenue" class="chart" viewBox="0 0 700 320"></svg>
                 </div>
                 <div class="report-card">
+                    <div class="card-title">Costo Materia Utilizzata per Mese</div>
+                    <svg id="chart-material-usage" class="chart" viewBox="0 0 700 320"></svg>
+                </div>
+                <div class="report-card">
                     <div class="card-title">Numero Ordini</div>
-                    <svg id="chart-orders" class="chart" viewBox="0 0 360 320"></svg>
+                    <svg id="chart-orders" class="chart" viewBox="0 0 700 320"></svg>
+                </div>
+                <div class="report-card">
+                    <div class="card-title">Bilancio Mensile (cumulato)</div>
+                    <svg id="chart-revenue-net" class="chart" viewBox="0 0 700 320"></svg>
                 </div>
                 <div class="report-card">
                     <div class="card-title">Analisi Rapida</div>

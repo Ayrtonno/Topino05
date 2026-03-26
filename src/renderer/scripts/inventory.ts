@@ -15,6 +15,31 @@ type Material = {
     costPerUnit: number;
 };
 
+type EconomicMovement = {
+    id: string;
+    date: string;
+    type: "expense" | "income";
+    category: string;
+    amount: number;
+    note?: string;
+    createdAt: string;
+};
+
+type MaterialMovement = {
+    id: string;
+    date: string;
+    direction: "in" | "out";
+    materialId: string;
+    materialName: string;
+    colorName?: string;
+    quantity: number;
+    unitCost: number;
+    totalValue: number;
+    source: "inventory";
+    note?: string;
+    createdAt: string;
+};
+
 let items: InventoryItem[] = [];
 let materials: Material[] = [];
 let editingId: string | null = null;
@@ -36,10 +61,18 @@ const qtyInput = qs<HTMLInputElement>("#inv-qty");
 const unitLabel = qs<HTMLDivElement>("#inv-unit-label");
 const moveType = qs<HTMLSelectElement>("#inv-move-type");
 const submitBtn = qs<HTMLButtonElement>("#submit-inventory");
+const purchaseForm = qs<HTMLFormElement>("#purchase-form");
+const purchaseMaterialSelect = qs<HTMLSelectElement>("#purchase-material");
+const purchaseColorInput = qs<HTMLInputElement>("#purchase-color");
+const purchaseQtyInput = qs<HTMLInputElement>("#purchase-qty");
+const purchaseUnitLabel = qs<HTMLDivElement>("#purchase-unit-label");
+const purchaseTotalPreview = qs<HTMLDivElement>("#purchase-total-preview");
 
 function setFormVisible(visible: boolean) {
     form.classList.toggle("hidden", !visible);
-    toggleBtn.textContent = visible ? "Annulla" : "+ Nuova Giacenza";
+    toggleBtn.textContent = visible
+        ? "Annulla"
+        : "+ Correzione Giacenza";
 }
 
 function resetForm() {
@@ -48,8 +81,21 @@ function resetForm() {
     qtyInput.value = "0";
     unitLabel.textContent = "Unita: -";
     moveType.value = "carico";
-    submitBtn.textContent = "Salva";
+    submitBtn.textContent = "Salva Correzione";
     editingId = null;
+}
+
+function updatePurchasePreview() {
+    const mat = getMaterialById(purchaseMaterialSelect.value);
+    const qty = parseFloat(purchaseQtyInput.value) || 0;
+    const label = mat?.unit === "pezzi" ? "pz" : "g";
+    purchaseUnitLabel.textContent = mat ? `Unita: ${label}` : "Unita: -";
+    if (!mat || qty <= 0) {
+        purchaseTotalPreview.textContent = "EUR 0.00";
+        return;
+    }
+    const total = qty * mat.costPerUnit;
+    purchaseTotalPreview.textContent = `EUR ${total.toFixed(2)}`;
 }
 
 async function loadData() {
@@ -65,12 +111,18 @@ async function loadData() {
 
 function renderMaterialOptions() {
     materialSelect.innerHTML = '<option value="">Seleziona un materiale</option>';
+    purchaseMaterialSelect.innerHTML =
+        '<option value="">Seleziona un materiale</option>';
     filterSelect.innerHTML = '<option value="">Tutti i materiali</option>';
     materials.forEach((m) => {
         const opt = document.createElement("option");
         opt.value = m.id;
         opt.textContent = m.name;
         materialSelect.appendChild(opt);
+        const optPurchase = document.createElement("option");
+        optPurchase.value = m.id;
+        optPurchase.textContent = m.name;
+        purchaseMaterialSelect.appendChild(optPurchase);
         const optFilter = document.createElement("option");
         optFilter.value = m.id;
         optFilter.textContent = m.name;
@@ -179,9 +231,13 @@ form.addEventListener("submit", async (e) => {
     const colorValue = colorInput.value.trim();
     const qtyValue = parseFloat(qtyInput.value) || 0;
     const now = new Date().toISOString();
+    const material = getMaterialById(materialSelect.value);
+    const isEditCorrection = !!editingId;
 
     let updated: InventoryItem[];
     if (editingId) {
+        const oldRow = items.find((i) => i.id === editingId);
+        if (!oldRow) return;
         updated = items.map((i) =>
             i.id === editingId
                 ? {
@@ -194,6 +250,13 @@ form.addEventListener("submit", async (e) => {
                 : i
         );
     } else {
+        if (moveType.value === "carico") {
+            showMessage(
+                "Per il carico reale usa il pannello Acquisto Materiale",
+                "error",
+            );
+            return;
+        }
         // merge if same material+color exists
         const existing = items.find((i) =>
             i.materialId === materialSelect.value &&
@@ -231,13 +294,162 @@ form.addEventListener("submit", async (e) => {
 
     const success = await window.api.saveInventory(updated);
     if (success) {
+        if (!isEditCorrection && material && qtyValue > 0) {
+            const materialMoves = await window.api.getMaterialMovements();
+            const materialMove: MaterialMovement = {
+                id: `mat-move-${Date.now()}`,
+                date: now.slice(0, 10),
+                direction: "out",
+                materialId: material.id,
+                materialName: material.name,
+                colorName: colorValue || undefined,
+                quantity: parseFloat(qtyValue.toFixed(3)),
+                unitCost: parseFloat(material.costPerUnit.toFixed(4)),
+                totalValue: parseFloat((qtyValue * material.costPerUnit).toFixed(2)),
+                source: "inventory",
+                note: "Uscita materiale da magazzino (movimento manuale)",
+                createdAt: now,
+            };
+            const savedMaterialMoves = await window.api.saveMaterialMovements([
+                ...materialMoves,
+                materialMove,
+            ]);
+            if (!savedMaterialMoves) {
+                showMessage(
+                    "Giacenza salvata, ma errore registrazione movimento materiale",
+                    "error",
+                );
+                return;
+            }
+        }
+
         items = updated;
         renderTable();
         setFormVisible(false);
         resetForm();
-        showMessage("Giacenza salvata!", "success");
+        showMessage(
+            isEditCorrection
+                ? "Correzione giacenza salvata (non contabilizzata)"
+                : "Movimento scarico salvato",
+            "success",
+        );
         clearMessage();
     }
+});
+
+purchaseForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!purchaseMaterialSelect.value || !purchaseQtyInput.value) {
+        showMessage("Completa tutti i campi acquisto richiesti", "error");
+        return;
+    }
+
+    const material = getMaterialById(purchaseMaterialSelect.value);
+    if (!material) {
+        showMessage("Materiale non valido", "error");
+        return;
+    }
+    const colorValue = purchaseColorInput.value.trim();
+    const qtyValue = parseFloat(purchaseQtyInput.value) || 0;
+    if (qtyValue <= 0) {
+        showMessage("Quantita acquisto non valida", "error");
+        return;
+    }
+
+    const now = new Date().toISOString();
+    const existing = items.find(
+        (i) =>
+            i.materialId === material.id &&
+            normalizeColor(i.colorName) === normalizeColor(colorValue),
+    );
+    let updated: InventoryItem[];
+    if (existing) {
+        updated = items.map((i) =>
+            i.id === existing.id
+                ? {
+                      ...i,
+                      quantity: i.quantity + qtyValue,
+                      lastUpdated: now,
+                  }
+                : i,
+        );
+    } else {
+        updated = [
+            ...items,
+            {
+                id: Date.now().toString(),
+                materialId: material.id,
+                colorName: colorValue || undefined,
+                quantity: qtyValue,
+                lastUpdated: now,
+            },
+        ];
+    }
+
+    const savedInventory = await window.api.saveInventory(updated);
+    if (!savedInventory) {
+        showMessage("Errore salvataggio giacenza", "error");
+        return;
+    }
+
+    const expenseAmount = qtyValue * material.costPerUnit;
+    const economicMoves = await window.api.getEconomicMovements();
+    const economicItem: EconomicMovement = {
+        id: `purchase-${Date.now()}`,
+        date: now.slice(0, 10),
+        type: "expense",
+        category: "inventory-load",
+        amount: parseFloat(expenseAmount.toFixed(2)),
+        note: `Acquisto materiale: ${material.name}${colorValue ? ` (${colorValue})` : ""}, qty ${qtyValue}`,
+        createdAt: now,
+    };
+    const savedEconomic = await window.api.saveEconomicMovements([
+        ...economicMoves,
+        economicItem,
+    ]);
+    if (!savedEconomic) {
+        showMessage(
+            "Acquisto registrato in giacenza, ma errore contabilizzazione spesa",
+            "error",
+        );
+        return;
+    }
+
+    const materialMoves = await window.api.getMaterialMovements();
+    const materialMove: MaterialMovement = {
+        id: `mat-move-${Date.now()}`,
+        date: now.slice(0, 10),
+        direction: "in",
+        materialId: material.id,
+        materialName: material.name,
+        colorName: colorValue || undefined,
+        quantity: parseFloat(qtyValue.toFixed(3)),
+        unitCost: parseFloat(material.costPerUnit.toFixed(4)),
+        totalValue: parseFloat((qtyValue * material.costPerUnit).toFixed(2)),
+        source: "inventory",
+        note: "Entrata materiale da acquisto",
+        createdAt: now,
+    };
+    const savedMaterialMoves = await window.api.saveMaterialMovements([
+        ...materialMoves,
+        materialMove,
+    ]);
+    if (!savedMaterialMoves) {
+        showMessage(
+            "Acquisto registrato, ma errore salvataggio movimento materiale",
+            "error",
+        );
+        return;
+    }
+
+    items = updated;
+    renderTable();
+    purchaseMaterialSelect.value = "";
+    purchaseColorInput.value = "";
+    purchaseQtyInput.value = "0";
+    updatePurchasePreview();
+    showMessage("Acquisto registrato e contabilizzato", "success");
+    clearMessage();
 });
 
 tbody.addEventListener("click", async (e) => {
@@ -256,7 +468,7 @@ tbody.addEventListener("click", async (e) => {
         qtyInput.value = row.quantity.toString();
         const mat = getMaterialById(row.materialId);
         unitLabel.textContent = mat ? `Unita: ${mat.unit === "pezzi" ? "pz" : "g"}` : "Unita: -";
-        submitBtn.textContent = "Salva Modifiche";
+        submitBtn.textContent = "Salva Correzione";
         setFormVisible(true);
     }
 
@@ -291,5 +503,8 @@ sortSelect?.addEventListener("change", () => {
 refreshBtn?.addEventListener("click", () => {
     loadData();
 });
+
+purchaseMaterialSelect.addEventListener("change", updatePurchasePreview);
+purchaseQtyInput.addEventListener("input", updatePurchasePreview);
 
 loadData();
