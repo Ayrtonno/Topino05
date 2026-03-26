@@ -7,6 +7,8 @@ import {
     saveInventory,
     getArticles,
     saveArticles,
+    getClients,
+    saveClients,
     getOrders,
     saveOrders,
     getIncomeMovements,
@@ -103,6 +105,15 @@ ipcMain.handle("get-articles", async () => {
 
 ipcMain.handle("save-articles", async (_, articles) => {
     return saveArticles(articles);
+});
+
+// IPC Handlers - Clients
+ipcMain.handle("get-clients", async () => {
+    return getClients();
+});
+
+ipcMain.handle("save-clients", async (_, clients) => {
+    return saveClients(clients);
 });
 
 // IPC Handlers - Orders

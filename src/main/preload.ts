@@ -17,6 +17,11 @@ const api = {
     saveArticles: (articles: Article[]) =>
         ipcRenderer.invoke("save-articles", articles) as Promise<boolean>,
 
+    // Clients API
+    getClients: () => ipcRenderer.invoke("get-clients") as Promise<any[]>,
+    saveClients: (clients: any[]) =>
+        ipcRenderer.invoke("save-clients", clients) as Promise<boolean>,
+
     // Orders API
     getOrders: () => ipcRenderer.invoke("get-orders") as Promise<Order[]>,
     saveOrders: (orders: Order[]) =>

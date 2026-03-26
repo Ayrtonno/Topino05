@@ -65,6 +65,10 @@
     margin-top: 10px;
 }
 
+.preview-grid-3 {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
 .preview-item {
     background: #f8fafc;
     border: 1px solid var(--border);
@@ -129,7 +133,7 @@
     margin-right: 6px;
 }
 
-.checkbox {
+.checkbox-line {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -140,10 +144,81 @@
     border: 1px solid var(--border);
     padding: 6px 10px;
     border-radius: 8px;
+    width: 100%;
+    min-height: 34px;
+    height: 34px;
 }
 
-.checkbox input {
+.checkbox-line input {
     accent-color: var(--primary);
+    margin: 0;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.order-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: #1f2937;
+}
+
+.order-subcard {
+    background: #fbfdff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+.subcard-title {
+    font-weight: 700;
+    font-size: 12px;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.order-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.order-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.order-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.order-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.order-add-row .form-group {
+    margin-bottom: 0;
+}
+
+.align-center {
+    align-items: end;
+}
+
+.add-btn-wrap {
+    display: flex;
+    align-items: flex-end;
+}
+
+.order-subcard .table-container {
+    margin-top: 6px;
 }
 
 .popup .app {
@@ -155,6 +230,10 @@
 }
 
 .popup-detail .topbar {
+    display: none;
+}
+
+.popup-form .topbar {
     display: none;
 }
 

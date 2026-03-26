@@ -43,6 +43,7 @@
   var orders = [];
   var articles = [];
   var materials = [];
+  var clients = [];
   var inventory = [];
   var laborConfig = { hourlyRate: 4 };
   var editingId = null;
@@ -61,13 +62,13 @@
   var toolbarSection = qs("#orders-toolbar");
   var listSection = qs("#orders-list-section");
   var detailSection = qs("#order-detail-section");
+  var clientSelect = qs("#order-client");
   var firstNameInput = qs("#order-first-name");
   var lastNameInput = qs("#order-last-name");
   var emailInput = qs("#order-email");
   var phoneInput = qs("#order-phone");
   var requestDateInput = qs("#order-request-date");
   var deliveryDateInput = qs("#order-delivery-date");
-  var discountInput = qs("#order-discount");
   var notesInput = qs("#order-notes");
   var submitBtn = qs("#submit-order");
   var itemArticle = qs("#item-article");
@@ -98,13 +99,13 @@
     toggleBtn.textContent = visible ? "Annulla" : "+ Nuovo Ordine";
   }
   function resetForm() {
+    clientSelect.value = "";
     firstNameInput.value = "";
     lastNameInput.value = "";
     emailInput.value = "";
     phoneInput.value = "";
     requestDateInput.value = "";
     deliveryDateInput.value = "";
-    discountInput.value = "0";
     notesInput.value = "";
     itemArticle.value = "";
     itemQty.value = "1";
@@ -140,8 +141,10 @@
       articles = await window.api.getArticles();
       materials = await window.api.getMaterials();
       inventory = await window.api.getInventory();
+      clients = await window.api.getClients();
       laborConfig = await window.api.getLaborConfig();
       renderArticleOptions();
+      renderClientOptions();
       renderOrders();
       const { popup, view, id } = getPopupParams();
       if (popup && view === "detail" && id) {
@@ -152,15 +155,20 @@
         const order = orders.find((o) => o.id === id);
         if (order) {
           editingId = id;
+          if (order.clientId) {
+            clientSelect.value = order.clientId;
+            fillClientFields(order.clientId);
+          } else {
+            clientSelect.value = "";
+          }
           const legacyName = order.clientName || "";
           const nameParts = legacyName ? legacyName.split(" ") : [];
-          firstNameInput.value = order.clientFirstName || nameParts.shift() || "";
-          lastNameInput.value = order.clientLastName || nameParts.join(" ");
-          emailInput.value = order.clientEmail || "";
-          phoneInput.value = order.clientPhone || "";
+          firstNameInput.value = order.clientFirstName || nameParts.shift() || firstNameInput.value;
+          lastNameInput.value = order.clientLastName || nameParts.join(" ") || lastNameInput.value;
+          emailInput.value = order.clientEmail || emailInput.value;
+          phoneInput.value = order.clientPhone || phoneInput.value;
           requestDateInput.value = order.requestedDate || "";
           deliveryDateInput.value = order.deliveryDate || "";
-          discountInput.value = order.discountPercentage.toString();
           notesInput.value = order.notes || "";
           items = [...order.items];
           submitBtn.textContent = "Salva Modifiche";
@@ -177,6 +185,22 @@
     } catch {
       showMessage("Errore nel caricamento dei dati", "error");
     }
+  }
+  function renderClientOptions() {
+    clientSelect.innerHTML = '<option value="">Seleziona cliente</option>';
+    clients.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.firstName} ${c.lastName}`;
+      clientSelect.appendChild(opt);
+    });
+  }
+  function fillClientFields(clientId) {
+    const client = clients.find((c) => c.id === clientId);
+    firstNameInput.value = client?.firstName || "";
+    lastNameInput.value = client?.lastName || "";
+    emailInput.value = client?.email || "";
+    phoneInput.value = client?.phone || "";
   }
   function renderArticleOptions() {
     itemArticle.innerHTML = '<option value="">Seleziona articolo</option>';
@@ -503,6 +527,9 @@
     renderColorRows(article);
     updateItemPreview();
   });
+  clientSelect.addEventListener("change", () => {
+    fillClientFields(clientSelect.value);
+  });
   itemPackaging.addEventListener("change", () => {
     updateItemPreview();
   });
@@ -563,11 +590,11 @@
   });
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!firstNameInput.value || !lastNameInput.value || items.length === 0) {
+    if (!clientSelect.value || items.length === 0) {
       showMessage("Completa i campi obbligatori", "error");
       return;
     }
-    const costs = calculateOrderCosts(items, parseFloat(discountInput.value) || 0);
+    const costs = calculateOrderCosts(items, 0);
     let updated;
     const previousInventory = [...inventory];
     const newReq = computeRequiredMaterials(items);
@@ -594,6 +621,7 @@
       updated = orders.map(
         (o) => o.id === editingId ? {
           ...o,
+          clientId: clientSelect.value,
           clientFirstName: firstNameInput.value.trim(),
           clientLastName: lastNameInput.value.trim(),
           clientEmail: emailInput.value.trim(),
@@ -601,7 +629,7 @@
           requestedDate: requestDateInput.value,
           deliveryDate: deliveryDateInput.value,
           items,
-          discountPercentage: parseFloat(discountInput.value) || 0,
+          discountPercentage: 0,
           status: o.status,
           notes: notesInput.value.trim(),
           ...costs
@@ -617,6 +645,7 @@
       }
       const newOrder = {
         id: Date.now().toString(),
+        clientId: clientSelect.value,
         clientFirstName: firstNameInput.value.trim(),
         clientLastName: lastNameInput.value.trim(),
         clientEmail: emailInput.value.trim(),
@@ -627,7 +656,7 @@
         materialCost: costs.materialCost,
         laborCost: costs.laborCost,
         finalAmount: costs.finalAmount,
-        discountPercentage: parseFloat(discountInput.value) || 0,
+        discountPercentage: 0,
         status: "pending",
         notes: notesInput.value.trim(),
         createdAt: (/* @__PURE__ */ new Date()).toISOString()

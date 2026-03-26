@@ -37,6 +37,7 @@ if (!fs.existsSync(dataDir)) {
 var MATERIALS_FILE = path.join(dataDir, "materials.json");
 var INVENTORY_FILE = path.join(dataDir, "inventory.json");
 var ARTICLES_FILE = path.join(dataDir, "articles.json");
+var CLIENTS_FILE = path.join(dataDir, "clients.json");
 var ORDERS_FILE = path.join(dataDir, "orders.json");
 var INCOME_MOVEMENTS_FILE = path.join(dataDir, "income-movements.json");
 var LABOR_CONFIG_FILE = path.join(dataDir, "labor-config.json");
@@ -187,6 +188,12 @@ var getArticles = () => {
 var saveArticles = (articles) => {
   return writeJsonFile(ARTICLES_FILE, articles);
 };
+var getClients = () => {
+  return readJsonFile(CLIENTS_FILE, []);
+};
+var saveClients = (clients) => {
+  return writeJsonFile(CLIENTS_FILE, clients);
+};
 var getOrders = () => {
   return readJsonFile(ORDERS_FILE, []);
 };
@@ -287,6 +294,12 @@ import_electron.ipcMain.handle("get-articles", async () => {
 });
 import_electron.ipcMain.handle("save-articles", async (_, articles) => {
   return saveArticles(articles);
+});
+import_electron.ipcMain.handle("get-clients", async () => {
+  return getClients();
+});
+import_electron.ipcMain.handle("save-clients", async (_, clients) => {
+  return saveClients(clients);
 });
 import_electron.ipcMain.handle("get-orders", async () => {
   return getOrders();

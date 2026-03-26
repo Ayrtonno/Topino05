@@ -10,6 +10,7 @@ type OrderItem = {
 
 type Order = {
     id: string;
+    clientId?: string;
     clientFirstName: string;
     clientLastName: string;
     clientEmail?: string;
@@ -56,9 +57,18 @@ type LaborConfig = {
     hourlyRate: number;
 };
 
+type Client = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+};
+
 let orders: Order[] = [];
 let articles: Article[] = [];
 let materials: Material[] = [];
+let clients: Client[] = [];
 let inventory: InventoryItem[] = [];
 let laborConfig: LaborConfig = { hourlyRate: 4 };
 let editingId: string | null = null;
@@ -80,13 +90,13 @@ const toolbarSection = qs<HTMLDivElement>("#orders-toolbar");
 const listSection = qs<HTMLDivElement>("#orders-list-section");
 const detailSection = qs<HTMLDivElement>("#order-detail-section");
 
+const clientSelect = qs<HTMLSelectElement>("#order-client");
 const firstNameInput = qs<HTMLInputElement>("#order-first-name");
 const lastNameInput = qs<HTMLInputElement>("#order-last-name");
 const emailInput = qs<HTMLInputElement>("#order-email");
 const phoneInput = qs<HTMLInputElement>("#order-phone");
 const requestDateInput = qs<HTMLInputElement>("#order-request-date");
 const deliveryDateInput = qs<HTMLInputElement>("#order-delivery-date");
-const discountInput = qs<HTMLInputElement>("#order-discount");
 const notesInput = qs<HTMLTextAreaElement>("#order-notes");
 const submitBtn = qs<HTMLButtonElement>("#submit-order");
 
@@ -121,13 +131,13 @@ function setFormVisible(visible: boolean) {
 }
 
 function resetForm() {
+    clientSelect.value = "";
     firstNameInput.value = "";
     lastNameInput.value = "";
     emailInput.value = "";
     phoneInput.value = "";
     requestDateInput.value = "";
     deliveryDateInput.value = "";
-    discountInput.value = "0";
     notesInput.value = "";
     itemArticle.value = "";
     itemQty.value = "1";
@@ -166,8 +176,10 @@ async function loadData() {
         articles = await window.api.getArticles();
         materials = await window.api.getMaterials();
         inventory = await window.api.getInventory();
+        clients = await window.api.getClients();
         laborConfig = await window.api.getLaborConfig();
         renderArticleOptions();
+        renderClientOptions();
         renderOrders();
         const { popup, view, id } = getPopupParams();
         if (popup && view === "detail" && id) {
@@ -178,15 +190,20 @@ async function loadData() {
             const order = orders.find((o) => o.id === id);
             if (order) {
                 editingId = id;
+                if (order.clientId) {
+                    clientSelect.value = order.clientId;
+                    fillClientFields(order.clientId);
+                } else {
+                    clientSelect.value = "";
+                }
                 const legacyName = (order as unknown as { clientName?: string }).clientName || "";
                 const nameParts = legacyName ? legacyName.split(" ") : [];
-                firstNameInput.value = order.clientFirstName || nameParts.shift() || "";
-                lastNameInput.value = order.clientLastName || nameParts.join(" ");
-                emailInput.value = order.clientEmail || "";
-                phoneInput.value = order.clientPhone || "";
+                firstNameInput.value = order.clientFirstName || nameParts.shift() || firstNameInput.value;
+                lastNameInput.value = order.clientLastName || nameParts.join(" ") || lastNameInput.value;
+                emailInput.value = order.clientEmail || emailInput.value;
+                phoneInput.value = order.clientPhone || phoneInput.value;
                 requestDateInput.value = order.requestedDate || "";
                 deliveryDateInput.value = order.deliveryDate || "";
-                discountInput.value = order.discountPercentage.toString();
                 notesInput.value = order.notes || "";
                 items = [...order.items];
                 submitBtn.textContent = "Salva Modifiche";
@@ -203,6 +220,24 @@ async function loadData() {
     } catch {
         showMessage("Errore nel caricamento dei dati", "error");
     }
+}
+
+function renderClientOptions() {
+    clientSelect.innerHTML = '<option value="">Seleziona cliente</option>';
+    clients.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.firstName} ${c.lastName}`;
+        clientSelect.appendChild(opt);
+    });
+}
+
+function fillClientFields(clientId: string) {
+    const client = clients.find((c) => c.id === clientId);
+    firstNameInput.value = client?.firstName || "";
+    lastNameInput.value = client?.lastName || "";
+    emailInput.value = client?.email || "";
+    phoneInput.value = client?.phone || "";
 }
 
 function renderArticleOptions() {
@@ -573,6 +608,10 @@ itemArticle.addEventListener("change", () => {
     updateItemPreview();
 });
 
+clientSelect.addEventListener("change", () => {
+    fillClientFields(clientSelect.value);
+});
+
 itemPackaging.addEventListener("change", () => {
     updateItemPreview();
 });
@@ -641,12 +680,12 @@ itemsBody.addEventListener("click", (e) => {
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!firstNameInput.value || !lastNameInput.value || items.length === 0) {
+    if (!clientSelect.value || items.length === 0) {
         showMessage("Completa i campi obbligatori", "error");
         return;
     }
 
-    const costs = calculateOrderCosts(items, parseFloat(discountInput.value) || 0);
+    const costs = calculateOrderCosts(items, 0);
     let updated: Order[];
     const previousInventory = [...inventory];
 
@@ -676,6 +715,7 @@ form.addEventListener("submit", async (e) => {
             o.id === editingId
                 ? {
                       ...o,
+                      clientId: clientSelect.value,
                       clientFirstName: firstNameInput.value.trim(),
                       clientLastName: lastNameInput.value.trim(),
                       clientEmail: emailInput.value.trim(),
@@ -683,7 +723,7 @@ form.addEventListener("submit", async (e) => {
                       requestedDate: requestDateInput.value,
                       deliveryDate: deliveryDateInput.value,
                       items,
-                      discountPercentage: parseFloat(discountInput.value) || 0,
+                      discountPercentage: 0,
                       status: o.status,
                       notes: notesInput.value.trim(),
                       ...costs,
@@ -700,6 +740,7 @@ form.addEventListener("submit", async (e) => {
         }
         const newOrder: Order = {
             id: Date.now().toString(),
+            clientId: clientSelect.value,
             clientFirstName: firstNameInput.value.trim(),
             clientLastName: lastNameInput.value.trim(),
             clientEmail: emailInput.value.trim(),
@@ -710,7 +751,7 @@ form.addEventListener("submit", async (e) => {
             materialCost: costs.materialCost,
             laborCost: costs.laborCost,
             finalAmount: costs.finalAmount,
-            discountPercentage: parseFloat(discountInput.value) || 0,
+            discountPercentage: 0,
             status: "pending",
             notes: notesInput.value.trim(),
             createdAt: new Date().toISOString(),

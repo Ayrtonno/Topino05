@@ -61,8 +61,18 @@ declare namespace Models {
         colorSelections?: string[];
     }
 
+    interface Client {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email?: string;
+        phone?: string;
+        createdAt: string;
+    }
+
     interface Order {
         id: string;
+        clientId?: string;
         clientFirstName?: string;
         clientLastName?: string;
         clientEmail?: string;
@@ -125,6 +135,10 @@ declare global {
         // Articles
         getArticles: () => Promise<Article[]>;
         saveArticles: (articles: Article[]) => Promise<boolean>;
+
+        // Clients
+        getClients: () => Promise<Client[]>;
+        saveClients: (clients: Client[]) => Promise<boolean>;
 
         // Orders
         getOrders: () => Promise<Order[]>;

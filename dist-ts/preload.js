@@ -12,6 +12,9 @@ var api = {
   // Articles API
   getArticles: () => import_electron.ipcRenderer.invoke("get-articles"),
   saveArticles: (articles) => import_electron.ipcRenderer.invoke("save-articles", articles),
+  // Clients API
+  getClients: () => import_electron.ipcRenderer.invoke("get-clients"),
+  saveClients: (clients) => import_electron.ipcRenderer.invoke("save-clients", clients),
   // Orders API
   getOrders: () => import_electron.ipcRenderer.invoke("get-orders"),
   saveOrders: (orders) => import_electron.ipcRenderer.invoke("save-orders", orders),

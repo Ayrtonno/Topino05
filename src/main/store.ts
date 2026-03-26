@@ -15,6 +15,7 @@ if (!fs.existsSync(dataDir)) {
 const MATERIALS_FILE = path.join(dataDir, "materials.json");
 const INVENTORY_FILE = path.join(dataDir, "inventory.json");
 const ARTICLES_FILE = path.join(dataDir, "articles.json");
+const CLIENTS_FILE = path.join(dataDir, "clients.json");
 const ORDERS_FILE = path.join(dataDir, "orders.json");
 const INCOME_MOVEMENTS_FILE = path.join(dataDir, "income-movements.json");
 const LABOR_CONFIG_FILE = path.join(dataDir, "labor-config.json");
@@ -185,6 +186,15 @@ export const getArticles = (): Article[] => {
 
 export const saveArticles = (articles: Article[]): boolean => {
     return writeJsonFile(ARTICLES_FILE, articles);
+};
+
+// ==================== CLIENTS ====================
+export const getClients = (): any[] => {
+    return readJsonFile(CLIENTS_FILE, []);
+};
+
+export const saveClients = (clients: any[]): boolean => {
+    return writeJsonFile(CLIENTS_FILE, clients);
 };
 
 // ==================== ORDERS ====================
