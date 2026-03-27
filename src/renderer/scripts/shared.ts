@@ -102,4 +102,18 @@ export function openSingletonWindow(
     return win;
 }
 
+function initSidebarBunnyBounce() {
+    const sidebar = document.querySelector<HTMLElement>(".sidebar");
+    if (!sidebar) return;
+
+    sidebar.addEventListener("mouseenter", () => {
+        sidebar.classList.add("bunny-bounce");
+    });
+
+    sidebar.addEventListener("mouseleave", () => {
+        sidebar.classList.remove("bunny-bounce");
+    });
+}
+
 setActiveNav();
+initSidebarBunnyBounce();

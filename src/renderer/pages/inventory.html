@@ -30,6 +30,7 @@
                 </div>
                 <div class="actions">
                     <button id="refresh-inventory" class="btn-small">Aggiorna</button>
+                    <button id="open-purchase-modal" class="btn-primary">+ Acquisto Materiale</button>
                     <button id="toggle-form" class="btn-primary">+ Correzione Giacenza</button>
                 </div>
             </div>
@@ -66,70 +67,6 @@
                 </div>
             </div>
 
-            <form id="inventory-form" class="form hidden">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Materiale *</label>
-                        <select id="inv-material">
-                            <option value="">Seleziona un materiale</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Colore (opzionale)</label>
-                        <input id="inv-color" type="text" placeholder="Es: Rosso, Blu" />
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Quantita Corretta *</label>
-                        <input id="inv-qty" type="number" value="0" />
-                        <div id="inv-unit-label" class="muted">Unita: -</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo movimento manuale</label>
-                        <select id="inv-move-type">
-                            <option value="carico">Carico (+)</option>
-                            <option value="scarico">Scarico (-)</option>
-                        </select>
-                        <div class="muted">Il carico reale va fatto dal pannello Acquisto.</div>
-                    </div>
-                </div>
-
-                <button id="submit-inventory" type="submit" class="btn-primary">Salva</button>
-            </form>
-
-            <form id="purchase-form" class="form">
-                <div class="table-header" style="margin:0 0 10px 0;">
-                    <div class="title">Acquisto Materiale (Carico Reale)</div>
-                    <div class="meta">Somma alla giacenza e registra la spesa economica.</div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Materiale *</label>
-                        <select id="purchase-material">
-                            <option value="">Seleziona un materiale</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Colore (opzionale)</label>
-                        <input id="purchase-color" type="text" placeholder="Es: Verde, Nero" />
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Quantita Acquistata *</label>
-                        <input id="purchase-qty" type="number" value="0" min="0" />
-                        <div id="purchase-unit-label" class="muted">Unita: -</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Totale acquisto</label>
-                        <div id="purchase-total-preview" class="muted">0,00€</div>
-                    </div>
-                </div>
-                <button id="submit-purchase" type="submit" class="btn-primary">Registra Acquisto</button>
-            </form>
-
             <div class="table-header">
                 <div class="title">Giacenze</div>
                 <div class="meta">Valore calcolato dai costi materiali</div>
@@ -151,6 +88,86 @@
                     <tbody id="inventory-body"></tbody>
                 </table>
                 <div id="inventory-empty" class="empty-state hidden">Nessuna giacenza presente.</div>
+            </div>
+
+            <div id="inventory-modal" class="modal hidden">
+                <div class="modal-backdrop" data-close-modal="inventory"></div>
+                <div class="modal-card">
+                    <div class="table-header" style="margin:0 0 10px 0;">
+                        <div class="title">Correzione Giacenza</div>
+                        <button type="button" id="close-inventory-modal" class="btn-small">Chiudi</button>
+                    </div>
+                    <form id="inventory-form" class="form" style="margin-bottom:0;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Materiale *</label>
+                                <select id="inv-material">
+                                    <option value="">Seleziona un materiale</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Colore (opzionale)</label>
+                                <input id="inv-color" list="inv-color-options" type="text" placeholder="Seleziona o scrivi colore" />
+                                <datalist id="inv-color-options"></datalist>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantita Corretta *</label>
+                                <input id="inv-qty" type="number" value="0" />
+                                <div id="inv-unit-label" class="muted">Unita: -</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo movimento manuale</label>
+                                <select id="inv-move-type">
+                                    <option value="carico">Carico (+)</option>
+                                    <option value="scarico">Scarico (-)</option>
+                                </select>
+                                <div class="muted">Il carico reale va fatto dal pannello Acquisto.</div>
+                            </div>
+                        </div>
+
+                        <button id="submit-inventory" type="submit" class="btn-primary">Salva Correzione</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="purchase-modal" class="modal hidden">
+                <div class="modal-backdrop" data-close-modal="purchase"></div>
+                <div class="modal-card">
+                    <div class="table-header" style="margin:0 0 10px 0;">
+                        <div class="title">Acquisto Materiale (Carico Reale)</div>
+                        <button type="button" id="close-purchase-modal" class="btn-small">Chiudi</button>
+                    </div>
+                    <form id="purchase-form" class="form" style="margin-bottom:0;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Materiale *</label>
+                                <select id="purchase-material">
+                                    <option value="">Seleziona un materiale</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Colore (opzionale)</label>
+                                <input id="purchase-color" list="purchase-color-options" type="text" placeholder="Seleziona o scrivi colore" />
+                                <datalist id="purchase-color-options"></datalist>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantita Acquistata *</label>
+                                <input id="purchase-qty" type="number" value="0" min="0" />
+                                <div id="purchase-unit-label" class="muted">Unita: -</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Totale acquisto</label>
+                                <div id="purchase-total-preview" class="muted">0,00€</div>
+                            </div>
+                        </div>
+                        <button id="submit-purchase" type="submit" class="btn-primary">Registra Acquisto</button>
+                    </form>
+                </div>
             </div>
         </main>
     </div>

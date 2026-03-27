@@ -67,8 +67,8 @@ body {
     height: 156px;
     border-radius: 50%;
     background:
-        radial-gradient(ellipse 10px 16px at 38% 35%, rgba(255, 255, 255, 0.74) 0 12px, transparent 13px),
-        radial-gradient(ellipse 10px 16px at 65% 35%, rgba(255, 255, 255, 0.74) 0 12px, transparent 13px),
+        radial-gradient(ellipse 10px 16px at 37% 35%, rgba(255, 255, 255, 0.74) 0 12px, transparent 13px),
+        radial-gradient(ellipse 10px 16px at 63% 35%, rgba(255, 255, 255, 0.74) 0 12px, transparent 13px),
         radial-gradient(circle at 50% 70%, rgba(255, 255, 255, 0.68) 0 50px, transparent 51px);
     opacity: 0.42;
     pointer-events: none;
@@ -81,8 +81,8 @@ body {
     z-index: 1;
 }
 
-.sidebar:hover::after {
-    animation: bunny-ears-bounce 520ms ease;
+.sidebar.bunny-bounce::after {
+    animation: bunny-ears-bounce 620ms ease;
 }
 
 .logo {

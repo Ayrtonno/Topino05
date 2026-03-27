@@ -49,6 +49,7 @@ let sortMode = "material-asc";
 
 const form = qs<HTMLFormElement>("#inventory-form");
 const toggleBtn = qs<HTMLButtonElement>("#toggle-form");
+const openPurchaseBtn = qs<HTMLButtonElement>("#open-purchase-modal");
 const tbody = qs<HTMLTableSectionElement>("#inventory-body");
 const searchInput = qs<HTMLInputElement>("#search-inventory");
 const filterSelect = qs<HTMLSelectElement>("#filter-material");
@@ -57,22 +58,29 @@ const sortSelect = qs<HTMLSelectElement>("#sort-inventory");
 
 const materialSelect = qs<HTMLSelectElement>("#inv-material");
 const colorInput = qs<HTMLInputElement>("#inv-color");
+const inventoryColorOptions = qs<HTMLDataListElement>("#inv-color-options");
 const qtyInput = qs<HTMLInputElement>("#inv-qty");
 const unitLabel = qs<HTMLDivElement>("#inv-unit-label");
 const moveType = qs<HTMLSelectElement>("#inv-move-type");
 const submitBtn = qs<HTMLButtonElement>("#submit-inventory");
+const inventoryModal = qs<HTMLDivElement>("#inventory-modal");
+const closeInventoryModalBtn = qs<HTMLButtonElement>("#close-inventory-modal");
 const purchaseForm = qs<HTMLFormElement>("#purchase-form");
+const purchaseModal = qs<HTMLDivElement>("#purchase-modal");
+const closePurchaseModalBtn = qs<HTMLButtonElement>("#close-purchase-modal");
 const purchaseMaterialSelect = qs<HTMLSelectElement>("#purchase-material");
 const purchaseColorInput = qs<HTMLInputElement>("#purchase-color");
+const purchaseColorOptions = qs<HTMLDataListElement>("#purchase-color-options");
 const purchaseQtyInput = qs<HTMLInputElement>("#purchase-qty");
 const purchaseUnitLabel = qs<HTMLDivElement>("#purchase-unit-label");
 const purchaseTotalPreview = qs<HTMLDivElement>("#purchase-total-preview");
 
 function setFormVisible(visible: boolean) {
-    form.classList.toggle("hidden", !visible);
-    toggleBtn.textContent = visible
-        ? "Annulla"
-        : "+ Correzione Giacenza";
+    inventoryModal.classList.toggle("hidden", !visible);
+}
+
+function setPurchaseVisible(visible: boolean) {
+    purchaseModal.classList.toggle("hidden", !visible);
 }
 
 function resetForm() {
@@ -104,6 +112,8 @@ async function loadData() {
         materials = await window.api.getMaterials();
         renderMaterialOptions();
         renderTable();
+        renderColorSuggestions(inventoryColorOptions, materialSelect.value);
+        renderColorSuggestions(purchaseColorOptions, purchaseMaterialSelect.value);
     } catch {
         showMessage("Errore nel caricamento dei dati", "error");
     }
@@ -136,6 +146,28 @@ function getMaterialById(id: string) {
 
 function normalizeColor(value?: string) {
     return (value || "").trim().toLowerCase();
+}
+
+function getColorSuggestions(materialId: string) {
+    const unique = new Map<string, string>();
+    items.forEach((i) => {
+        if (i.materialId !== materialId) return;
+        const raw = (i.colorName || "").trim();
+        if (!raw) return;
+        const key = raw.toLowerCase();
+        if (!unique.has(key)) unique.set(key, raw);
+    });
+    return Array.from(unique.values()).sort((a, b) => a.localeCompare(b));
+}
+
+function renderColorSuggestions(list: HTMLDataListElement, materialId: string) {
+    list.innerHTML = "";
+    if (!materialId) return;
+    getColorSuggestions(materialId).forEach((color) => {
+        const opt = document.createElement("option");
+        opt.value = color;
+        list.appendChild(opt);
+    });
 }
 
 function renderTable() {
@@ -210,15 +242,40 @@ function renderTable() {
 }
 
 toggleBtn.addEventListener("click", () => {
-    const visible = form.classList.contains("hidden");
-    if (visible) resetForm();
-    setFormVisible(visible);
+    resetForm();
+    setFormVisible(true);
+});
+
+openPurchaseBtn.addEventListener("click", () => {
+    purchaseMaterialSelect.value = "";
+    purchaseColorInput.value = "";
+    purchaseQtyInput.value = "0";
+    renderColorSuggestions(purchaseColorOptions, "");
+    updatePurchasePreview();
+    setPurchaseVisible(true);
+});
+
+closeInventoryModalBtn.addEventListener("click", () => {
+    setFormVisible(false);
+});
+
+closePurchaseModalBtn.addEventListener("click", () => {
+    setPurchaseVisible(false);
+});
+
+document.querySelectorAll<HTMLElement>("[data-close-modal]").forEach((el) => {
+    el.addEventListener("click", () => {
+        const target = el.getAttribute("data-close-modal");
+        if (target === "inventory") setFormVisible(false);
+        if (target === "purchase") setPurchaseVisible(false);
+    });
 });
 
 materialSelect.addEventListener("change", () => {
     const mat = getMaterialById(materialSelect.value);
     const label = mat?.unit === "pezzi" ? "pz" : "g";
     unitLabel.textContent = mat ? `Unita: ${label}` : "Unita: -";
+    renderColorSuggestions(inventoryColorOptions, materialSelect.value);
 });
 
 form.addEventListener("submit", async (e) => {
@@ -448,6 +505,7 @@ purchaseForm.addEventListener("submit", async (e) => {
     purchaseColorInput.value = "";
     purchaseQtyInput.value = "0";
     updatePurchasePreview();
+    setPurchaseVisible(false);
     showMessage("Acquisto registrato e contabilizzato", "success");
     clearMessage();
 });
@@ -468,6 +526,7 @@ tbody.addEventListener("click", async (e) => {
         qtyInput.value = row.quantity.toString();
         const mat = getMaterialById(row.materialId);
         unitLabel.textContent = mat ? `Unita: ${mat.unit === "pezzi" ? "pz" : "g"}` : "Unita: -";
+        renderColorSuggestions(inventoryColorOptions, row.materialId);
         submitBtn.textContent = "Salva Correzione";
         setFormVisible(true);
     }
@@ -506,6 +565,9 @@ refreshBtn?.addEventListener("click", () => {
 
 purchaseMaterialSelect.addEventListener("change", updatePurchasePreview);
 purchaseQtyInput.addEventListener("input", updatePurchasePreview);
+purchaseMaterialSelect.addEventListener("change", () => {
+    renderColorSuggestions(purchaseColorOptions, purchaseMaterialSelect.value);
+});
 
 loadData();
 
