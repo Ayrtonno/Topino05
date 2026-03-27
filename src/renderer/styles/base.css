@@ -13,6 +13,10 @@
     --border: #d7e8fb;
     --shadow: 0 12px 28px rgba(78, 128, 173, 0.14);
     --soft-glow: 0 0 0 4px rgba(136, 200, 255, 0.25);
+    --scroll-track: #eaf5ff;
+    --scroll-thumb: #9fd1ff;
+    --scroll-thumb-hover: #7ebfff;
+    --scroll-thumb-border: #dff0ff;
 }
 
 * {
@@ -34,6 +38,37 @@ body {
         radial-gradient(circle at 85% 85%, rgba(118, 216, 197, 0.14) 0, rgba(118, 216, 197, 0) 28%);
     color: var(--text);
     overflow: hidden;
+}
+
+/* Scrollbar styling: pastel blue + bunny vibe */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #f4faff 0%, var(--scroll-track) 100%);
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--scroll-thumb) 0%, #85c2ff 100%);
+    border: 2px solid var(--scroll-thumb-border);
+    border-radius: 999px;
+    min-height: 42px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--scroll-thumb-hover) 0%, #67b2ff 100%);
+}
+
+*::-webkit-scrollbar-corner {
+    background: var(--scroll-track);
 }
 
 .app {

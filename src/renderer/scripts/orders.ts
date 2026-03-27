@@ -1,4 +1,4 @@
-﻿﻿import { qs, showMessage, clearMessage, formatDate, formatCurrency } from "./shared";
+import { qs, showMessage, clearMessage, formatDate, formatCurrency } from "./shared";
 
 import { openSingletonWindow } from "./shared";
 
@@ -161,7 +161,7 @@ const pdfBackdrop = qs<HTMLDivElement>("#pdf-modal .modal-backdrop");
 
 function setFormVisible(visible: boolean) {
     form.classList.toggle("hidden", !visible);
-    toggleBtn.textContent = visible ? "Annulla" : "+ Nuovo Ordine";
+    toggleBtn.textContent = visible ? "Annulla" : "Nuovo Ordine";
 }
 
 function resetForm() {

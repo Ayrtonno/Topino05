@@ -30,7 +30,7 @@ const submitBtn = qs<HTMLButtonElement>("#submit-material");
 
 function setFormVisible(visible: boolean) {
     form.classList.toggle("hidden", !visible);
-    toggleBtn.textContent = visible ? "Annulla" : "+ Nuovo Materiale";
+    toggleBtn.textContent = visible ? "Annulla" : "Nuovo Materiale";
 }
 
 function resetForm() {

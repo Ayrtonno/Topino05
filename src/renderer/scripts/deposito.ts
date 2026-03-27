@@ -69,7 +69,7 @@ const colorsBody = qs<HTMLTableSectionElement>("#deposit-colors-body");
 
 function setFormVisible(visible: boolean) {
     form.classList.toggle("hidden", !visible);
-    toggleBtn.textContent = visible ? "Annulla" : "+ Nuova Giacenza";
+    toggleBtn.textContent = visible ? "Annulla" : "Nuova Giacenza";
 }
 
 function resetForm() {

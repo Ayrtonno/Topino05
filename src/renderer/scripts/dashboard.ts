@@ -557,7 +557,7 @@ function attachChartTooltip(svg: SVGSVGElement) {
         }
         const kind = target.getAttribute("data-kind") || "currency";
         const formatted = formatChartValue(parseFloat(value), kind);
-        const text = series ? `${label} Â· ${series}: ${formatted}` : `${label}: ${formatted}`;
+        const text = series ? `${label} - ${series}: ${formatted}` : `${label}: ${formatted}`;
         showChartTooltip(text, event);
     });
     svg.addEventListener("mouseleave", hideChartTooltip);
