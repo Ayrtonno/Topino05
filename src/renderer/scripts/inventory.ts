@@ -1,4 +1,4 @@
-import { qs, showMessage, clearMessage, formatDate } from "./shared";
+﻿import { qs, showMessage, clearMessage, formatDate, formatCurrency } from "./shared";
 
 type InventoryItem = {
     id: string;
@@ -91,11 +91,11 @@ function updatePurchasePreview() {
     const label = mat?.unit === "pezzi" ? "pz" : "g";
     purchaseUnitLabel.textContent = mat ? `Unita: ${label}` : "Unita: -";
     if (!mat || qty <= 0) {
-        purchaseTotalPreview.textContent = "EUR 0.00";
+        purchaseTotalPreview.textContent = formatCurrency(0);
         return;
     }
     const total = qty * mat.costPerUnit;
-    purchaseTotalPreview.textContent = `EUR ${total.toFixed(2)}`;
+    purchaseTotalPreview.textContent = `${formatCurrency(total, 2)}`;
 }
 
 async function loadData() {
@@ -194,8 +194,8 @@ function renderTable() {
             <td>${i.colorName || "-"}</td>
             <td>${i.quantity.toFixed(0)} ${unitLabelText}</td>
             <td>${mat?.unit || "-"}</td>
-            <td>EUR ${cost.toFixed(3)}</td>
-            <td>EUR ${total.toFixed(2)}</td>
+            <td>${formatCurrency(cost, 3)}</td>
+            <td>${formatCurrency(total, 2)}</td>
             <td>${formatDate(i.lastUpdated || "")}</td>
             <td>
                 <button class="btn-small" data-action="edit" data-id="${i.id}">Modifica</button>
@@ -508,3 +508,4 @@ purchaseMaterialSelect.addEventListener("change", updatePurchasePreview);
 purchaseQtyInput.addEventListener("input", updatePurchasePreview);
 
 loadData();
+

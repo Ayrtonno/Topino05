@@ -1,8 +1,8 @@
-export function qs<T extends HTMLElement>(selector: string, parent: ParentNode = document): T {
+export function qs<T extends Element>(selector: string, parent: ParentNode = document): T {
     return parent.querySelector(selector) as T;
 }
 
-export function qsa<T extends HTMLElement>(selector: string, parent: ParentNode = document): T[] {
+export function qsa<T extends Element>(selector: string, parent: ParentNode = document): T[] {
     return Array.from(parent.querySelectorAll(selector)) as T[];
 }
 
@@ -38,6 +38,14 @@ export function formatDate(dateIso: string) {
     } catch {
         return "-";
     }
+}
+
+export function formatCurrency(value: number, decimals = 2) {
+    const formatted = value.toLocaleString("it-IT", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    });
+    return `${formatted}€`;
 }
 
 type PopupRegistry = Record<string, Window | null>;

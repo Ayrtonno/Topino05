@@ -1,17 +1,18 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap");
 
 :root {
-    --bg: #f5f6f8;
+    --bg: #f2f8ff;
     --panel: #ffffff;
-    --panel-2: #f9fafb;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --primary: #0078d4;
-    --primary-2: #3aa0ff;
-    --accent: #00a37a;
-    --danger: #d13438;
-    --border: #e5e7eb;
-    --shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    --panel-2: #f6fbff;
+    --text: #244260;
+    --muted: #6b88a6;
+    --primary: #5aa8ff;
+    --primary-2: #88c8ff;
+    --accent: #76d8c5;
+    --danger: #d77a8a;
+    --border: #d7e8fb;
+    --shadow: 0 12px 28px rgba(78, 128, 173, 0.14);
+    --soft-glow: 0 0 0 4px rgba(136, 200, 255, 0.25);
 }
 
 * {
@@ -25,8 +26,12 @@ html, body {
 }
 
 body {
-    font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
+    font-family: "Nunito", "Segoe UI", Tahoma, sans-serif;
     background: var(--bg);
+    background-image:
+        radial-gradient(circle at 8% 12%, rgba(136, 200, 255, 0.22) 0, rgba(136, 200, 255, 0) 34%),
+        radial-gradient(circle at 92% 16%, rgba(173, 223, 255, 0.2) 0, rgba(173, 223, 255, 0) 30%),
+        radial-gradient(circle at 85% 85%, rgba(118, 216, 197, 0.14) 0, rgba(118, 216, 197, 0) 28%);
     color: var(--text);
     overflow: hidden;
 }
@@ -42,31 +47,94 @@ body {
 }
 
 .sidebar {
-    background: #1f2937;
-    color: #e5e7eb;
+    background: linear-gradient(180deg, #cbe8ff 0%, #b8dcff 100%);
+    color: #1d486e;
     padding: 22px 16px;
     display: flex;
     flex-direction: column;
     gap: 18px;
-    border-right: 1px solid #111827;
+    border-right: 1px solid #9ac5eb;
     overflow: hidden;
+    position: relative;
+}
+
+.sidebar::after {
+    content: "";
+    position: absolute;
+    right: 18px;
+    bottom: -32px;
+    width: 156px;
+    height: 156px;
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse 10px 16px at 38% 35%, rgba(255, 255, 255, 0.74) 0 12px, transparent 13px),
+        radial-gradient(ellipse 10px 16px at 65% 35%, rgba(255, 255, 255, 0.74) 0 12px, transparent 13px),
+        radial-gradient(circle at 50% 70%, rgba(255, 255, 255, 0.68) 0 50px, transparent 51px);
+    opacity: 0.42;
+    pointer-events: none;
+    transform-origin: 50% 100%;
+    z-index: 0;
+}
+
+.sidebar > * {
+    position: relative;
+    z-index: 1;
+}
+
+.sidebar:hover::after {
+    animation: bunny-ears-bounce 520ms ease;
 }
 
 .logo {
+    font-family: "Baloo 2", "Nunito", sans-serif;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 22px;
     letter-spacing: 0.2px;
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
+    padding-left: 34px;
 }
 
-.logo span {
-    color: #dbeafe;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 999px;
-    background: rgba(59, 130, 246, 0.35);
+.logo::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(57, 113, 163, 0.25);
+    background:
+        radial-gradient(ellipse at 35% 12%, #fff 0 6px, transparent 7px),
+        radial-gradient(ellipse at 65% 12%, #fff 0 6px, transparent 7px),
+        radial-gradient(circle at 50% 64%, #ffffff 0 11px, #def1ff 12px);
+}
+
+.logo::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: -6px;
+    width: 8px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 10px 0 0 #ffffff;
+    transform-origin: 50% 100%;
+    transition: transform 160ms ease;
+}
+
+.logo:hover::after {
+    animation: bunny-ears-bounce 520ms ease;
+}
+
+@keyframes bunny-ears-bounce {
+    0% { transform: translateY(0) scaleY(1); }
+    30% { transform: translateY(-1px) scaleY(1.08); }
+    55% { transform: translateY(0) scaleY(0.95); }
+    100% { transform: translateY(0) scaleY(1); }
 }
 
 .nav {
@@ -76,21 +144,23 @@ body {
 }
 
 .nav a {
-    color: #e5e7eb;
+    color: #2f618d;
     text-decoration: none;
-    padding: 9px 12px;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
     font-size: 13px;
     transition: background 0.15s ease, color 0.15s ease;
+    font-weight: 700;
 }
 
 .nav a:hover {
-    background: #374151;
+    background: rgba(255, 255, 255, 0.62);
 }
 
 .nav a.active {
-    background: #0f172a;
-    color: #ffffff;
+    background: linear-gradient(135deg, #7dbdff 0%, #9ed2ff 100%);
+    color: #143d62;
+    border: 1px solid rgba(53, 110, 160, 0.2);
 }
 
 .content {
@@ -111,7 +181,7 @@ body {
     padding: 10px 12px;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 14px;
     box-shadow: var(--shadow);
 }
 
@@ -122,7 +192,8 @@ body {
 }
 
 .page-title h1 {
-    font-size: 20px;
+    font-family: "Baloo 2", "Nunito", sans-serif;
+    font-size: 26px;
     font-weight: 700;
 }
 
@@ -140,8 +211,8 @@ body {
 .chip {
     font-size: 11px;
     font-weight: 600;
-    color: #1f2937;
-    background: #e5e7eb;
+    color: #2a5e8b;
+    background: #dff0ff;
     padding: 5px 8px;
     border-radius: 999px;
 }
@@ -169,7 +240,7 @@ body {
     gap: 8px;
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 6px 10px;
     box-shadow: none;
 }
@@ -178,7 +249,7 @@ body {
 .field select {
     border: none;
     outline: none;
-    font-size: 12px;
+    font-size: 13px;
     min-width: 160px;
     background: transparent;
     color: var(--text);
@@ -190,14 +261,14 @@ body {
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 999px;
-    background: #e5e7eb;
-    color: #1f2937;
+    background: #e5f3ff;
+    color: #204a72;
 }
 
-.badge.primary { background: #dbeafe; color: #1d4ed8; }
-.badge.success { background: #d1fae5; color: #065f46; }
-.badge.warn { background: #fef3c7; color: #92400e; }
-.badge.danger { background: #fee2e2; color: #991b1b; }
+.badge.primary { background: #dcefff; color: #1e5f95; }
+.badge.success { background: #d5f7ef; color: #1b6f63; }
+.badge.warn { background: #ffefcc; color: #925f20; }
+.badge.danger { background: #ffe2e8; color: #a34d5f; }
 
 .text-success {
     color: #15803d;
@@ -219,7 +290,7 @@ body {
 .stat-card {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 14px;
     padding: 12px;
     box-shadow: none;
 }
@@ -256,17 +327,17 @@ body {
 .message.success {
     opacity: 1;
     transform: translateY(0);
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
+    background: #d5f7ef;
+    color: #1b6f63;
+    border: 1px solid #b8eadf;
 }
 
 .message.error {
     opacity: 1;
     transform: translateY(0);
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background: #ffe2e8;
+    color: #964353;
+    border: 1px solid #ffc7d2;
 }
 
 .muted {

@@ -1,4 +1,4 @@
-﻿﻿import { qs, showMessage, clearMessage, formatDate } from "./shared";
+﻿﻿import { qs, showMessage, clearMessage, formatDate, formatCurrency } from "./shared";
 
 import { openSingletonWindow } from "./shared";
 
@@ -180,9 +180,9 @@ function resetForm() {
     editingId = null;
     currentColorSelections = [];
     itemColorsBody.innerHTML = "";
-    previewMaterialSell.textContent = "EUR 0.00";
+    previewMaterialSell.textContent = formatCurrency(0);
     previewHours.textContent = "0h";
-    previewFinal.textContent = "EUR 0.00";
+    previewFinal.textContent = formatCurrency(0);
     submitBtn.textContent = "Crea Ordine";
     renderItems();
 }
@@ -386,15 +386,15 @@ function renderColorRows(article: Article | undefined) {
 function updateItemPreview() {
     const article = articles.find((a) => a.id === itemArticle.value);
     if (!article) {
-        previewMaterialSell.textContent = "EUR 0.00";
+        previewMaterialSell.textContent = formatCurrency(0);
         previewHours.textContent = "0h";
-        previewFinal.textContent = "EUR 0.00";
+        previewFinal.textContent = formatCurrency(0);
         return;
     }
     const pricing = calculateArticlePricing(article, itemPackaging.checked);
-    previewMaterialSell.textContent = `EUR ${pricing.materialSell.toFixed(2)}`;
+    previewMaterialSell.textContent = `${formatCurrency(pricing.materialSell, 2)}`;
     previewHours.textContent = `${pricing.laborHours}h`;
-    previewFinal.textContent = `EUR ${pricing.finalPrice.toFixed(2)}`;
+    previewFinal.textContent = `${formatCurrency(pricing.finalPrice, 2)}`;
 }
 
 refreshBtn.addEventListener("click", () => {
@@ -896,7 +896,7 @@ function buildOrderPdfHtml(order: Order) {
             <div class="grid">
                 <div class="card">
                     <div class="label">Costo Materiale</div>
-                    <div class="value">EUR ${costs.materialCost.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(costs.materialCost, 2)}</div>
                 </div>
                 <div class="card">
                     <div class="label">Ore Lavoro</div>
@@ -904,21 +904,21 @@ function buildOrderPdfHtml(order: Order) {
                 </div>
                 <div class="card">
                     <div class="label">Manodopera</div>
-                    <div class="value">EUR ${costs.laborCost.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(costs.laborCost, 2)}</div>
                 </div>
                 <div class="card">
                     <div class="label">Totale</div>
-                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(totalRaw, 2)}</div>
                 </div>
             </div>
             <div class="split">
                 <div class="total">
                     <div class="label">Totale</div>
-                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(totalRaw, 2)}</div>
                 </div>
                 <div class="total">
                     <div class="label">Totale Arrotondato</div>
-                    <div class="value">EUR ${totalRounded.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(totalRounded, 2)}</div>
                 </div>
             </div>
 
@@ -953,8 +953,8 @@ function renderOrderDetail(order: Order) {
     const saleTotal = summary.saleTotal;
     const profitNoLabor = saleTotal - costs.materialCost;
     const profitWithLabor = saleTotal - costs.materialCost - costs.laborCost;
-    detailProfitNoLabor.textContent = `EUR ${profitNoLabor.toFixed(2)}`;
-    detailProfitWithLabor.textContent = `EUR ${profitWithLabor.toFixed(2)}`;
+    detailProfitNoLabor.textContent = `${formatCurrency(profitNoLabor, 2)}`;
+    detailProfitWithLabor.textContent = `${formatCurrency(profitWithLabor, 2)}`;
 
     const canChange = order.status === "pending";
     detailConfirmBtn.disabled = !canChange;
@@ -978,8 +978,8 @@ function renderOrderDetail(order: Order) {
             <td>${item.packaging ? "Si" : "No"}</td>
             <td>${formatItemColors(item)}</td>
             <td>${getItemMissing(item, missingList, idx) > 0 ? `Da produrre: ${getItemMissing(item, missingList, idx)}` : "Disponibile"}</td>
-            <td>EUR ${item.unitPrice.toFixed(2)}</td>
-            <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
+            <td>${formatCurrency(item.unitPrice, 2)}</td>
+            <td>${formatCurrency((item.unitPrice * item.quantity), 2)}</td>
         </tr>
     `;
         })
@@ -1183,8 +1183,8 @@ function renderItems() {
                     <option value="yes" ${item.packaging ? "selected" : ""}>Si</option>
                 </select>
             </td>
-            <td>EUR ${item.unitPrice.toFixed(2)}</td>
-            <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
+            <td>${formatCurrency(item.unitPrice, 2)}</td>
+            <td>${formatCurrency((item.unitPrice * item.quantity), 2)}</td>
             <td><button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button></td>
         `;
         itemsBody.appendChild(tr);
@@ -1271,9 +1271,9 @@ function renderOrders() {
             <td>${formatDate(order.requestedDate || order.createdAt)}</td>
             <td><span class="hover-hint" data-tooltip="${codes}">${totalQty}</span></td>
             <td>${depositLabel}</td>
-            <td>EUR ${costs.materialCost.toFixed(2)}</td>
-            <td>EUR ${costs.laborCost.toFixed(2)}</td>
-            <td><strong>EUR ${saleTotal.toFixed(2)}</strong></td>
+            <td>${formatCurrency(costs.materialCost, 2)}</td>
+            <td>${formatCurrency(costs.laborCost, 2)}</td>
+            <td><strong>${formatCurrency(saleTotal, 2)}</strong></td>
             <td><span class="pill ${order.status}">${order.status}</span></td>
             <td>
                 <button class="btn-small btn-danger" data-action="delete" data-id="${order.id}">Elimina</button>
@@ -1757,6 +1757,7 @@ if (retryParams.popup && retryParams.id) {
         }
     }, 200);
 }
+
 
 
 

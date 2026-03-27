@@ -1,4 +1,4 @@
-import { qs, showMessage } from "./shared";
+﻿import { qs, showMessage, formatCurrency } from "./shared";
 
 type ArticleComposition = {
     materialId: string;
@@ -99,7 +99,7 @@ async function loadData() {
                 <td>${material?.name || "-"}</td>
                 <td>${comp.description || "-"}</td>
                 <td>${comp.quantity} ${unitLabel}</td>
-                <td>EUR ${rowCost.toFixed(2)}</td>
+                <td>${formatCurrency(rowCost, 2)}</td>
             `;
             compBody.appendChild(tr);
         });
@@ -114,18 +114,18 @@ async function loadData() {
         const totalRounded = Math.round(totalSell * 2) / 2;
         const totalGain = totalRounded - materialCost;
 
-        previewMaterialCost.textContent = `EUR ${materialCost.toFixed(2)}`;
-        previewMaterialSell.textContent = `EUR ${materialSell.toFixed(2)}`;
-        previewLaborCost.textContent = `EUR ${laborCost.toFixed(2)}`;
-        previewLaborSell.textContent = `EUR ${laborSell.toFixed(2)}`;
-        previewColorSurcharge.textContent = `EUR ${colorSurcharge.toFixed(2)}`;
-        previewMaterialFinal.textContent = `EUR ${materialFinalBase.toFixed(2)}`;
-        previewTotalSell.textContent = `EUR ${totalSell.toFixed(2)}`;
-        previewTotalRounded.textContent = `EUR ${totalRounded.toFixed(2)}`;
-        previewMaterialMargin.textContent = `EUR ${materialMargin.toFixed(2)}`;
+        previewMaterialCost.textContent = `${formatCurrency(materialCost, 2)}`;
+        previewMaterialSell.textContent = `${formatCurrency(materialSell, 2)}`;
+        previewLaborCost.textContent = `${formatCurrency(laborCost, 2)}`;
+        previewLaborSell.textContent = `${formatCurrency(laborSell, 2)}`;
+        previewColorSurcharge.textContent = `${formatCurrency(colorSurcharge, 2)}`;
+        previewMaterialFinal.textContent = `${formatCurrency(materialFinalBase, 2)}`;
+        previewTotalSell.textContent = `${formatCurrency(totalSell, 2)}`;
+        previewTotalRounded.textContent = `${formatCurrency(totalRounded, 2)}`;
+        previewMaterialMargin.textContent = `${formatCurrency(materialMargin, 2)}`;
         previewMaterialMargin.classList.remove("text-success", "text-danger");
         previewMaterialMargin.classList.add(materialMargin >= 0 ? "text-success" : "text-danger");
-        previewTotalGain.textContent = `EUR ${totalGain.toFixed(2)}`;
+        previewTotalGain.textContent = `${formatCurrency(totalGain, 2)}`;
         previewTotalGain.classList.remove("text-success", "text-danger");
         previewTotalGain.classList.add(totalGain >= 0 ? "text-success" : "text-danger");
     } catch {
@@ -134,3 +134,4 @@ async function loadData() {
 }
 
 loadData();
+

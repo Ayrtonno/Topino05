@@ -1,4 +1,4 @@
-﻿﻿import { qs, showMessage, clearMessage, formatDate } from "./shared";
+﻿﻿import { qs, showMessage, clearMessage, formatDate, formatCurrency } from "./shared";
 
 import { openSingletonWindow } from "./shared";
 
@@ -672,7 +672,7 @@ function buildOrderPdfHtml(order: Order) {
             <div class="grid">
                 <div class="card">
                     <div class="label">Costo Materiale</div>
-                    <div class="value">EUR ${costs.materialCost.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(costs.materialCost, 2)}</div>
                 </div>
                 <div class="card">
                     <div class="label">Ore Lavoro</div>
@@ -680,21 +680,21 @@ function buildOrderPdfHtml(order: Order) {
                 </div>
                 <div class="card">
                     <div class="label">Manodopera</div>
-                    <div class="value">EUR ${costs.laborCost.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(costs.laborCost, 2)}</div>
                 </div>
                 <div class="card">
                     <div class="label">Totale</div>
-                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(totalRaw, 2)}</div>
                 </div>
             </div>
             <div class="split">
                 <div class="total">
                     <div class="label">Totale</div>
-                    <div class="value">EUR ${totalRaw.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(totalRaw, 2)}</div>
                 </div>
                 <div class="total">
                     <div class="label">Totale Arrotondato</div>
-                    <div class="value">EUR ${totalRounded.toFixed(2)}</div>
+                    <div class="value">${formatCurrency(totalRounded, 2)}</div>
                 </div>
             </div>
 
@@ -787,8 +787,8 @@ function renderProduction() {
             <td>${formatDate(order.requestedDate || order.createdAt)}</td>
             <td><span class="hover-hint" data-tooltip="${codes}">${totalQty}</span></td>
             <td>
-                <strong>EUR ${saleTotal.toFixed(2)}</strong>
-                ${soldAmount !== null ? `<div class="muted">Venduto a EUR ${soldAmount.toFixed(2)}</div>` : ""}
+                <strong>${formatCurrency(saleTotal, 2)}</strong>
+                ${soldAmount !== null ? `<div class="muted">Venduto a ${formatCurrency(soldAmount, 2)}</div>` : ""}
             </td>
             <td><span class="pill ${order.status}">${order.status}</span></td>
         `;
@@ -811,7 +811,7 @@ function renderDetail(order: Order) {
         : "-";
     detailPaymentAmount.textContent =
         typeof order.paymentReceived === "number"
-            ? `EUR ${order.paymentReceived.toFixed(2)}`
+            ? `${formatCurrency(order.paymentReceived, 2)}`
             : "-";
 
     const costs = calculateOrderCosts(order.items, order.discountPercentage);
@@ -823,8 +823,8 @@ function renderDetail(order: Order) {
             : saleTotal;
     const profitNoLabor = actualSale - costs.materialCost;
     const profitWithLabor = actualSale - costs.materialCost - costs.laborCost;
-    detailProfitNoLabor.textContent = `EUR ${profitNoLabor.toFixed(2)}`;
-    detailProfitWithLabor.textContent = `EUR ${profitWithLabor.toFixed(2)}`;
+    detailProfitNoLabor.textContent = `${formatCurrency(profitNoLabor, 2)}`;
+    detailProfitWithLabor.textContent = `${formatCurrency(profitWithLabor, 2)}`;
 
     const missingList = computeMissingByItem(order.items);
     detailItemsBody.innerHTML = order.items
@@ -841,8 +841,8 @@ function renderDetail(order: Order) {
             <td>${item.packaging ? "Si" : "No"}</td>
             <td>${formatItemColors(item)}</td>
             <td>${missingList[idx] > 0 ? `Da produrre: ${missingList[idx]}` : "Disponibile"}</td>
-            <td>EUR ${item.unitPrice.toFixed(2)}</td>
-            <td>EUR ${(item.unitPrice * item.quantity).toFixed(2)}</td>
+            <td>${formatCurrency(item.unitPrice, 2)}</td>
+            <td>${formatCurrency((item.unitPrice * item.quantity), 2)}</td>
         </tr>
     `;
         })
@@ -1122,3 +1122,4 @@ if (params.popup) {
 }
 
 loadData();
+

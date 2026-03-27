@@ -1,4 +1,4 @@
-import { qs, showMessage, clearMessage } from "./shared";
+﻿import { qs, showMessage, clearMessage, formatCurrency } from "./shared";
 
 type ArticleComposition = {
     materialId: string;
@@ -109,7 +109,7 @@ function renderComposition() {
                 </td>
                 <td><input class="inline-field inline-desc" type="text" value="${comp.description || ""}"/></td>
                 <td><input class="inline-field inline-qty" type="number" value="${comp.quantity}"/></td>
-                <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
+                <td>${formatCurrency((materialCost * comp.quantity), 3)}</td>
                 <td>
                     <button class="btn-small" data-action="save" data-index="${idx}">Salva</button>
                     <button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button>
@@ -121,7 +121,7 @@ function renderComposition() {
                 <td>${material}</td>
                 <td>${desc}</td>
                 <td>${comp.quantity} ${unitLabel}</td>
-                <td>EUR ${(materialCost * comp.quantity).toFixed(3)}</td>
+                <td>${formatCurrency((materialCost * comp.quantity), 3)}</td>
                 <td>
                     <button class="btn-small" data-action="edit" data-index="${idx}">Modifica</button>
                     <button class="btn-small btn-danger" data-action="remove" data-index="${idx}">Rimuovi</button>
@@ -130,7 +130,7 @@ function renderComposition() {
         }
         compBody.appendChild(tr);
     });
-    compCost.textContent = `Costo Materiale: EUR ${compositionCost().toFixed(2)}`;
+    compCost.textContent = `Costo Materiale: ${formatCurrency(compositionCost(), 2)}`;
 }
 
 function setStep(step: number) {
@@ -333,3 +333,4 @@ form.addEventListener("submit", async (e) => {
 });
 
 loadData();
+

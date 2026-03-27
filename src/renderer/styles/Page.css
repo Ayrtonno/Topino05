@@ -1,7 +1,7 @@
 .card {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 14px;
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: none;
@@ -10,7 +10,7 @@
 .form {
     background-color: var(--panel);
     padding: 14px;
-    border-radius: 8px;
+    border-radius: 14px;
     border: 1px solid var(--border);
     margin-bottom: 16px;
     box-shadow: none;
@@ -24,7 +24,7 @@
     display: block;
     margin-bottom: 6px;
     font-weight: 600;
-    color: #333;
+    color: #32577b;
 }
 
 .form-group input,
@@ -33,7 +33,7 @@
     width: 100%;
     padding: 8px 10px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 13px;
     font-family: inherit;
     background: #fff;
@@ -44,7 +44,7 @@
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+    box-shadow: var(--soft-glow);
 }
 
 .form-group textarea {
@@ -70,7 +70,7 @@
 }
 
 .preview-item {
-    background: #f8fafc;
+    background: #f5fbff;
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 12px 14px;
@@ -102,32 +102,32 @@
 }
 
 .preview-item.total {
-    background: #eef6ff;
-    border-color: #c7defc;
+    background: #eaf6ff;
+    border-color: #c1ddf8;
 }
 
 .btn-primary {
     padding: 8px 14px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: #123f67;
+    border: 1px solid #8ec1ef;
+    border-radius: 10px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: none;
+    box-shadow: 0 8px 16px rgba(93, 157, 214, 0.22);
 }
 
 .btn-primary:hover {
-    filter: brightness(0.95);
+    filter: brightness(1.02);
 }
 
 .btn-small {
     padding: 6px 10px;
-    background-color: #e5e7eb;
-    color: #1f2937;
-    border: none;
-    border-radius: 6px;
+    background-color: #e9f5ff;
+    color: #265883;
+    border: 1px solid #c5e0f6;
+    border-radius: 10px;
     font-size: 12px;
     cursor: pointer;
     margin-right: 6px;
@@ -138,9 +138,9 @@
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #374151;
+    color: #2d567d;
     font-size: 12px;
-    background: #f3f4f6;
+    background: #f2f9ff;
     border: 1px solid var(--border);
     padding: 6px 10px;
     border-radius: 8px;
@@ -250,7 +250,7 @@
 .inline-input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.15);
+    box-shadow: var(--soft-glow);
 }
 
 .popup .app {
@@ -285,7 +285,7 @@
 .modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(15, 23, 42, 0.45);
+    background: rgba(53, 92, 130, 0.34);
 }
 
 .modal-card {
@@ -293,7 +293,7 @@
     z-index: 1;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px;
     width: min(520px, 92vw);
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
@@ -317,7 +317,7 @@
     left: 50%;
     bottom: calc(100% + 6px);
     transform: translateX(-50%);
-    background: #111827;
+    background: #204667;
     color: #f9fafb;
     padding: 6px 8px;
     border-radius: 6px;
@@ -387,17 +387,17 @@
     padding: 0 18px;
     border-radius: 8px;
     font-weight: 600;
-    background: #eaf3ff;
-    color: #1e88ff;
-    border: 1px solid #c7e0ff;
+    background: #e2f3ff;
+    color: #266496;
+    border: 1px solid #b8dbf7;
 }
 
 .composition-row .btn-inline:hover {
-    background: #dbeeff;
+    background: #d4ecff;
 }
 
 .composition-actions .btn-inline {
-    background: #eaf3ff;
+    background: #e2f3ff;
     box-shadow: none;
     border: 1px solid #c7e0ff;
     font-weight: 700;
@@ -416,7 +416,7 @@
 
 .wizard-progress {
     height: 6px;
-    background: #e5e7eb;
+    background: #ddeeff;
     border-radius: 999px;
     overflow: hidden;
 }
@@ -442,10 +442,10 @@
 }
 
 .wizard-step.active {
-    background: #eaf3ff;
-    border-color: #c7e0ff;
+    background: #ddf0ff;
+    border-color: #b4daf9;
     color: var(--primary);
-    box-shadow: inset 0 0 0 1px rgba(0, 120, 212, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(90, 168, 255, 0.25);
 }
 
 .wizard-section {
@@ -476,7 +476,7 @@
 }
 
 .btn-small:hover {
-    background-color: #d1d5db;
+    background-color: #d9edff;
 }
 
 .btn-danger {
@@ -521,7 +521,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     background-color: white;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--border);
     box-shadow: none;
@@ -529,7 +529,7 @@ table {
 }
 
 table thead {
-    background-color: #f3f4f6;
+    background-color: #edf6ff;
     border-bottom: 1px solid var(--border);
 }
 
@@ -537,17 +537,17 @@ table th {
     padding: 10px 12px;
     text-align: left;
     font-weight: 600;
-    color: #374151;
+    color: #2f5b84;
     font-size: 12px;
     position: sticky;
     top: 0;
-    background-color: #f3f4f6;
+    background-color: #edf6ff;
     z-index: 2;
 }
 
 table td {
     padding: 10px 12px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #ecf4fd;
     font-size: 13px;
 }
 
@@ -561,8 +561,8 @@ td.actions-cell {
     width: 34px;
     height: 34px;
     border-radius: 999px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border: 1px solid #cfe4f8;
+    background: #eff7ff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -582,9 +582,9 @@ td.actions-cell {
 }
 
 .icon-btn:hover {
-    background: #eef2ff;
-    border-color: #c7d2fe;
-    color: #1d4ed8;
+    background: #deefff;
+    border-color: #b8daf7;
+    color: #27669a;
 }
 
 .icon-btn.danger {
@@ -617,11 +617,11 @@ td.actions-cell {
 }
 
 .row-editing {
-    background: #f8fbff;
+    background: #edf7ff;
 }
 
 table tbody tr:hover {
-    background-color: #f8fafc;
+    background-color: #f4faff;
 }
 
 .pill {
@@ -629,14 +629,14 @@ table tbody tr:hover {
     border-radius: 999px;
     font-size: 11px;
     font-weight: 600;
-    color: #1f2937;
-    background: #e5e7eb;
+    color: #2c5e88;
+    background: #e5f3ff;
 }
 
-.pill.pending { background: #fde68a; }
-.pill.refused { background: #fca5a5; }
-.pill.confirmed { background: #93c5fd; }
-.pill.processed { background: #86efac; }
+.pill.pending { background: #ffe8ad; }
+.pill.refused { background: #ffc9d4; }
+.pill.confirmed { background: #bfe1ff; }
+.pill.processed { background: #b9f2e5; }
 
 .empty-state {
     text-align: center;

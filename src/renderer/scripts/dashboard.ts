@@ -1,4 +1,4 @@
-import { qs, showMessage } from "./shared";
+﻿import { qs, showMessage, formatCurrency } from "./shared";
 
 type OrderItem = {
     articleId: string;
@@ -131,7 +131,6 @@ const monthLabels = [
 const round2 = (value: number) => parseFloat(value.toFixed(2));
 const roundToHalf = (value: number) => Math.round(value * 2) / 2;
 const toMonthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
-const formatCurrency = (value: number) => `EUR ${value.toFixed(2)}`;
 
 const getOrderDate = (order: Order) =>
     new Date(order.processedDate || order.requestedDate || order.createdAt);
@@ -558,7 +557,7 @@ function attachChartTooltip(svg: SVGSVGElement) {
         }
         const kind = target.getAttribute("data-kind") || "currency";
         const formatted = formatChartValue(parseFloat(value), kind);
-        const text = series ? `${label} · ${series}: ${formatted}` : `${label}: ${formatted}`;
+        const text = series ? `${label} Â· ${series}: ${formatted}` : `${label}: ${formatted}`;
         showChartTooltip(text, event);
     });
     svg.addEventListener("mouseleave", hideChartTooltip);
@@ -764,3 +763,4 @@ filterClient.addEventListener("change", render);
 filterView.addEventListener("change", render);
 
 loadData();
+
