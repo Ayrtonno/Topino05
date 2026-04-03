@@ -136,20 +136,20 @@
     "id": "1774530115902",
     "materialId": "mat_fettuccia",
     "colorName": "Verde",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T20:05:24.347Z"
+    "quantity": 1200,
+    "lastUpdated": "2026-04-03T11:16:03.756Z"
   },
   {
     "id": "1774530125132",
     "materialId": "mat_base_borsa",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T20:05:24.347Z"
+    "quantity": 1,
+    "lastUpdated": "2026-04-03T11:16:03.755Z"
   },
   {
     "id": "1774530133389",
     "materialId": "mat_ganci_coppia",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T20:05:24.347Z"
+    "quantity": 2,
+    "lastUpdated": "2026-04-03T11:16:03.756Z"
   },
   {
     "id": "1774535124574",
@@ -160,7 +160,7 @@
   {
     "id": "1774554098469",
     "materialId": "1774554091867",
-    "quantity": 0,
-    "lastUpdated": "2026-03-26T20:05:24.347Z"
+    "quantity": 10,
+    "lastUpdated": "2026-04-03T11:16:03.756Z"
   }
 ]

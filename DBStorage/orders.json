@@ -185,7 +185,7 @@
       {
         "articleId": "1774554132982",
         "quantity": 1,
-        "unitPrice": 104.5,
+        "unitPrice": 94.5,
         "packaging": false,
         "colorSelections": [
           "",
@@ -195,13 +195,13 @@
         ],
         "variantId": "1774555452193-e76245793b545",
         "variantCode": "BF001E-0000",
-        "depositMissing": 1,
-        "depositUsed": 0
+        "depositMissing": 0,
+        "depositUsed": 1
       }
     ],
-    "materialCost": 44.5,
+    "materialCost": 37.2,
     "laborCost": 36,
-    "finalAmount": 104.5,
+    "finalAmount": 94.5,
     "discountPercentage": 0,
     "status": "pending",
     "notes": "",
