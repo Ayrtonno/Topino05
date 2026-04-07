@@ -88,6 +88,16 @@ const createWindow = () => {
 const runAutoUpdater = () => {
     if (!app.isPackaged) return;
     autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on("update-downloaded", async () => {
+        await dialog.showMessageBox({
+            type: "info",
+            title: "Aggiornamento pronto",
+            message:
+                "È disponibile un aggiornamento. L'app verrà chiusa per completare l'installazione.",
+        });
+        autoUpdater.quitAndInstall();
+    });
     autoUpdater.checkForUpdatesAndNotify();
 };
 

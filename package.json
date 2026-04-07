@@ -1,6 +1,6 @@
 {
   "name": "preventivatore-magazzino",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Electron app per gestire preventivi e magazzino",
   "main": "dist-ts/main.js",
   "homepage": "./",
@@ -55,7 +55,8 @@
       {
         "provider": "github",
         "owner": "Ayrtonno",
-        "repo": "Topino05"
+        "repo": "Topino05",
+        "releaseType": "release"
       }
     ],
     "win": {
