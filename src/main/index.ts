@@ -35,10 +35,14 @@ app.commandLine.appendSwitch("disable-gpu");
 app.commandLine.appendSwitch("disable-software-rasterizer");
 
 const createWindow = () => {
+    const iconPath = app.isPackaged
+        ? path.join(process.resourcesPath, "assets", "icon.ico")
+        : path.join(process.cwd(), "assets", "icon.ico");
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
         show: false,
+        icon: iconPath,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: false,
@@ -57,6 +61,7 @@ const createWindow = () => {
             height: 800,
             show: false,
             parent: mainWindow || undefined,
+            icon: iconPath,
             webPreferences: {
                 preload: path.join(__dirname, "preload.js"),
                 nodeIntegration: false,

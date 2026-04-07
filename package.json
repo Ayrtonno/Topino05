@@ -37,6 +37,7 @@
   "build": {
     "appId": "com.topino.preventivatore",
     "productName": "ERPT05",
+    "icon": "assets/icon.ico",
     "files": [
       "dist-ts/**/*",
       "node_modules/**/*"
@@ -60,6 +61,7 @@
       }
     ],
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",
