@@ -1,7 +1,7 @@
 {
-  "name": "preventivatore-magazzino",
+  "name": "erpt05",
   "version": "0.0.1",
-  "description": "Electron app per gestire preventivi e magazzino",
+  "description": "Electron app per gestire ERP e magazzino",
   "main": "dist-ts/main.js",
   "homepage": "./",
   "repository": {
@@ -36,7 +36,7 @@
   },
   "build": {
     "appId": "com.topino.preventivatore",
-    "productName": "Preventivatore Magazzino",
+    "productName": "ERPT05",
     "files": [
       "dist-ts/**/*",
       "node_modules/**/*"
@@ -63,12 +63,6 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
           "arch": [
             "x64"
           ]

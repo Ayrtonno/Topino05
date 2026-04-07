@@ -230,30 +230,22 @@ ipcMain.handle("save-dashboard-config", async (_, config) => {
 
 // IPC Handlers - Export PDF
 ipcMain.handle("export-order-pdf", async (event, payload: { html: string; filename: string; skipDialog?: boolean }) => {
-    const { html, filename, skipDialog } = payload || {};
+    const { html, filename } = payload || {};
     if (!html) return { ok: false, message: "HTML mancante" };
 
-    let targetPath: string | undefined;
-    if (!skipDialog) {
-        const parentWindow = BrowserWindow.fromWebContents(event.sender);
-        const saveDialogOptions = {
-            title: "Esporta Preventivo PDF",
-            defaultPath: filename || "preventivo.pdf",
-            filters: [{ name: "PDF", extensions: ["pdf"] }],
-        };
-        const { canceled, filePath } = parentWindow
-            ? await dialog.showSaveDialog(parentWindow, saveDialogOptions)
-            : await dialog.showSaveDialog(saveDialogOptions);
-        targetPath = canceled ? undefined : filePath || undefined;
+    const parentWindow = BrowserWindow.fromWebContents(event.sender);
+    const saveDialogOptions = {
+        title: "Esporta Preventivo PDF",
+        defaultPath: filename || "preventivo.pdf",
+        filters: [{ name: "PDF", extensions: ["pdf"] }],
+    };
+    const { canceled, filePath } = parentWindow
+        ? await dialog.showSaveDialog(parentWindow, saveDialogOptions)
+        : await dialog.showSaveDialog(saveDialogOptions);
+    if (canceled || !filePath) {
+        return { ok: false, message: "Operazione annullata" };
     }
-    if (!targetPath) {
-        const pdfDir = path.join(getDataDir(), "PDF");
-        const fs = await import("fs");
-        if (!fs.existsSync(pdfDir)) {
-            fs.mkdirSync(pdfDir, { recursive: true });
-        }
-        targetPath = path.join(pdfDir, filename || `preventivo-${Date.now()}.pdf`);
-    }
+    const targetPath = filePath;
 
     const win = new BrowserWindow({
         show: false,
