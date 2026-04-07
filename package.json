@@ -4,6 +4,10 @@
   "description": "Electron app per gestire preventivi e magazzino",
   "main": "dist-ts/main.js",
   "homepage": "./",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ayrtonno/Topino05.git"
+  },
   "author": "Topino",
   "license": "MIT",
   "scripts": {
@@ -16,6 +20,7 @@
     "build:dir": "electron-builder --dir",
     "prebuild": "npm run build:ts",
     "build": "electron-builder --win",
+    "release": "electron-builder --win --publish always",
     "test": "echo \"No tests configured\""
   },
   "dependencies": {
@@ -46,6 +51,13 @@
       "buildResources": "assets",
       "output": "./releases"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Ayrtonno",
+        "repo": "Topino05"
+      }
+    ],
     "win": {
       "target": [
         {
