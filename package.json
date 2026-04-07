@@ -19,6 +19,7 @@
     "test": "echo \"No tests configured\""
   },
   "dependencies": {
+    "electron-updater": "^6.1.8"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -34,6 +35,12 @@
     "files": [
       "dist-ts/**/*",
       "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "DBStorage",
+        "to": "DBStorage"
+      }
     ],
     "directories": {
       "buildResources": "assets",

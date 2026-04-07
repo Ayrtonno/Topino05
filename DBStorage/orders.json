@@ -203,7 +203,7 @@
     "laborCost": 36,
     "finalAmount": 94.5,
     "discountPercentage": 0,
-    "status": "pending",
+    "status": "confirmed",
     "notes": "",
     "createdAt": "2026-03-26T20:05:24.347Z"
   }

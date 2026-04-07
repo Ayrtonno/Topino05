@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog } from "electron";
+import { autoUpdater } from "electron-updater";
 import * as path from "path";
 import {
     getMaterials,
@@ -23,6 +24,8 @@ import {
     saveLaborConfig,
     getDashboardConfig,
     saveDashboardConfig,
+    initDataDir,
+    getDataDir,
 } from "./store";
 
 let mainWindow: BrowserWindow | null;
@@ -82,7 +85,27 @@ const createWindow = () => {
     });
 };
 
-app.on("ready", createWindow);
+const runAutoUpdater = () => {
+    if (!app.isPackaged) return;
+    autoUpdater.autoDownload = true;
+    autoUpdater.checkForUpdatesAndNotify();
+};
+
+app.on("ready", async () => {
+    const init = initDataDir();
+    if (init.created) {
+        const message = init.seeded
+            ? "Ho creato la cartella C:\\DBT05 e ho inserito i modelli di base. Se hai un archivio esistente, copia i tuoi file JSON dentro C:\\DBT05 e riavvia l'app."
+            : "Ho creato la cartella C:\\DBT05. Copia i tuoi file JSON dentro C:\\DBT05 e riavvia l'app.";
+        await dialog.showMessageBox({
+            type: "info",
+            title: "Archivio dati",
+            message,
+        });
+    }
+    createWindow();
+    runAutoUpdater();
+});
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
@@ -214,7 +237,7 @@ ipcMain.handle("export-order-pdf", async (event, payload: { html: string; filena
         targetPath = canceled ? undefined : filePath || undefined;
     }
     if (!targetPath) {
-        const pdfDir = path.join(process.cwd(), "DBStorage", "PDF");
+        const pdfDir = path.join(getDataDir(), "PDF");
         const fs = await import("fs");
         if (!fs.existsSync(pdfDir)) {
             fs.mkdirSync(pdfDir, { recursive: true });
