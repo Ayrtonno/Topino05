@@ -406,7 +406,6 @@ function calculateOrderSummary(order: Order) {
 
 function buildOrderPdfHtml(order: Order) {
     const summary = calculateOrderSummary(order);
-    const costs = calculateOrderCosts(order.items, order.discountPercentage);
     const colorsList = order.items
         .map((item) => formatItemColors(item))
         .filter((txt) => txt && txt !== "-")
@@ -422,6 +421,8 @@ function buildOrderPdfHtml(order: Order) {
         return sum + rawUnit * item.quantity;
     }, 0);
     const totalRounded = roundToHalf(totalRaw);
+    const materialForClient = summary.materialSell;
+    const laborForClient = Math.max(0, totalRaw - materialForClient);
     const title = `Preventivo Ordine ${order.id}`;
     const itemDetailsHtml = order.items
         .map((item) => {
@@ -672,7 +673,7 @@ function buildOrderPdfHtml(order: Order) {
             <div class="grid">
                 <div class="card">
                     <div class="label">Costo Materiale</div>
-                    <div class="value">${formatCurrency(costs.materialCost, 2)}</div>
+                    <div class="value">${formatCurrency(materialForClient, 2)}</div>
                 </div>
                 <div class="card">
                     <div class="label">Ore Lavoro</div>
@@ -680,7 +681,7 @@ function buildOrderPdfHtml(order: Order) {
                 </div>
                 <div class="card">
                     <div class="label">Manodopera</div>
-                    <div class="value">${formatCurrency(costs.laborCost, 2)}</div>
+                    <div class="value">${formatCurrency(laborForClient, 2)}</div>
                 </div>
                 <div class="card">
                     <div class="label">Totale</div>

@@ -320,5 +320,34 @@
     "materialMarkupPct": 0,
     "laborMarkupPct": 0,
     "createdAt": "2026-03-26T19:42:12.982Z"
+  },
+  {
+    "id": "1778702159146",
+    "code": "BF001F",
+    "name": "Borsa in Fettuccia Piccola, con Base, Doppi Ganci e Doppi Moschettoni",
+    "composition": [
+      {
+        "materialId": "1778701991060",
+        "description": "Corpo e Manici",
+        "quantity": 800
+      },
+      {
+        "materialId": "1778702015681",
+        "description": "Base",
+        "quantity": 1
+      },
+      {
+        "materialId": "mat_ganci_coppia",
+        "quantity": 2
+      },
+      {
+        "materialId": "1774554091867",
+        "quantity": 2
+      }
+    ],
+    "laborHoursRequired": 8,
+    "materialMarkupPct": 0,
+    "laborMarkupPct": 0,
+    "createdAt": "2026-05-13T19:55:59.146Z"
   }
 ]

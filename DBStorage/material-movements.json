@@ -1,0 +1,29 @@
+[
+  {
+    "id": "mat-move-1778702045062",
+    "date": "2026-05-13",
+    "direction": "in",
+    "materialId": "1778701991060",
+    "materialName": "Fettuccia Soft Lycra",
+    "colorName": "Viola",
+    "quantity": 800,
+    "unitCost": 0.019,
+    "totalValue": 15.2,
+    "source": "inventory",
+    "note": "Entrata materiale da acquisto",
+    "createdAt": "2026-05-13T19:54:05.060Z"
+  },
+  {
+    "id": "mat-move-1778702071180",
+    "date": "2026-05-13",
+    "direction": "in",
+    "materialId": "1778702015681",
+    "materialName": "Base Borse 291 (small)",
+    "quantity": 1,
+    "unitCost": 6.95,
+    "totalValue": 6.95,
+    "source": "inventory",
+    "note": "Entrata materiale da acquisto",
+    "createdAt": "2026-05-13T19:54:31.178Z"
+  }
+]

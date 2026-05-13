@@ -206,5 +206,40 @@
     "status": "pending",
     "notes": "",
     "createdAt": "2026-03-26T20:05:24.347Z"
+  },
+  {
+    "id": "26008",
+    "clientId": "1774524912625",
+    "clientFirstName": "Elena",
+    "clientLastName": "Noris",
+    "clientEmail": "",
+    "clientPhone": "",
+    "requestedDate": "2026-05-10",
+    "deliveryDate": "2026-05-29",
+    "items": [
+      {
+        "articleId": "1778702159146",
+        "quantity": 1,
+        "unitPrice": 81.5,
+        "packaging": true,
+        "colorSelections": [
+          "Viola",
+          "",
+          "",
+          ""
+        ],
+        "variantId": "1778702218598-946e4c2d3e0cb",
+        "variantCode": "BF001F-0001",
+        "depositMissing": 1,
+        "depositUsed": 0
+      }
+    ],
+    "materialCost": 31.85,
+    "laborCost": 32,
+    "finalAmount": 81.5,
+    "discountPercentage": 0,
+    "status": "pending",
+    "notes": "",
+    "createdAt": "2026-05-13T19:57:01.229Z"
   }
 ]

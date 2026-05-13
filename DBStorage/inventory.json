@@ -148,8 +148,8 @@
   {
     "id": "1774530133389",
     "materialId": "mat_ganci_coppia",
-    "quantity": 2,
-    "lastUpdated": "2026-04-03T11:16:03.756Z"
+    "quantity": 0,
+    "lastUpdated": "2026-05-13T19:57:01.229Z"
   },
   {
     "id": "1774535124574",
@@ -160,7 +160,20 @@
   {
     "id": "1774554098469",
     "materialId": "1774554091867",
-    "quantity": 10,
-    "lastUpdated": "2026-04-03T11:16:03.756Z"
+    "quantity": 8,
+    "lastUpdated": "2026-05-13T19:57:01.229Z"
+  },
+  {
+    "id": "1778702045060",
+    "materialId": "1778701991060",
+    "colorName": "Viola",
+    "quantity": 0,
+    "lastUpdated": "2026-05-13T19:57:01.229Z"
+  },
+  {
+    "id": "1778702071178",
+    "materialId": "1778702015681",
+    "quantity": 0,
+    "lastUpdated": "2026-05-13T19:57:01.229Z"
   }
 ]

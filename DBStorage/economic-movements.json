@@ -7,5 +7,23 @@
     "amount": 163.01,
     "note": "Bootstrap storico: costo materia prima iniziale e materiale usato (dicembre 2025).",
     "createdAt": "2026-03-26T20:39:02.417Z"
+  },
+  {
+    "id": "purchase-1778702045061",
+    "date": "2026-05-13",
+    "type": "expense",
+    "category": "inventory-load",
+    "amount": 15.2,
+    "note": "Acquisto materiale: Fettuccia Soft Lycra (Viola), qty 800",
+    "createdAt": "2026-05-13T19:54:05.060Z"
+  },
+  {
+    "id": "purchase-1778702071179",
+    "date": "2026-05-13",
+    "type": "expense",
+    "category": "inventory-load",
+    "amount": 6.95,
+    "note": "Acquisto materiale: Base Borse 291 (small), qty 1",
+    "createdAt": "2026-05-13T19:54:31.178Z"
   }
 ]

@@ -81,5 +81,31 @@
     ],
     "quantity": 0,
     "lastUpdated": "2026-04-03T11:14:11.655Z"
+  },
+  {
+    "id": "1778702186594-57140142e204f",
+    "articleId": "1778702159146",
+    "variantCode": "BF001F-0000",
+    "colors": [
+      "",
+      "",
+      "",
+      ""
+    ],
+    "quantity": 0,
+    "lastUpdated": "2026-05-13T19:56:26.594Z"
+  },
+  {
+    "id": "1778702218598-946e4c2d3e0cb",
+    "articleId": "1778702159146",
+    "variantCode": "BF001F-0001",
+    "colors": [
+      "Viola",
+      "",
+      "",
+      ""
+    ],
+    "quantity": 0,
+    "lastUpdated": "2026-05-13T19:56:58.598Z"
   }
 ]

@@ -52,5 +52,23 @@
     "stockQuantity": 0,
     "unit": "pezzi",
     "lastUpdated": "2026-04-03T11:12:36.011Z"
+  },
+  {
+    "id": "1778701991060",
+    "name": "Fettuccia Soft Lycra",
+    "costPerUnit": 0.019,
+    "sellingPricePerUnit": 0.034,
+    "stockQuantity": 0,
+    "unit": "grammi",
+    "lastUpdated": "2026-05-13T19:53:11.060Z"
+  },
+  {
+    "id": "1778702015681",
+    "name": "Base Borse 291 (small)",
+    "costPerUnit": 6.95,
+    "sellingPricePerUnit": 8.5,
+    "stockQuantity": 0,
+    "unit": "pezzi",
+    "lastUpdated": "2026-05-13T19:54:23.103Z"
   }
 ]
