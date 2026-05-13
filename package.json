@@ -17,10 +17,11 @@
     "rebuild": "npm run build:ts",
     "build:ts": "node tools/build-ts.js",
     "prebuild:dir": "npm run build:ts",
-    "build:dir": "electron-builder --dir",
+    "build:dir": "electron-builder.cmd --dir",
     "prebuild": "npm run build:ts",
-    "build": "electron-builder --win",
-    "release": "electron-builder --win --publish always",
+    "build": "electron-builder.cmd --win",
+    "release": "electron-builder.cmd --win --publish never",
+    "release:publish": "electron-builder.cmd --win --publish always",
     "test": "echo \"No tests configured\""
   },
   "dependencies": {
@@ -62,6 +63,7 @@
     ],
     "win": {
       "icon": "assets/icon.ico",
+      "signAndEditExecutable": false,
       "target": [
         {
           "target": "nsis",

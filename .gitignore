@@ -3,6 +3,8 @@ dist
 dist-ts
 build
 releases
+releases-temp
+.electron-cache
 out
 *.pak
 *.blockmap
@@ -15,3 +17,5 @@ latest.yml
 *.log
 .vscode
 DBStorage/PDF
+tools/handle/
+tools/handle.zip
