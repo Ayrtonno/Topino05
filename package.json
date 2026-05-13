@@ -1,9 +1,13 @@
 {
-  "name": "preventivatore-magazzino",
-  "version": "1.0.0",
-  "description": "Electron app per gestire preventivi e magazzino",
+  "name": "erpt05",
+  "version": "0.0.1",
+  "description": "Electron app per gestire ERP e magazzino",
   "main": "dist-ts/main.js",
   "homepage": "./",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ayrtonno/Topino05.git"
+  },
   "author": "Topino",
   "license": "MIT",
   "scripts": {
@@ -16,9 +20,11 @@
     "build:dir": "electron-builder --dir",
     "prebuild": "npm run build:ts",
     "build": "electron-builder --win",
+    "release": "electron-builder --win --publish always",
     "test": "echo \"No tests configured\""
   },
   "dependencies": {
+    "electron-updater": "^6.1.8"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -30,25 +36,35 @@
   },
   "build": {
     "appId": "com.topino.preventivatore",
-    "productName": "Preventivatore Magazzino",
+    "productName": "ERPT05",
+    "icon": "assets/icon.ico",
     "files": [
       "dist-ts/**/*",
       "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "DBStorage",
+        "to": "DBStorage"
+      }
     ],
     "directories": {
       "buildResources": "assets",
       "output": "./releases"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Ayrtonno",
+        "repo": "Topino05",
+        "releaseType": "release"
+      }
+    ],
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
           "arch": [
             "x64"
           ]

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog } from "electron";
+import { autoUpdater } from "electron-updater";
 import * as path from "path";
 import {
     getMaterials,
@@ -23,6 +24,8 @@ import {
     saveLaborConfig,
     getDashboardConfig,
     saveDashboardConfig,
+    initDataDir,
+    getDataDir,
 } from "./store";
 
 let mainWindow: BrowserWindow | null;
@@ -32,10 +35,14 @@ app.commandLine.appendSwitch("disable-gpu");
 app.commandLine.appendSwitch("disable-software-rasterizer");
 
 const createWindow = () => {
+    const iconPath = app.isPackaged
+        ? path.join(process.resourcesPath, "assets", "icon.ico")
+        : path.join(process.cwd(), "assets", "icon.ico");
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
         show: false,
+        icon: iconPath,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: false,
@@ -54,6 +61,7 @@ const createWindow = () => {
             height: 800,
             show: false,
             parent: mainWindow || undefined,
+            icon: iconPath,
             webPreferences: {
                 preload: path.join(__dirname, "preload.js"),
                 nodeIntegration: false,
@@ -82,7 +90,37 @@ const createWindow = () => {
     });
 };
 
-app.on("ready", createWindow);
+const runAutoUpdater = () => {
+    if (!app.isPackaged) return;
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on("update-downloaded", async () => {
+        await dialog.showMessageBox({
+            type: "info",
+            title: "Aggiornamento pronto",
+            message:
+                "È disponibile un aggiornamento. L'app verrà chiusa per completare l'installazione.",
+        });
+        autoUpdater.quitAndInstall();
+    });
+    autoUpdater.checkForUpdatesAndNotify();
+};
+
+app.on("ready", async () => {
+    const init = initDataDir();
+    if (init.created) {
+        const message = init.seeded
+            ? "Ho creato la cartella C:\\DBT05 e ho inserito i modelli di base. Se hai un archivio esistente, copia i tuoi file JSON dentro C:\\DBT05 e riavvia l'app."
+            : "Ho creato la cartella C:\\DBT05. Copia i tuoi file JSON dentro C:\\DBT05 e riavvia l'app.";
+        await dialog.showMessageBox({
+            type: "info",
+            title: "Archivio dati",
+            message,
+        });
+    }
+    createWindow();
+    runAutoUpdater();
+});
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
@@ -197,30 +235,22 @@ ipcMain.handle("save-dashboard-config", async (_, config) => {
 
 // IPC Handlers - Export PDF
 ipcMain.handle("export-order-pdf", async (event, payload: { html: string; filename: string; skipDialog?: boolean }) => {
-    const { html, filename, skipDialog } = payload || {};
+    const { html, filename } = payload || {};
     if (!html) return { ok: false, message: "HTML mancante" };
 
-    let targetPath: string | undefined;
-    if (!skipDialog) {
-        const parentWindow = BrowserWindow.fromWebContents(event.sender);
-        const saveDialogOptions = {
-            title: "Esporta Preventivo PDF",
-            defaultPath: filename || "preventivo.pdf",
-            filters: [{ name: "PDF", extensions: ["pdf"] }],
-        };
-        const { canceled, filePath } = parentWindow
-            ? await dialog.showSaveDialog(parentWindow, saveDialogOptions)
-            : await dialog.showSaveDialog(saveDialogOptions);
-        targetPath = canceled ? undefined : filePath || undefined;
+    const parentWindow = BrowserWindow.fromWebContents(event.sender);
+    const saveDialogOptions = {
+        title: "Esporta Preventivo PDF",
+        defaultPath: filename || "preventivo.pdf",
+        filters: [{ name: "PDF", extensions: ["pdf"] }],
+    };
+    const { canceled, filePath } = parentWindow
+        ? await dialog.showSaveDialog(parentWindow, saveDialogOptions)
+        : await dialog.showSaveDialog(saveDialogOptions);
+    if (canceled || !filePath) {
+        return { ok: false, message: "Operazione annullata" };
     }
-    if (!targetPath) {
-        const pdfDir = path.join(process.cwd(), "DBStorage", "PDF");
-        const fs = await import("fs");
-        if (!fs.existsSync(pdfDir)) {
-            fs.mkdirSync(pdfDir, { recursive: true });
-        }
-        targetPath = path.join(pdfDir, filename || `preventivo-${Date.now()}.pdf`);
-    }
+    const targetPath = filePath;
 
     const win = new BrowserWindow({
         show: false,

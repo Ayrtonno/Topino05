@@ -4,12 +4,59 @@ import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
 
-const appRoot = process.cwd();
-const dataDir = path.join(appRoot, "DBStorage");
+const resolveDataDir = () => {
+    if (process.platform === "win32") {
+        return "C:\\DBT05";
+    }
+    return path.join(app.getPath("documents"), "DBT05");
+};
 
-// Ensure data directory exists
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+const resolveSeedDir = () => {
+    if (app.isPackaged) {
+        return path.join(process.resourcesPath, "DBStorage");
+    }
+    return path.join(process.cwd(), "DBStorage");
+};
+
+const dataDir = resolveDataDir();
+
+export const getDataDir = () => dataDir;
+
+export function initDataDir() {
+    let created = false;
+    let seeded = false;
+
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+        created = true;
+    }
+
+    const hasAnyData =
+        fs.existsSync(path.join(dataDir, "materials.json")) ||
+        fs.existsSync(path.join(dataDir, "inventory.json")) ||
+        fs.existsSync(path.join(dataDir, "article-inventory.json")) ||
+        fs.existsSync(path.join(dataDir, "articles.json")) ||
+        fs.existsSync(path.join(dataDir, "clients.json")) ||
+        fs.existsSync(path.join(dataDir, "orders.json")) ||
+        fs.existsSync(path.join(dataDir, "income-movements.json")) ||
+        fs.existsSync(path.join(dataDir, "economic-movements.json")) ||
+        fs.existsSync(path.join(dataDir, "material-movements.json")) ||
+        fs.existsSync(path.join(dataDir, "labor-config.json")) ||
+        fs.existsSync(path.join(dataDir, "dashboard-config.json"));
+
+    if (!hasAnyData) {
+        const seedDir = resolveSeedDir();
+        if (fs.existsSync(seedDir)) {
+            try {
+                fs.cpSync(seedDir, dataDir, { recursive: true, force: false });
+                seeded = true;
+            } catch (error) {
+                console.error("Error seeding DBT05 data:", error);
+            }
+        }
+    }
+
+    return { created, seeded, dataDir };
 }
 
 const MATERIALS_FILE = path.join(dataDir, "materials.json");

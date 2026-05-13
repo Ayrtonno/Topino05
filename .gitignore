@@ -2,6 +2,14 @@ node_modules
 dist
 dist-ts
 build
+releases
+out
+*.pak
+*.blockmap
+latest.yml
+*.dmg
+*.exe
+*.msi
 .env
 .DS_Store
 *.log
